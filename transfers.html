@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
+  <title>Wire Transfer — First Global Standard Bank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #0ea5b7;
+      --teal-bright: #22d4e8;
+      --gold: #f5c842;
+      --ink: #030712;
+      --surface: rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --white: #ffffff;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --warn: #f5c842;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--ink); color: var(--text);
+      overflow-x: hidden; -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025; pointer-events: none; z-index: 9999;
+    }
+
+    .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); animation: float 8s ease-in-out infinite; }
+    .orb-1 { width: 600px; height: 600px; background: rgba(14,165,183,0.07); top: -100px; left: -150px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(245,200,66,0.04); bottom: 10%; right: 5%; animation-delay: -3s; }
+    .orb-3 { width: 300px; height: 300px; background: rgba(14,165,183,0.05); top: 50%; right: 20%; animation-delay: -5s; }
+    @keyframes float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-24px) scale(1.04)} }
+
+    .grid-bg {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: linear-gradient(rgba(14,165,183,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(14,165,183,0.025) 1px,transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 80% 70% at 30% 30%, black, transparent);
+    }
+
+    /* ─── LAYOUT ─── */
+    .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; position: relative; z-index: 1; }
+
+    /* ─── SIDEBAR ─── */
+    .side {
+      background: rgba(3,7,18,0.7); backdrop-filter: blur(20px) saturate(1.4);
+      border-right: 1px solid var(--border);
+      position: sticky; top: 0; height: 100vh;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 20px 18px; border-bottom: 1px solid var(--border); text-decoration: none;
+    }
+    .logo-mark {
+      width: 36px; height: 36px; background: linear-gradient(135deg,var(--teal),#0c8a9a);
+      border-radius: 10px; display: grid; place-items: center;
+      font-family: 'Syne',sans-serif; font-weight: 800; font-size: 0.95rem;
+      color: #001018; box-shadow: 0 0 16px rgba(14,165,183,0.4); flex-shrink: 0;
+    }
+    .brand-text { font-family: 'Syne',sans-serif; font-size: 0.72rem; font-weight: 700; color: var(--white); line-height: 1.2; letter-spacing: 0.02em; text-transform: uppercase; }
+    .brand-text span { color: var(--teal); }
+
+    .side-nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+    .nav-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 10px 6px; font-weight: 600; }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 12px; color: #64748b; text-decoration: none;
+      font-size: 0.88rem; font-weight: 400; transition: all 0.2s; margin-bottom: 2px;
+    }
+    .nav-link:hover { background: var(--surface2); color: #cbd5e1; }
+    .nav-link.active { background: linear-gradient(135deg,rgba(14,165,183,0.15),rgba(14,165,183,0.07)); border: 1px solid rgba(14,165,183,0.2); color: var(--white); }
+    .nav-link.active svg { color: var(--teal-bright); opacity: 1; }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
+
+    .side-footer { padding: 14px; border-top: 1px solid var(--border); }
+    .user-chip {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 12px; cursor: pointer; transition: all 0.2s;
+    }
+    .user-chip:hover { background: var(--surface2); }
+    .avatar-sm {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg,var(--teal),#0c8a9a);
+      display: grid; place-items: center;
+      font-family: 'Syne',sans-serif; font-size: 0.75rem; font-weight: 800; color: #001018; flex-shrink: 0;
+    }
+    .user-name { font-size: 0.85rem; color: #cbd5e1; font-weight: 500; }
+    .user-role { font-size: 0.73rem; color: var(--muted); }
+
+    /* ─── MAIN ─── */
+    .main { display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(3,7,18,0.65); backdrop-filter: blur(20px) saturate(1.4);
+      border-bottom: 1px solid var(--border);
+      height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 24px;
+    }
+    .page-title { font-family: 'Syne',sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); }
+    .page-title span { color: var(--muted); font-weight: 400; font-size: 0.85rem; margin-left: 6px; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .icon-btn {
+      width: 36px; height: 36px; min-width: 44px; min-height: 44px; border-radius: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      display: grid; place-items: center; cursor: pointer; color: #64748b; transition: all 0.2s;
+      touch-action: manipulation;
+    }
+    .icon-btn:hover { background: var(--surface2); color: #cbd5e1; }
+
+    /* ─── CONTENT ─── */
+    .content { padding: 24px; flex: 1; }
+
+    .page-header { margin-bottom: 28px; animation: fadeUp 0.5s 0.1s ease both; }
+    .page-header h2 { font-family: 'Syne',sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--white); letter-spacing: -0.02em; }
+    .page-header p { font-size: 0.88rem; color: var(--muted); margin-top: 4px; }
+
+    /* ─── TWO-COL GRID ─── */
+    .transfer-grid {
+      display: grid; grid-template-columns: 1fr 340px;
+      gap: 24px; align-items: start;
+    }
+
+    /* ─── PANEL ─── */
+    .panel {
+      background: rgba(8,14,30,0.6); border: 1px solid var(--border);
+      border-radius: 20px; backdrop-filter: blur(10px); transition: border-color 0.2s;
+    }
+
+    /* ─── STEP INDICATOR ─── */
+    .steps-bar {
+      display: flex; align-items: center;
+      padding: 20px 24px 0; gap: 0;
+      margin-bottom: 24px;
+    }
+    .step-item { display: flex; align-items: center; flex: 1; }
+    .step-item:last-child { flex: none; }
+    .step-dot {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: grid; place-items: center; flex-shrink: 0;
+      font-family: 'Syne',sans-serif; font-size: 0.78rem; font-weight: 800;
+      border: 2px solid var(--border); color: var(--muted); background: transparent;
+      transition: all 0.3s;
+    }
+    .step-dot.active { border-color: var(--teal); color: var(--teal-bright); background: rgba(14,165,183,0.1); box-shadow: 0 0 12px rgba(14,165,183,0.3); }
+    .step-dot.done { border-color: var(--good); background: rgba(34,197,94,0.12); color: var(--good); }
+    .step-label { font-size: 0.75rem; font-weight: 500; color: var(--muted); margin-left: 8px; white-space: nowrap; transition: color 0.3s; }
+    .step-label.active { color: var(--teal-bright); }
+    .step-label.done { color: var(--good); }
+    .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 12px; transition: background 0.3s; }
+    .step-line.done { background: rgba(34,197,94,0.4); }
+
+    /* ─── FORM BODY ─── */
+    .form-body { padding: 0 24px 24px; }
+
+    .section-title { font-family: 'Syne',sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .section-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 20px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-field { margin-bottom: 16px; }
+    .form-label {
+      display: block; font-size: 0.72rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      font-weight: 600; margin-bottom: 7px;
+    }
+    .form-label .req { color: var(--bad); margin-left: 2px; }
+
+    .form-input, .form-select {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 11px; padding: 11px 14px;
+      color: var(--white); font-family: 'DM Sans',sans-serif; font-size: 0.92rem;
+      transition: all 0.2s; outline: none; appearance: none; -webkit-appearance: none;
+    }
+    .form-input::placeholder { color: #2d3748; }
+    .form-input:focus, .form-select:focus {
+      border-color: rgba(14,165,183,0.45); background: rgba(14,165,183,0.04);
+      box-shadow: 0 0 0 3px rgba(14,165,183,0.08);
+    }
+    .form-input.err { border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.04); }
+    .form-select { cursor: pointer; }
+    .form-select option { background: #0a1020; color: var(--white); }
+
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: ''; position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      width: 0; height: 0;
+      border-left: 4px solid transparent; border-right: 4px solid transparent;
+      border-top: 5px solid var(--muted); pointer-events: none;
+    }
+
+    .err-msg { font-size: 0.72rem; color: var(--bad); margin-top: 4px; display: none; }
+    .err-msg.show { display: block; }
+
+    /* Amount field special */
+    .amount-wrap {
+      display: flex; align-items: stretch; border: 1px solid var(--border);
+      border-radius: 11px; overflow: hidden; transition: all 0.2s; background: rgba(255,255,255,0.04);
+    }
+    .amount-wrap:focus-within { border-color: rgba(14,165,183,0.45); background: rgba(14,165,183,0.04); box-shadow: 0 0 0 3px rgba(14,165,183,0.08); }
+    .amount-prefix {
+      padding: 11px 14px; background: rgba(255,255,255,0.04); border-right: 1px solid var(--border);
+      font-family: 'Syne',sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--teal-bright);
+      display: flex; align-items: center; flex-shrink: 0;
+    }
+    .amount-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      padding: 11px 14px; color: var(--white);
+      font-family: 'Syne',sans-serif; font-weight: 700; font-size: 1.1rem;
+    }
+    .amount-input::placeholder { color: #2d3748; font-weight: 400; font-size: 0.92rem; font-family: 'DM Sans',sans-serif; }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 11px 20px; border-radius: 11px;
+      font-family: 'DM Sans',sans-serif; font-size: 0.88rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; border: none; line-height: 1;
+    }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: #cbd5e1; }
+    .btn-ghost:hover { border-color: var(--border2); background: var(--surface); color: var(--white); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal) 0%, #0c8a9a 100%);
+      color: var(--white); box-shadow: 0 0 20px rgba(14,165,183,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(14,165,183,0.45); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-lg { padding: 13px 28px; font-size: 0.95rem; }
+
+    .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+
+    /* Info box */
+    .info-box {
+      display: flex; gap: 10px; padding: 12px 14px;
+      background: rgba(14,165,183,0.06); border: 1px solid rgba(14,165,183,0.15);
+      border-radius: 12px; margin-bottom: 16px;
+    }
+    .info-box svg { flex-shrink: 0; margin-top: 1px; color: var(--teal-bright); }
+    .info-box p { font-size: 0.82rem; color: #94a3b8; line-height: 1.55; }
+    .info-box p strong { color: var(--teal-bright); }
+
+    /* ─── REVIEW ROWS ─── */
+    .review-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .review-item:last-child { border-bottom: none; }
+    .review-label { font-size: 0.82rem; color: var(--muted); }
+    .review-value { font-size: 0.88rem; color: #cbd5e1; font-weight: 500; text-align: right; max-width: 220px; word-break: break-all; }
+    .review-value.highlight { color: var(--teal-bright); font-family: 'Syne',sans-serif; font-weight: 700; }
+    .review-value.free { color: var(--good); font-weight: 600; }
+
+    /* Warn box */
+    .warn-box {
+      display: flex; gap: 10px; padding: 12px 14px;
+      background: rgba(245,200,66,0.06); border: 1px solid rgba(245,200,66,0.2);
+      border-radius: 12px; margin-bottom: 16px;
+    }
+    .warn-box svg { flex-shrink: 0; margin-top: 1px; color: var(--warn); }
+    .warn-box p { font-size: 0.82rem; color: #d4a017; line-height: 1.55; }
+
+    /* ─── SUCCESS ─── */
+    .success-panel {
+      display: none; padding: 48px 24px; text-align: center;
+    }
+    .success-panel.show { display: block; animation: fadeUp 0.5s ease; }
+    .success-icon {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--good), #16a34a);
+      display: grid; place-items: center; margin: 0 auto 24px;
+      box-shadow: 0 0 40px rgba(34,197,94,0.3);
+      animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes pop { from{transform:scale(0)} to{transform:scale(1)} }
+    .success-panel h2 { font-family: 'Syne',sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--white); margin-bottom: 10px; letter-spacing: -0.02em; }
+    .success-panel p { color: var(--muted); font-size: 0.92rem; line-height: 1.65; max-width: 38ch; margin: 0 auto 24px; }
+    .ref-box {
+      display: inline-block; background: rgba(14,165,183,0.08); border: 1px solid rgba(14,165,183,0.2);
+      border-radius: 12px; padding: 14px 24px; margin-bottom: 28px;
+    }
+    .ref-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+    .ref-value { font-family: 'Syne',sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--teal-bright); }
+    .success-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+    /* ─── RIGHT PANEL ─── */
+    .right-stack { display: flex; flex-direction: column; gap: 20px; }
+
+    /* Summary card */
+    .summary-panel { overflow: hidden; }
+    .summary-header {
+      background: linear-gradient(135deg, #0a1628 0%, #0d2040 50%, #0a1628 100%);
+      padding: 24px; position: relative; overflow: hidden;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-header::before {
+      content: ''; position: absolute; top: -40%; right: -20%;
+      width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(14,165,183,0.15), transparent 60%);
+    }
+    .summary-label { font-size: 0.68rem; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; position: relative; z-index: 1; }
+    .summary-amount { font-family: 'Syne',sans-serif; font-size: 2rem; font-weight: 800; color: var(--white); letter-spacing: -0.03em; position: relative; z-index: 1; }
+    .summary-sub { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-top: 4px; position: relative; z-index: 1; }
+
+    .summary-body { padding: 16px; }
+    .summary-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-row-label { font-size: 0.78rem; color: var(--muted); }
+    .summary-row-val { font-size: 0.82rem; font-weight: 600; color: #cbd5e1; }
+    .summary-row-val.teal { color: var(--teal-bright); }
+    .summary-row-val.green { color: var(--good); }
+
+    /* Security strip */
+    .security-strip {
+      display: flex; flex-direction: column; gap: 10px; padding: 18px;
+      background: rgba(8,14,30,0.6); border: 1px solid var(--border); border-radius: 16px;
+    }
+    .security-title { font-family: 'Syne',sans-serif; font-size: 0.82rem; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .sec-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.78rem; color: var(--muted);
+    }
+    .sec-item svg { color: var(--good); flex-shrink: 0; }
+
+    /* Limits card */
+    .limits-panel { padding: 18px; }
+    .limits-title { font-family: 'Syne',sans-serif; font-size: 0.88rem; font-weight: 700; color: var(--white); margin-bottom: 14px; }
+    .limit-item { margin-bottom: 14px; }
+    .limit-item:last-child { margin-bottom: 0; }
+    .limit-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .limit-name { font-size: 0.78rem; color: var(--muted); }
+    .limit-val { font-size: 0.78rem; color: #cbd5e1; font-weight: 600; }
+    .limit-bar-bg { height: 5px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
+    .limit-bar { height: 100%; border-radius: 999px; }
+
+    /* PIN modal */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px); z-index: 100;
+      display: none; place-items: center;
+    }
+    .overlay.show { display: grid; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    .pin-modal {
+      background: rgba(8,14,30,0.95); border: 1px solid rgba(14,165,183,0.2);
+      border-radius: 24px; padding: 36px;
+      max-width: 360px; width: 90%; text-align: center;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+      animation: pop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .pin-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(14,165,183,0.1); border: 1px solid rgba(14,165,183,0.25);
+      display: grid; place-items: center; margin: 0 auto 16px;
+    }
+    .pin-title { font-family: 'Syne',sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--white); margin-bottom: 6px; }
+    .pin-sub { font-size: 0.82rem; color: var(--muted); line-height: 1.5; margin-bottom: 24px; }
+    .pin-dots { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; }
+    .pin-input {
+      width: 52px; height: 58px; border-radius: 12px;
+      background: rgba(255,255,255,0.04); border: 1.5px solid var(--border);
+      color: var(--white); font-size: 1.4rem; font-weight: 800; text-align: center;
+      outline: none; transition: all 0.2s; font-family: 'Syne',sans-serif;
+    }
+    .pin-input:focus { border-color: var(--teal); background: rgba(14,165,183,0.08); box-shadow: 0 0 0 3px rgba(14,165,183,0.12); }
+    .pin-input.filled { border-color: rgba(14,165,183,0.4); }
+    .pin-actions { display: flex; flex-direction: column; gap: 8px; }
+    .pin-cancel { background: none; border: none; color: var(--muted); font-size: 0.85rem; cursor: pointer; font-family: 'DM Sans',sans-serif; margin-top: 4px; transition: color 0.2s; }
+    .pin-cancel:hover { color: var(--bad); }
+
+    /* Spinner */
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+    .loading .spinner { display: block; }
+    .loading .btn-text { display: none; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 200;
+      background: rgba(8,14,30,0.95); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 18px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.85rem; color: var(--text);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1100px) {
+      .transfer-grid { grid-template-columns: 1fr; }
+      .right-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    }
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 72px 1fr; }
+      .brand-text, .nav-label, .nav-link span, .user-name, .user-role { display: none; }
+      .brand { justify-content: center; padding: 16px; }
+      .nav-link { justify-content: center; padding: 12px; }
+      .nav-link svg { margin: 0; opacity: 1; }
+      .user-chip { justify-content: center; padding: 10px; }
+    }
+    @media (max-width: 720px) {
+      .app { grid-template-columns: 1fr; }
+      .side { display: none; }
+      .form-row { grid-template-columns: 1fr; }
+      .right-stack { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+      .step-label { display: none; }
+      .page-header h2 { font-size: 1.3rem; }
+      .topbar { padding: 0 12px; height: 56px; }
+      .icon-btn { min-width: 44px; min-height: 44px; }
+    }
+
+    @media (max-width: 480px) {
+      :root { font-size: 13px; }
+      .content { padding: 12px; }
+      .page-header { margin-bottom: 20px; }
+      .page-header h2 { font-size: 1.2rem; }
+      .page-header p { font-size: 0.82rem; }
+      .topbar { height: 52px; padding: 0 8px; }
+      .topbar-actions { gap: 4px; }
+      .steps-bar { padding: 14px 14px 0; margin-bottom: 16px; }
+      .step-dot { width: 28px; height: 28px; font-size: 0.72rem; }
+      .form-body { padding: 0 14px 14px; }
+      .section-title { font-size: 0.88rem; }
+      .section-sub { font-size: 0.74rem; margin-bottom: 14px; }
+      .form-field { margin-bottom: 12px; }
+      .form-label { font-size: 0.68rem; }
+      .form-input, .form-select { padding: 9px 12px; font-size: 0.86rem; border-radius: 10px; }
+      .amount-prefix { padding: 9px 12px; font-size: 0.88rem; }
+      .amount-input { padding: 9px 12px; font-size: 1rem; }
+      .btn { padding: 9px 14px; font-size: 0.82rem; }
+      .btn-lg { padding: 11px 20px; font-size: 0.9rem; }
+      .form-actions { flex-direction: column; gap: 8px; }
+      .form-actions .btn { width: 100%; justify-content: center; }
+      .review-item { flex-wrap: wrap; gap: 4px; }
+      .review-value { max-width: 100%; text-align: left; }
+      .panel { border-radius: 16px; }
+      .pin-modal {
+        padding: 24px 20px;
+        border-radius: 20px;
+        max-width: calc(100vw - 24px);
+        width: calc(100vw - 24px);
+      }
+      .pin-input { width: 46px; height: 52px; font-size: 1.2rem; }
+      .pin-dots { gap: 8px; }
+      .summary-amount { font-size: 1.6rem; }
+      .info-box p { font-size: 0.78rem; }
+      .warn-box p { font-size: 0.78rem; }
+      .success-panel { padding: 32px 14px; }
+      .success-panel h2 { font-size: 1.3rem; }
+      .success-panel p { font-size: 0.85rem; }
+      .toast { bottom: 12px; right: 12px; left: 12px; font-size: 0.8rem; }
+    }
+
+    @media (max-width: 360px) {
+      .content { padding: 10px; }
+      .form-body { padding: 0 10px 10px; }
+      .steps-bar { padding: 10px 10px 0; }
+      .form-input, .form-select { padding: 8px 10px; font-size: 0.82rem; }
+      .amount-input { font-size: 0.95rem; }
+      .pin-input { width: 40px; height: 46px; }
+    }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    /* ─── BOTTOM NAV ─── */
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(5,10,22,.97);backdrop-filter:blur(20px) saturate(1.5);border-top:1px solid rgba(255,255,255,.08);padding:6px 0 max(6px,env(safe-area-inset-bottom))}
+    .bottom-nav-inner{display:flex}
+    .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;padding:6px 4px;text-decoration:none;cursor:pointer;transition:transform .15s;-webkit-tap-highlight-color:transparent}
+    .bnav-item:active{transform:scale(.90)}
+    .bnav-icon{width:22px;height:22px;color:#475569;transition:color .2s}
+    .bnav-label{font-size:.6rem;font-weight:500;color:#475569;transition:color .2s}
+    .bnav-item.active .bnav-icon,.bnav-item.active .bnav-label{color:#22d4e8}
+    @media(max-width:720px){.bottom-nav{display:block}.content{padding-bottom:80px !important}}
+  </style>
+</head>
+<body>
+  <div class="bg-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+  <div class="grid-bg"></div>
+
+  <div class="app">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="side">
+      <a class="brand" href="index.html">
+        <div class="logo-mark">$</div>
+        <div class="brand-text">First Global<br><span>Standard Bank</span></div>
+      </a>
+      <nav class="side-nav">
+        <div class="nav-label">Main</div>
+        <a href="dashboard.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="transfers.html" class="nav-link active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <span>Transfers</span>
+        </a>
+        <a href="bills.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-1 .1-1.3.5l-.5.5c-.3.4-.3.9 0 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 4.5 5.5c.4.3.9.3 1.3 0l.5-.5c.4-.3.6-.8.5-1.3z"/></svg>
+          <span>Flights</span>
+        </a>
+        <a href="cards.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          <span>Cards</span>
+        </a>
+        <div class="nav-label" style="margin-top:8px">Services</div>
+        <a href="branches.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M9 22V12h6v10"/></svg>
+          <span>Branches</span>
+        </a>
+        <a href="support.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>Support</span>
+        </a>
+        <a href="#" class="nav-link" onclick="localStorage.removeItem('token');localStorage.removeItem('user');window.location.href='login.html'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          <span>Sign Out</span>
+        </a>
+      </nav>
+      <div class="side-footer">
+        <div class="user-chip">
+          <div class="avatar-sm">--</div>
+          <div><div class="user-name">Account Holder</div><div class="user-role">—</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <section class="main">
+      <header class="topbar">
+        <div class="page-title">Transfers <span>/ Wire Transfer</span></div>
+        <div class="topbar-actions">
+          <div class="icon-btn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          </div>
+          <div class="icon-btn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header">
+          <h2>Wire Transfer</h2>
+          <p>Send money securely to any bank account worldwide. Fast, transparent, zero hidden fees.</p>
+        </div>
+
+        <div class="transfer-grid">
+
+          <!-- ═══ FORM PANEL ═══ -->
+          <div class="panel" style="animation: fadeUp 0.5s 0.15s ease both;">
+
+            <!-- Step indicator -->
+            <div class="steps-bar">
+              <div class="step-item">
+                <div class="step-dot active" id="dot1">1</div>
+                <span class="step-label active" id="lbl1">Recipient</span>
+              </div>
+              <div class="step-line" id="line1"></div>
+              <div class="step-item">
+                <div class="step-dot" id="dot2">2</div>
+                <span class="step-label" id="lbl2">Amount</span>
+              </div>
+              <div class="step-line" id="line2"></div>
+              <div class="step-item">
+                <div class="step-dot" id="dot3">3</div>
+                <span class="step-label" id="lbl3">Confirm</span>
+              </div>
+            </div>
+
+            <!-- ─── STEP 1: RECIPIENT ─── -->
+            <div class="form-body" id="step1">
+              <div class="section-title">Recipient Details</div>
+              <div class="section-sub">Enter the recipient's banking information</div>
+
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label">Account Name <span class="req">*</span></label>
+                  <input class="form-input" id="accountName" type="text" placeholder="e.g. Jane Smith">
+                  <div class="err-msg" id="err_name">Please enter the account name</div>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Account Number <span class="req">*</span></label>
+                  <input class="form-input" id="accountNumber" type="text" placeholder="e.g. 0123456789">
+                  <div class="err-msg" id="err_acct">Please enter the account number</div>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-field">
+                  <label class="form-label">Bank Name <span class="req">*</span></label>
+                  <input class="form-input" id="bankName" type="text" placeholder="e.g. Chase Bank">
+                  <div class="err-msg" id="err_bank">Please enter the bank name</div>
+                </div>
+                <div class="form-field">
+                  <label class="form-label">Account Type <span class="req">*</span></label>
+                  <div class="select-wrap">
+                    <select class="form-select" id="accountType">
+                      <option value="" hidden>Select type</option>
+                      <option>Savings</option>
+                      <option>Checking</option>
+                      <option>Current</option>
+                      <option>Business</option>
+                      <option>Corporate</option>
+                    </select>
+                  </div>
+                  <div class="err-msg" id="err_type">Please select an account type</div>
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label class="form-label">Country <span class="req">*</span></label>
+                <div class="select-wrap">
+                  <select class="form-select" id="country">
+                    <option value="" hidden>Select country</option>
+                    <option>United States</option><option>United Kingdom</option><option>Canada</option>
+                    <option>Australia</option><option>Germany</option><option>France</option>
+                    <option>New Zealand</option><option>Ireland</option><option>Norway</option>
+                    <option>South Africa</option><option>India</option><option>China</option>
+                    <option>Japan</option><option>Brazil</option><option>Mexico</option>
+                    <option>Italy</option><option>Spain</option><option>Netherlands</option>
+                    <option>Switzerland</option><option>Singapore</option><option>UAE</option>
+                    <option>Saudi Arabia</option><option>Egypt</option><option>Ethiopia</option>
+                    <option>Tanzania</option><option>Uganda</option><option>Rwanda</option>
+                    <option>Zambia</option><option>Zimbabwe</option><option>Afghanistan</option>
+                    <option>Albania</option><option>Algeria</option><option>Argentina</option>
+                    <option>Austria</option><option>Bangladesh</option><option>Belgium</option>
+                    <option>Bolivia</option><option>Cambodia</option><option>Chile</option>
+                    <option>Colombia</option><option>Croatia</option><option>Czechia</option>
+                    <option>Denmark</option><option>Ecuador</option><option>Finland</option>
+                    <option>Greece</option><option>Hungary</option><option>Indonesia</option>
+                    <option>Iran</option><option>Iraq</option><option>Ireland</option>
+                    <option>Israel</option><option>Jordan</option><option>Kazakhstan</option>
+                    <option>Malaysia</option><option>Morocco</option><option>Myanmar</option>
+                    <option>New Zealand</option><option>Norway</option><option>Pakistan</option>
+                    <option>Peru</option><option>Philippines</option><option>Poland</option>
+                    <option>Portugal</option><option>Romania</option><option>Russia</option>
+                    <option>Serbia</option><option>South Korea</option><option>Sri Lanka</option>
+                    <option>Sweden</option><option>Taiwan</option><option>Thailand</option>
+                    <option>Turkey</option><option>Ukraine</option><option>Venezuela</option>
+                    <option>Vietnam</option>
+                  </select>
+                </div>
+                <div class="err-msg" id="err_country">Please select a country</div>
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn-primary btn-lg" id="btn1" onclick="nextStep(2)">
+                  <span class="btn-text">Continue</span>
+                  <div class="spinner"></div>
+                  <svg class="btn-text" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- ─── STEP 2: AMOUNT ─── -->
+            <div class="form-body" id="step2" style="display:none">
+              <div class="section-title">Transfer Amount</div>
+              <div class="section-sub">Enter the amount you'd like to send</div>
+
+              <div class="form-field">
+                <label class="form-label">Amount <span class="req">*</span></label>
+                <div class="amount-wrap">
+                  <div class="amount-prefix">$</div>
+                  <input class="amount-input" id="amount" type="number" placeholder="0.00" min="1" oninput="updateSummary()">
+                </div>
+                <div class="err-msg" id="err_amount">Please enter a valid amount (minimum $1)</div>
+              </div>
+
+              <div class="form-field">
+                <label class="form-label">Purpose <span class="req">*</span></label>
+                <div class="select-wrap">
+                  <select class="form-select" id="purpose">
+                    <option value="" hidden>Select purpose</option>
+                    <option>Personal Transfer</option><option>Business Payment</option>
+                    <option>Salary / Payroll</option><option>Invoice Payment</option>
+                    <option>Investment</option><option>Loan Repayment</option>
+                    <option>Family Support</option><option>Tuition / Education</option>
+                    <option>Medical</option><option>Gift</option><option>Other</option>
+                  </select>
+                </div>
+                <div class="err-msg" id="err_purpose">Please select a purpose</div>
+              </div>
+
+              <div class="form-field">
+                <label class="form-label">Narration <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+                <input class="form-input" id="narration" type="text" placeholder="e.g. Invoice #1042 payment">
+              </div>
+
+              <div class="info-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <p>First Global Standard Bank charges <strong>$0.00 in transfer fees</strong>. We use the real mid-market exchange rate with no hidden markups.</p>
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn-ghost" onclick="nextStep(1)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                  Back
+                </button>
+                <button class="btn btn-primary btn-lg" id="btn2" onclick="nextStep(3)">
+                  <span class="btn-text">Review Transfer</span>
+                  <div class="spinner"></div>
+                  <svg class="btn-text" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- ─── STEP 3: CONFIRM ─── -->
+            <div class="form-body" id="step3" style="display:none">
+              <div class="section-title">Review Transfer</div>
+              <div class="section-sub">Confirm all details before sending</div>
+
+              <div class="warn-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <p>Please verify all details carefully. <strong>Transfers cannot be reversed</strong> once confirmed.</p>
+              </div>
+
+              <div id="reviewRows"></div>
+
+              <div class="form-actions">
+                <button class="btn btn-ghost" onclick="nextStep(2)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                  Edit
+                </button>
+                <button class="btn btn-primary btn-lg" id="btn3" onclick="openPin()">
+                  <span class="btn-text">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Confirm &amp; Send
+                  </span>
+                  <div class="spinner"></div>
+                </button>
+              </div>
+            </div>
+
+            <!-- ─── SUCCESS ─── -->
+            <div class="success-panel" id="successPanel">
+              <div class="success-icon" style="background:linear-gradient(135deg,#f5c842,#e8a820);box-shadow:0 0 40px rgba(245,200,66,0.35)">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <h2>Transfer Submitted</h2>
+              <p>Your transfer is <strong style="color:#f5c842">pending admin review</strong>. You'll receive an email confirmation once it is approved and processed.</p>
+              <div class="ref-box">
+                <div class="ref-label">Transaction Reference</div>
+                <div class="ref-value" id="txRef">FRSB-TXN-000000</div>
+              </div>
+              <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.2);border-radius:12px;padding:10px 18px;margin-bottom:24px;font-size:0.82rem;color:#d4a017">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                Awaiting compliance review — usually within 24 hours
+              </div>
+              <div class="success-actions">
+                <a class="btn btn-primary btn-lg" href="dashboard.html">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  Done
+                </a>
+                <button class="btn btn-ghost btn-lg" onclick="resetForm()">Send Another</button>
+              </div>
+            </div>
+
+          </div><!-- /panel -->
+
+          <!-- ═══ RIGHT STACK ═══ -->
+          <div class="right-stack" style="animation: fadeUp 0.5s 0.25s ease both;">
+
+            <!-- Transfer summary -->
+            <div class="panel summary-panel">
+              <div class="summary-header">
+                <div class="summary-label">You are sending</div>
+                <div class="summary-amount" id="sumAmount">$0.00</div>
+                <div class="summary-sub" id="sumSub">Fill in the form to preview</div>
+              </div>
+              <div class="summary-body">
+                <div class="summary-row"><span class="summary-row-label">To</span><span class="summary-row-val" id="sumTo">—</span></div>
+                <div class="summary-row"><span class="summary-row-label">Account No.</span><span class="summary-row-val" id="sumAcct">—</span></div>
+                <div class="summary-row"><span class="summary-row-label">Bank</span><span class="summary-row-val" id="sumBank">—</span></div>
+                <div class="summary-row"><span class="summary-row-label">Country</span><span class="summary-row-val" id="sumCountry">—</span></div>
+                <div class="summary-row"><span class="summary-row-label">Account Type</span><span class="summary-row-val" id="sumType">—</span></div>
+                <div class="summary-row"><span class="summary-row-label">Transfer Fee</span><span class="summary-row-val green">FREE — $0.00</span></div>
+                <div class="summary-row"><span class="summary-row-label">Purpose</span><span class="summary-row-val" id="sumPurpose">—</span></div>
+                <div class="summary-row"><span class="summary-row-label">Est. Arrival</span><span class="summary-row-val teal">1–3 business days</span></div>
+              </div>
+            </div>
+
+            <!-- Security -->
+            <div class="security-strip">
+              <div class="security-title">Transfer Protection</div>
+              <div class="sec-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                AES-256 end-to-end encryption
+              </div>
+              <div class="sec-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                FDIC insured up to $250,000
+              </div>
+              <div class="sec-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                24/7 real-time monitoring
+              </div>
+              <div class="sec-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                PIN-verified authorization
+              </div>
+            </div>
+
+            <!-- Limits -->
+            <div class="panel limits-panel">
+              <div class="limits-title">Transfer Limits</div>
+              <div class="limit-item">
+                <div class="limit-top"><span class="limit-name">Daily</span><span class="limit-val">$850 / $10,000</span></div>
+                <div class="limit-bar-bg"><div class="limit-bar" style="width:8.5%;background:linear-gradient(90deg,#0ea5b7,#22d4e8)"></div></div>
+              </div>
+              <div class="limit-item">
+                <div class="limit-top"><span class="limit-name">Monthly</span><span class="limit-val">$3,210 / $50,000</span></div>
+                <div class="limit-bar-bg"><div class="limit-bar" style="width:6.4%;background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></div></div>
+              </div>
+              <div class="limit-item">
+                <div class="limit-top"><span class="limit-name">Per Transaction</span><span class="limit-val">Max $25,000</span></div>
+                <div class="limit-bar-bg"><div class="limit-bar" style="width:0%;background:linear-gradient(90deg,#f5c842,#fbbf24)"></div></div>
+              </div>
+            </div>
+
+          </div><!-- /right-stack -->
+        </div><!-- /transfer-grid -->
+      </div><!-- /content -->
+    </section>
+  </div><!-- /app -->
+
+  <!-- ═══ PIN MODAL ═══ -->
+  <div class="overlay" id="pinOverlay">
+    <div class="pin-modal">
+      <div class="pin-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--teal-bright)" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/></svg>
+      </div>
+      <div class="pin-title">Enter PIN</div>
+      <div class="pin-sub">Enter your 4-digit transaction PIN to authorize this wire transfer</div>
+      <div class="pin-dots">
+        <input class="pin-input" id="p1" type="password" maxlength="1" inputmode="numeric">
+        <input class="pin-input" id="p2" type="password" maxlength="1" inputmode="numeric">
+        <input class="pin-input" id="p3" type="password" maxlength="1" inputmode="numeric">
+        <input class="pin-input" id="p4" type="password" maxlength="1" inputmode="numeric">
+      </div>
+      <div class="pin-actions">
+        <button class="btn btn-primary btn-lg" id="pinBtn" onclick="submitTransfer()" style="width:100%;justify-content:center">
+          <span class="btn-text">Authorize Transfer</span>
+          <div class="spinner"></div>
+        </button>
+        <button class="pin-cancel" onclick="closePin()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <div class="toast-dot" id="toastDot"></div>
+    <span id="toastMsg"></span>
+  </div>
+
+  <script>
+    const API = '/api';
+    const auth = { token: localStorage.getItem('token') || '' };
+    function apiHeaders(extra = {}) {
+      const h = {'Content-Type': 'application/json'};
+      if (auth.token) h['X-Auth-Token'] = auth.token;
+      return Object.assign(h, extra);
+    }
+    async function api(path, opts = {}) {
+      const response = await fetch(API + path, {
+        headers: apiHeaders(),
+        credentials: 'include',
+        ...opts
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'API request failed');
+      }
+      return response.json();
+    }
+    function ensureAuth() {
+      if (!auth.token) window.location.href = 'login.html';
+    }
+    function applyUser(user) {
+      const initials = (user.full_name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+      document.querySelectorAll('.user-name').forEach(el => el.textContent = user.full_name || user.email || 'Account Holder');
+      document.querySelectorAll('.user-role').forEach(el => el.textContent = 'Checking Account');
+      document.querySelectorAll('.avatar-sm').forEach(el => el.textContent = initials);
+    }
+    async function loadUserInfo() {
+      try { applyUser(JSON.parse(localStorage.getItem('user') || '{}')); } catch {}
+      try {
+        const { user } = await api('/me');
+        applyUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
+      } catch {}
+    }
+    window.addEventListener('DOMContentLoaded', async () => {
+      ensureAuth();
+      loadUserInfo();
+      // Card gate: transfers require an active card
+      try {
+        const me = await api('/me');
+        if (!me.has_active_card) {
+          showCardGate(me.has_pending_card);
+        }
+      } catch {}
+    });
+
+    function showCardGate(isPending) {
+      const existing = document.getElementById('cardGateOverlay');
+      if (existing) return;
+      const overlay = document.createElement('div');
+      overlay.id = 'cardGateOverlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(3,7,18,0.96);backdrop-filter:blur(16px);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px';
+      overlay.innerHTML = `
+        <div style="max-width:420px;width:100%;text-align:center">
+          <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,rgba(245,200,66,0.15),rgba(245,200,66,0.05));border:1px solid rgba(245,200,66,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:30px">
+            💳
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:#fff;margin-bottom:10px">
+            ${isPending ? 'Card Pending Review' : 'Card Required'}
+          </div>
+          <p style="font-size:0.9rem;color:#64748b;line-height:1.6;margin-bottom:28px">
+            ${isPending
+              ? 'Your card request is currently under review. You can make transfers once your card is approved. We\'ll notify you by email.'
+              : 'You need an active card before you can make transfers. Request your card now — it takes just a few minutes.'}
+          </p>
+          ${isPending
+            ? `<a href="cards.html" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.3);color:#f5c842;border-radius:12px;font-weight:600;font-size:0.9rem;text-decoration:none">View Card Status</a>`
+            : `<a href="cards.html" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:linear-gradient(135deg,#0ea5b7,#0c8a9a);color:#fff;border-radius:12px;font-weight:600;font-size:0.9rem;text-decoration:none;box-shadow:0 0 24px rgba(14,165,183,0.35)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                Request a Card
+               </a>`}
+        </div>`;
+      document.body.appendChild(overlay);
+    }
+
+    let currentStep = 1;
+
+    /* ─── STEP NAVIGATION ─── */
+    function nextStep(n) {
+      if (n > currentStep && !validateStep(currentStep)) return;
+
+      // Animate out current
+      const curEl = document.getElementById('step' + currentStep);
+      const nxtEl = document.getElementById('step' + n);
+
+      // Sim loading briefly going forward
+      if (n > currentStep) {
+        const btn = document.getElementById('btn' + currentStep);
+        if (btn) {
+          btn.classList.add('loading');
+          btn.disabled = true;
+          setTimeout(() => {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+            doStepTransition(curEl, nxtEl, n);
+          }, 600);
+          return;
+        }
+      }
+      doStepTransition(curEl, nxtEl, n);
+    }
+
+    function doStepTransition(curEl, nxtEl, n) {
+      curEl.style.display = 'none';
+      nxtEl.style.display = 'block';
+      nxtEl.style.animation = 'fadeUp 0.4s ease';
+      currentStep = n;
+      updateStepUI();
+      if (n === 3) buildReview();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateStepUI() {
+      [1,2,3].forEach(i => {
+        const dot = document.getElementById('dot' + i);
+        const lbl = document.getElementById('lbl' + i);
+        const line = i < 3 ? document.getElementById('line' + i) : null;
+
+        dot.className = 'step-dot';
+        lbl.className = 'step-label';
+        if (line) line.className = 'step-line';
+
+        if (i < currentStep) {
+          dot.className = 'step-dot done';
+          dot.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+          lbl.className = 'step-label done';
+          if (line) line.className = 'step-line done';
+        } else if (i === currentStep) {
+          dot.className = 'step-dot active';
+          dot.textContent = i;
+          lbl.className = 'step-label active';
+        } else {
+          dot.textContent = i;
+        }
+      });
+    }
+
+    /* ─── VALIDATION ─── */
+    function validateStep(step) {
+      let ok = true;
+      if (step === 1) {
+        ok = !setErr('accountName', 'err_name', !gv('accountName')) && ok;
+        ok = !setErr('accountNumber', 'err_acct', !gv('accountNumber')) && ok;
+        ok = !setErr('bankName', 'err_bank', !gv('bankName')) && ok;
+        ok = !setErr('accountType', 'err_type', !gv('accountType')) && ok;
+        ok = !setErr('country', 'err_country', !gv('country')) && ok;
+        return ok;
+      }
+      if (step === 2) {
+        const amt = parseFloat(document.getElementById('amount').value) || 0;
+        ok = !setErr('amount', 'err_amount', amt < 1) && ok;
+        ok = !setErr('purpose', 'err_purpose', !gv('purpose')) && ok;
+        return ok;
+      }
+      return true;
+    }
+
+    function setErr(inputId, errId, hasErr) {
+      const inp = document.getElementById(inputId);
+      const err = document.getElementById(errId);
+      if (inp) inp.classList.toggle('err', hasErr);
+      if (err) err.classList.toggle('show', hasErr);
+      return hasErr;
+    }
+
+    function gv(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+    /* ─── LIVE SUMMARY ─── */
+    function updateSummary() {
+      const amt = parseFloat(document.getElementById('amount')?.value) || 0;
+      document.getElementById('sumAmount').textContent = amt > 0 ? `$${amt.toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2})}` : '$0.00';
+      document.getElementById('sumTo').textContent = gv('accountName') || '—';
+      document.getElementById('sumAcct').textContent = gv('accountNumber') ? maskAcct(gv('accountNumber')) : '—';
+      document.getElementById('sumBank').textContent = gv('bankName') || '—';
+      document.getElementById('sumCountry').textContent = gv('country') || '—';
+      document.getElementById('sumType').textContent = gv('accountType') || '—';
+      document.getElementById('sumPurpose').textContent = gv('purpose') || '—';
+      document.getElementById('sumSub').textContent = amt > 0 ? `to ${gv('accountName') || 'recipient'} · 0 fees` : 'Fill in the form to preview';
+    }
+
+    function maskAcct(n) {
+      if (n.length <= 4) return n;
+      return '•'.repeat(n.length - 4) + n.slice(-4);
+    }
+
+    // Live update on any input change
+    document.addEventListener('input', updateSummary);
+    document.addEventListener('change', updateSummary);
+
+    /* ─── REVIEW BUILDER ─── */
+    function buildReview() {
+      const amt = parseFloat(document.getElementById('amount').value) || 0;
+      const rows = [
+        ['Account Name', gv('accountName')],
+        ['Account Number', gv('accountNumber')],
+        ['Bank Name', gv('bankName')],
+        ['Account Type', gv('accountType')],
+        ['Country', gv('country')],
+        ['Amount', `$${amt.toLocaleString('en-US',{minimumFractionDigits:2})}`, 'highlight'],
+        ['Transfer Fee', '$0.00 (FREE)', 'free'],
+        ['Purpose', gv('purpose')],
+        ...(gv('narration') ? [['Narration', gv('narration')]] : []),
+        ['Estimated Arrival', '1–3 business days'],
+      ];
+      document.getElementById('reviewRows').innerHTML = rows.map(([l, v, cls]) =>
+        `<div class="review-item">
+          <span class="review-label">${l}</span>
+          <span class="review-value ${cls||''}">${v || '—'}</span>
+        </div>`
+      ).join('');
+    }
+
+    /* ─── PIN ─── */
+    function openPin() {
+      document.getElementById('pinOverlay').classList.add('show');
+      const inputs = [1,2,3,4].map(i => document.getElementById('p' + i));
+      inputs.forEach((inp, idx) => {
+        inp.value = '';
+        inp.className = 'pin-input';
+        inp.oninput = () => {
+          inp.value = inp.value.replace(/\D/g,'').slice(-1);
+          if (inp.value) { inp.classList.add('filled'); inputs[idx+1]?.focus(); }
+          else inp.classList.remove('filled');
+        };
+        inp.onkeydown = e => {
+          if (e.key === 'Backspace' && !inp.value && idx > 0) {
+            inputs[idx-1].focus(); inputs[idx-1].value = ''; inputs[idx-1].classList.remove('filled');
+          }
+        };
+      });
+      setTimeout(() => inputs[0].focus(), 100);
+    }
+
+    function closePin() {
+      document.getElementById('pinOverlay').classList.remove('show');
+    }
+
+    async function submitTransfer() {
+      const pin = [1,2,3,4].map(i => document.getElementById('p' + i).value).join('');
+      if (pin.length < 4) { toast('Please enter all 4 PIN digits', 'warn'); return; }
+
+      const btn = document.getElementById('pinBtn');
+      btn.classList.add('loading'); btn.disabled = true;
+
+      const amount = Math.round(parseFloat(document.getElementById('amount').value) || 0);
+      const payload = {
+        type: 'bank',
+        amount,
+        note: document.getElementById('purpose').value.trim() || document.getElementById('narration').value.trim(),
+        dest: document.getElementById('accountNumber').value.trim(),
+        bank: document.getElementById('bankName').value.trim()
+      };
+
+      try {
+        const res = await api('/transfers', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        btn.classList.remove('loading'); btn.disabled = false;
+        closePin();
+
+        document.getElementById('step3').style.display = 'none';
+        const sp = document.getElementById('successPanel');
+        sp.classList.add('show');
+
+        const refId = res.ref_id || 0;
+        document.getElementById('txRef').textContent = 'FRSB-TXN-' + String(refId).padStart(6, '0');
+        document.querySelector('.steps-bar').style.display = 'none';
+        updateSummary();
+        toast('Transfer submitted — pending admin approval', 'good');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (error) {
+        btn.classList.remove('loading'); btn.disabled = false;
+        toast('Transfer failed: ' + error.message, 'bad');
+      }
+    }
+
+    /* ─── RESET ─── */
+    function resetForm() {
+      // Clear inputs
+      ['accountName','accountNumber','bankName','narration','amount'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      ['accountType','country','purpose'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.selectedIndex = 0;
+      });
+
+      // Reset steps
+      document.getElementById('successPanel').classList.remove('show');
+      document.querySelector('.steps-bar').style.display = 'flex';
+      ['step1','step2','step3'].forEach((id,i) => {
+        document.getElementById(id).style.display = i === 0 ? 'block' : 'none';
+      });
+      currentStep = 1;
+      updateStepUI();
+      updateSummary();
+    }
+
+    /* ─── TOAST ─── */
+    function toast(msg, type = 'good') {
+      const t = document.getElementById('toast');
+      const colors = { good: '#22c55e', warn: '#f5c842', bad: '#ef4444' };
+      document.getElementById('toastDot').style.background = colors[type] || colors.good;
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._t);
+      t._t = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // Init
+    updateSummary();
+  </script>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="dashboard.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="bnav-label">Home</span></a>
+    <a href="transfers.html" class="bnav-item active"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span class="bnav-label">Transfer</span></a>
+    <a href="bills.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-1 .1-1.3.5l-.5.5c-.3.4-.3.9 0 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 4.5 5.5c.4.3.9.3 1.3 0l.5-.5c.4-.3.6-.8.5-1.3z"/></svg><span class="bnav-label">Flights</span></a>
+    <a href="cards.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><span class="bnav-label">Cards</span></a>
+    <a href="support.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span class="bnav-label">Support</span></a>
+  </div>
+</nav>
+</body>
+</html>

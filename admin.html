@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="theme-color" content="#030712"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <title>Admin Panel — First Global Standard Bank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #0ea5b7;
+      --teal-bright: #22d4e8;
+      --teal-glow: rgba(14,165,183,0.45);
+      --gold: #f5c842;
+      --ink: #030712;
+      --ink2: #080e1e;
+      --surface: rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --white: #ffffff;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --warn: #f5c842;
+      --purple: #8b5cf6;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--ink);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    input, textarea, button, a, select { -webkit-user-select: text; user-select: text; }
+
+    /* Noise */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025; pointer-events: none; z-index: 9999;
+    }
+
+    /* Background orbs */
+    .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); animation: float 8s ease-in-out infinite; }
+    .orb-1 { width: 600px; height: 600px; background: rgba(14,165,183,0.07); top: -100px; left: -150px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(245,200,66,0.04); bottom: 10%; right: 5%; animation-delay: -3s; }
+    .orb-3 { width: 300px; height: 300px; background: rgba(139,92,246,0.05); top: 40%; right: 25%; animation-delay: -5s; }
+    @keyframes float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-24px) scale(1.04)} }
+
+    /* Grid BG */
+    .grid-bg {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: linear-gradient(rgba(14,165,183,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(14,165,183,0.025) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 80% 70% at 30% 30%, black, transparent);
+    }
+
+    /* ─── LAYOUT ─── */
+    .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; position: relative; z-index: 1; }
+
+    /* ─── SIDEBAR ─── */
+    .side {
+      background: rgba(3,7,18,0.7);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border-right: 1px solid var(--border);
+      position: sticky; top: 0; height: 100vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .brand { display: flex; align-items: center; gap: 10px; padding: 20px 18px; border-bottom: 1px solid var(--border); text-decoration: none; }
+    .logo-mark {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #ef4444, #c0392b);
+      border-radius: 10px; display: grid; place-items: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.95rem;
+      color: #fff; box-shadow: 0 0 16px rgba(239,68,68,0.4); flex-shrink: 0;
+    }
+    .brand-text { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700; color: var(--white); line-height: 1.2; letter-spacing: 0.02em; text-transform: uppercase; }
+    .brand-text span { color: #ef4444; }
+    .admin-chip {
+      margin: 10px 18px 0;
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
+      color: #fca5a5; font-size: 0.68rem; font-weight: 600;
+      padding: 4px 10px; border-radius: 999px; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .admin-chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 6px #ef4444; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .side-nav { padding: 12px 10px; flex: 1; overflow-y: auto; margin-top: 4px; }
+    .nav-section { margin-bottom: 4px; }
+    .nav-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 10px 6px; font-weight: 600; }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 12px;
+      color: #64748b; text-decoration: none;
+      font-size: 0.88rem; font-weight: 400;
+      transition: all 0.2s; margin-bottom: 2px;
+    }
+    .nav-link:hover { background: var(--surface2); color: #cbd5e1; }
+    .nav-link.active { background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.07)); border: 1px solid rgba(239,68,68,0.2); color: var(--white); }
+    .nav-link.active .nav-icon { color: #fca5a5; opacity: 1; }
+    .nav-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
+    .nav-badge { margin-left: auto; font-size: 0.7rem; font-weight: 600; background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); padding: 2px 7px; border-radius: 999px; }
+    .nav-badge.teal { background: rgba(14,165,183,0.2); color: var(--teal-bright); border-color: rgba(14,165,183,0.3); }
+
+    .side-footer { padding: 14px; border-top: 1px solid var(--border); }
+    .user-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; cursor: pointer; transition: all 0.2s; }
+    .user-chip:hover { background: var(--surface2); border-color: var(--border2); }
+    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #ef4444, #c0392b); display: grid; place-items: center; font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 800; color: #fff; flex-shrink: 0; }
+    .user-name { font-size: 0.85rem; color: #cbd5e1; font-weight: 500; }
+    .user-role { font-size: 0.73rem; color: #ef4444; }
+
+    /* ─── MAIN ─── */
+    .main { display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* Topbar */
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(3,7,18,0.65);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border-bottom: 1px solid var(--border);
+      height: 64px; display: flex; align-items: center; gap: 12px;
+      padding: 0 24px;
+    }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); }
+    .page-title span { color: var(--muted); font-weight: 400; font-size: 0.85rem; margin-left: 6px; }
+    .search-bar { flex: 1; max-width: 400px; margin-left: auto; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 8px 14px; transition: all 0.2s; }
+    .search-bar:focus-within { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.03); }
+    .search-bar input { flex: 1; border: 0; background: transparent; outline: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; }
+    .search-bar input::placeholder { color: #334155; }
+    .admin-key-group { display:flex; align-items:center; gap:10px; margin-left:12px; }
+    .admin-key-input { width: 200px; min-width: 180px; }
+    .admin-key-status { font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; cursor: pointer; color: #64748b; transition: all 0.2s; position: relative; padding: 8px; }
+    .icon-btn:hover { background: var(--surface2); color: #cbd5e1; border-color: var(--border2); }
+    .icon-btn:active { transform: scale(0.95); }
+    .notif-dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: #ef4444; border: 1.5px solid var(--ink); }
+
+    /* ─── CONTENT ─── */
+    .content { padding: 24px; flex: 1; }
+
+    /* Greeting */
+    .greeting-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; animation: fadeUp 0.6s 0.1s ease both; }
+    .greeting h2 { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--white); letter-spacing: -0.02em; }
+    .greeting p { font-size: 0.88rem; color: var(--muted); margin-top: 3px; }
+    .greeting-actions { display: flex; gap: 8px; }
+
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; border: none; line-height: 1; min-height: 44px; touch-action: manipulation; }
+    .btn:active { transform: scale(0.98); }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: #cbd5e1; }
+    .btn-ghost:hover { border-color: var(--border2); background: var(--surface); color: var(--white); }
+    .btn-primary { background: linear-gradient(135deg, var(--teal) 0%, #0c8a9a 100%); color: var(--white); box-shadow: 0 0 20px rgba(14,165,183,0.3), inset 0 1px 0 rgba(255,255,255,0.15); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(14,165,183,0.45); }
+    .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; box-shadow: 0 0 20px rgba(239,68,68,0.25); }
+    .btn-danger:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(239,68,68,0.4); }
+    .btn-sm { padding: 6px 14px; font-size: 0.78rem; min-height: 32px; }
+
+    /* ─── KPI ─── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; animation: fadeUp 0.6s 0.15s ease both; }
+    .kpi-card { background: rgba(8,14,30,0.6); border: 1px solid var(--border); border-radius: 20px; padding: 22px 24px; backdrop-filter: blur(10px); position: relative; overflow: hidden; transition: all 0.3s; }
+    .kpi-card::before { content: ''; position: absolute; inset: 0; opacity: 0; background: radial-gradient(circle at 80% 20%, rgba(14,165,183,0.08), transparent 60%); transition: opacity 0.4s; }
+    .kpi-card:hover::before { opacity: 1; }
+    .kpi-card:hover { border-color: rgba(14,165,183,0.2); transform: translateY(-2px); }
+    .kpi-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .kpi-label .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .kpi-value { font-family: 'Syne', sans-serif; font-size: 1.7rem; font-weight: 800; color: var(--white); line-height: 1; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .kpi-trend { font-size: 0.78rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; }
+    .kpi-trend.up { color: var(--good); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); }
+    .kpi-trend.down { color: var(--bad); background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+    .kpi-trend.neutral { color: var(--warn); background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.2); }
+    .kpi-icon { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; }
+
+    /* ─── CARD ─── */
+    .card { background: rgba(8,14,30,0.6); border: 1px solid var(--border); border-radius: 20px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: border-color 0.2s; }
+    .card:hover { border-color: rgba(255,255,255,0.12); }
+    .card-inner { padding: 24px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .card-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); letter-spacing: -0.01em; }
+    .card-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    /* ─── MAIN GRID ─── */
+    .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; margin-bottom: 20px; animation: fadeUp 0.6s 0.2s ease both; }
+    .second-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; animation: fadeUp 0.6s 0.25s ease both; }
+    .third-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; animation: fadeUp 0.6s 0.3s ease both; }
+
+    /* ─── TABLE ─── */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { text-align: left; font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; padding: 0 12px 10px; border-bottom: 1px solid var(--border); }
+    .data-row { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+    .data-row:hover { background: rgba(255,255,255,0.02); }
+    .data-row:last-child { border-bottom: none; }
+    .data-row td { padding: 12px; font-size: 0.86rem; vertical-align: middle; }
+
+    /* ─── STATUS BADGES ─── */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+    .badge.success { color: var(--good); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); }
+    .badge.pending { color: var(--warn); background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.2); }
+    .badge.failed  { color: var(--bad);  background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.2); }
+    .badge.info    { color: var(--teal-bright); background: rgba(14,165,183,0.1); border: 1px solid rgba(14,165,183,0.2); }
+
+    /* ─── ACTION BUTTONS ─── */
+    .action-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; border: 1px solid transparent; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+    }
+    .action-btn.approve { color: var(--good); background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.2); }
+    .action-btn.approve:hover { background: rgba(34,197,94,0.18); }
+    .action-btn.decline { color: var(--bad); background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); }
+    .action-btn.decline:hover { background: rgba(239,68,68,0.18); }
+    .action-btn.view { color: var(--teal-bright); background: rgba(14,165,183,0.08); border-color: rgba(14,165,183,0.2); }
+    .action-btn.view:hover { background: rgba(14,165,183,0.18); }
+
+    /* ─── FORM ELEMENTS ─── */
+    .form-group { margin-bottom: 14px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-label { display: block; font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .form-input, .form-select {
+      width: 100%; padding: 10px 14px; border-radius: 10px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+      outline: none; transition: all 0.2s;
+    }
+    .form-input:focus, .form-select:focus { border-color: rgba(14,165,183,0.4); background: rgba(14,165,183,0.04); box-shadow: 0 0 0 3px rgba(14,165,183,0.08); }
+    .form-input::placeholder { color: #334155; }
+    .form-select option { background: #080e1e; }
+    .form-actions { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+    .form-msg { font-size: 0.78rem; color: var(--teal-bright); }
+    .form-msg.err { color: var(--bad); }
+
+    /* ─── USER CELL ─── */
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-family: 'Syne', sans-serif; font-size: 0.7rem; font-weight: 800; color: #001018; flex-shrink: 0; }
+    .user-cell-name { font-size: 0.85rem; font-weight: 500; color: #cbd5e1; }
+    .user-cell-sub { font-size: 0.72rem; color: var(--muted); }
+
+    /* ─── STAT MINI ─── */
+    .stat-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { font-size: 0.82rem; color: #94a3b8; }
+    .stat-value { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--white); font-size: 0.95rem; }
+
+    /* ─── ALERT ITEMS ─── */
+    .alert-item { display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 8px; transition: all 0.2s; }
+    .alert-item:last-child { margin-bottom: 0; }
+    .alert-item:hover { border-color: rgba(255,255,255,0.12); }
+    .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .alert-text { font-size: 0.82rem; color: #94a3b8; line-height: 1.4; }
+    .alert-time { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+    /* ─── LOAN CARD ─── */
+    .loan-item { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px; transition: all 0.2s; }
+    .loan-item:hover { border-color: rgba(255,255,255,0.12); }
+    .loan-item:last-child { margin-bottom: 0; }
+    .loan-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .loan-meta { display: flex; gap: 16px; }
+    .loan-stat { text-align: center; }
+    .loan-stat-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .loan-stat-val { font-family: 'Syne', sans-serif; font-size: 0.88rem; font-weight: 700; color: var(--white); margin-top: 1px; }
+
+    /* ─── TABS ─── */
+    .tab-bar { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px; }
+    .tab-btn { padding: 6px 16px; border-radius: 9px; font-size: 0.8rem; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .tab-btn.active { background: rgba(14,165,183,0.15); border: 1px solid rgba(14,165,183,0.3); color: var(--teal-bright); }
+
+    /* ─── TRANSACTION TYPE ─── */
+    .tx-type { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 500; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } .main-grid { grid-template-columns: 1fr; } .third-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 1024px) { .app { grid-template-columns: 1fr; } .side { display: none !important; } .second-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .kpi-grid { grid-template-columns: 1fr; } .second-grid { grid-template-columns: 1fr; } .third-grid { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } .content { padding: 16px; } .greeting-row { flex-direction: column; align-items: flex-start; gap: 12px; } }
+
+    @media (max-width: 480px) {
+      :root { font-size: 13px; }
+      .content { padding: 12px; }
+      .topbar { height: 52px; padding: 0 8px; }
+      .topbar-actions { gap: 4px; }
+      .icon-btn { min-width: 44px; min-height: 44px; }
+      .admin-key-group { display: none; }
+      .admin-key-input { width: 100% !important; max-width: 100%; }
+      .page-title { font-size: 0.85rem; }
+      .page-title span { display: none; }
+      .greeting h2 { font-size: 1.2rem; }
+      .kpi-grid { gap: 10px; }
+      .kpi-card { padding: 14px; }
+      .kpi-value { font-size: 1.3rem; }
+      .card { border-radius: 16px; padding: 14px; }
+      .card-title { font-size: 0.9rem; }
+      .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; padding-bottom: 4px; }
+      .tab-btn { white-space: nowrap; }
+      .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+      .data-table { min-width: 500px; }
+      .data-table th, .data-table td { padding: 8px 10px; font-size: 0.78rem; }
+      .btn { padding: 9px 14px; font-size: 0.82rem; }
+      .form-input, .form-select { padding: 9px 12px; font-size: 0.86rem; }
+      .form-label { font-size: 0.68rem; }
+    }
+
+    @media (max-width: 360px) {
+      .content { padding: 10px; }
+      .kpi-card { padding: 12px; }
+      .kpi-value { font-size: 1.1rem; }
+      .data-table th, .data-table td { padding: 6px 8px; font-size: 0.74rem; }
+    }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+
+    /* ─── SECTION DIVIDER ─── */
+    .section-label {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ─── EMPTY STATE ─── */
+    .empty-state { text-align: center; padding: 32px; color: var(--muted); font-size: 0.85rem; }
+    .empty-state svg { opacity: 0.3; margin-bottom: 8px; }
+    .account-summary { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-top: 12px; color: var(--text); font-size: 0.9rem; }
+
+    /* ─── INTEREST VISUAL ─── */
+    .rate-display {
+      display: flex; align-items: flex-end; gap: 4px;
+      font-family: 'Syne', sans-serif; font-weight: 800;
+      font-size: 2.4rem; color: var(--teal-bright); line-height: 1;
+    }
+    .rate-display sup { font-size: 1rem; margin-bottom: 8px; color: var(--teal); }
+    .rate-caption { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+    /* ─── PROGRESS BAR ─── */
+    .prog-bar-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; margin-top: 6px; }
+    .prog-bar { height: 100%; border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="grid-bg"></div>
+
+  <div class="app">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="side">
+      <a class="brand" href="index.html">
+        <div class="logo-mark">⚙</div>
+        <div class="brand-text">First Global<br><span>Admin Portal</span></div>
+      </a>
+      <div class="admin-chip">Super Admin Access</div>
+
+      <nav class="side-nav">
+        <div class="nav-section">
+          <div class="nav-label">Admin</div>
+          <a href="admin.html" class="nav-link active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-8 8-8 8s-8-3-8-8V6l8-4z"/></svg>
+            <span>Admin Dashboard</span>
+          </a>
+          <a href="#" class="nav-link" id="approvals-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4M7 2v20l5-3 5 3V2"/></svg>
+            <span>Approvals</span>
+            <span class="nav-badge" id="pending-count">3</span>
+          </a>
+          <a href="#" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <span>Loans</span>
+            <span class="nav-badge teal">0</span>
+          </a>
+          <a href="#" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="7" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+            <span>Users</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-label">Operations</div>
+          <a href="dashboard.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            <span>User Dashboard</span>
+          </a>
+          <a href="transfers.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <span>Transfers</span>
+          </a>
+          <a href="bills.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <span>Bills</span>
+          </a>
+          <a href="support.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            <span>Support</span>
+            <span class="nav-badge">2</span>
+          </a>
+          <a href="branches.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/></svg>
+            <span>Branches</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-label">System</div>
+          <a href="#" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <span>Settings</span>
+          </a>
+          <a href="#" class="nav-link" onclick="localStorage.removeItem('token');localStorage.removeItem('user');window.location.href='login.html'">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            <span>Sign Out</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="side-footer">
+        <div class="user-chip">
+          <div class="avatar-sm">SA</div>
+          <div>
+            <div class="user-name">Super Admin</div>
+            <div class="user-role">Administrator</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <section class="main">
+      <header class="topbar">
+        <div class="page-title">Admin Panel <span>/ Control Center</span></div>
+        <div class="search-bar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input placeholder="Search users, queues, transactions…">
+        </div>
+        <div class="admin-key-group">
+          <input id="admin-key" class="form-input admin-key-input" type="password" placeholder="Admin key" value="CHANGE_ME_ADMIN">
+          <span id="admin-key-status" class="admin-key-status">Key loaded</span>
+        </div>
+        <div class="topbar-actions">
+          <div class="icon-btn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <div class="notif-dot"></div>
+          </div>
+          <div class="icon-btn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- Greeting -->
+        <div class="greeting-row">
+          <div class="greeting">
+            <h2>Admin Control Center 🛡️</h2>
+            <p id="dateLabel">Loading date… · Manage approvals, loans, interest &amp; operations</p>
+          </div>
+          <div class="greeting-actions">
+            <button class="btn btn-ghost" onclick="bulkApprove()">Approve All Pending</button>
+            <button class="btn btn-danger btn-sm" onclick="bulkDecline()">Decline All</button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(239,68,68,0.1)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.8"><path d="M9 12l2 2 4-4M7 2v20l5-3 5 3V2"/></svg>
+            </div>
+            <div class="kpi-label"><div class="dot" style="background:#ef4444"></div>Pending Approvals</div>
+            <div class="kpi-value" id="kpi-pending">3</div>
+            <span class="kpi-trend down">↑ Needs attention</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(14,165,183,0.1)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d4e8" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-8 8-8 8s-8-3-8-8V6l8-4z"/></svg>
+            </div>
+            <div class="kpi-label"><div class="dot" style="background:#22d4e8"></div>Active Loans</div>
+            <div class="kpi-value" id="kpi-loans">0</div>
+            <span class="kpi-trend neutral">Manage below</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(34,197,94,0.1)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <div class="kpi-label"><div class="dot" style="background:#22c55e"></div>Interest Rate</div>
+            <div class="kpi-value" id="kpi-rate">8.5%</div>
+            <span class="kpi-trend up">Current policy</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(245,200,66,0.1)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5c842" stroke-width="1.8"><path d="M22 17H2a3 3 0 002-3V9a7 7 0 0114 0v5a3 3 0 002 3z"/></svg>
+            </div>
+            <div class="kpi-label"><div class="dot" style="background:#f5c842"></div>Bills Processed</div>
+            <div class="kpi-value" id="kpi-bills">0</div>
+            <span class="kpi-trend neutral">This session</span>
+          </div>
+        </div>
+
+        <!-- ──────────── APPROVALS QUEUE ──────────── -->
+        <div class="section-label">Pending Approvals Queue</div>
+        <div class="card" style="margin-bottom:20px; animation: fadeUp 0.6s 0.2s ease both;">
+          <div class="card-inner">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Transfers & Withdrawals</div>
+                <div class="card-sub">Review and approve or decline pending requests</div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-ghost btn-sm" onclick="bulkApprove()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                  Approve All
+                </button>
+                <button class="action-btn decline btn-sm" style="padding:7px 14px" onclick="bulkDecline()">Decline All</button>
+              </div>
+            </div>
+            <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>User</th>
+                  <th>Details</th>
+                  <th>Amount</th>
+                  <th>Requested</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="q-body"></tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ──────────── MAIN GRID: Interest + Alerts ──────────── -->
+        <div class="main-grid" style="animation: fadeUp 0.6s 0.25s ease both;">
+          <!-- Interest Settings -->
+          <div class="card">
+            <div class="card-inner">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Interest Policy</div>
+                  <div class="card-sub">Savings rate configuration</div>
+                </div>
+                <div style="text-align:right">
+                  <div class="rate-display"><span id="rate-display-val">8.5</span><sup>%</sup></div>
+                  <div class="rate-caption">Current APY</div>
+                </div>
+              </div>
+              <form id="int-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Default Savings Interest (% / year)</label>
+                    <input id="int-rate" class="form-input" type="number" min="0" step="0.1" value="8.5" oninput="document.getElementById('rate-display-val').textContent=this.value">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Top-up Bonus (% / year)</label>
+                    <input id="int-bonus" class="form-input" type="number" min="0" step="0.1" value="2.0">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Apply Top-up Interest?</label>
+                    <select id="int-top" class="form-select"><option>Enabled</option><option>Disabled</option></select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Effective From</label>
+                    <input id="int-date" class="form-input" type="date">
+                  </div>
+                </div>
+
+                <!-- Visual rate bars -->
+                <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+                  <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);margin-bottom:6px">
+                    <span>Base Rate</span><span id="base-pct-label">8.5%</span>
+                  </div>
+                  <div class="prog-bar-bg"><div class="prog-bar" id="base-prog" style="width:85%;background:linear-gradient(90deg,var(--teal),var(--teal-bright))"></div></div>
+                  <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--muted);margin-top:10px;margin-bottom:6px">
+                    <span>With Top-up Bonus</span><span id="total-pct-label">10.5%</span>
+                  </div>
+                  <div class="prog-bar-bg"><div class="prog-bar" id="total-prog" style="width:100%;background:linear-gradient(90deg,var(--teal),#22c55e)"></div></div>
+                </div>
+
+                <div class="form-actions">
+                  <button class="btn btn-primary" type="submit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save Policy
+                  </button>
+                  <span class="form-msg" id="int-msg"></span>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Alerts panel -->
+          <div class="card">
+            <div class="card-inner">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">System Alerts</div>
+                  <div class="card-sub">Recent admin activity</div>
+                </div>
+                <span style="font-size:0.7rem;color:var(--teal-bright);cursor:pointer">Mark all read</span>
+              </div>
+              <div id="alerts-list">
+                <div class="alert-item">
+                  <div class="alert-dot" style="background:#ef4444;box-shadow:0 0 6px #ef4444"></div>
+                  <div>
+                    <div class="alert-text">3 transactions pending approval — action required</div>
+                    <div class="alert-time">Just now</div>
+                  </div>
+                </div>
+                <div class="alert-item">
+                  <div class="alert-dot" style="background:#f5c842;box-shadow:0 0 6px #f5c842"></div>
+                  <div>
+                    <div class="alert-text">@uche requested a $80,000 withdrawal — large amount</div>
+                    <div class="alert-time">5 min ago</div>
+                  </div>
+                </div>
+                <div class="alert-item">
+                  <div class="alert-dot" style="background:#22d4e8;box-shadow:0 0 6px #22d4e8"></div>
+                  <div>
+                    <div class="alert-text">Interest policy last updated 30 days ago — review recommended</div>
+                    <div class="alert-time">1 hour ago</div>
+                  </div>
+                </div>
+                <div class="alert-item">
+                  <div class="alert-dot" style="background:#22c55e;box-shadow:0 0 6px #22c55e"></div>
+                  <div>
+                    <div class="alert-text">2 support tickets marked resolved by agent</div>
+                    <div class="alert-time">2 hours ago</div>
+                  </div>
+                </div>
+                <div class="alert-item">
+                  <div class="alert-dot" style="background:#64748b"></div>
+                  <div>
+                    <div class="alert-text">System backup completed successfully at 02:00 UTC</div>
+                    <div class="alert-time">Yesterday</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ──────────── SECOND GRID: Loans + Bills ──────────── -->
+        <div class="second-grid">
+          <!-- Loans -->
+          <div class="card">
+            <div class="card-inner">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Loan Management</div>
+                  <div class="card-sub">Create and manage user loans</div>
+                </div>
+              </div>
+              <form id="loan-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">User ID / Email</label>
+                    <input id="loan-user" class="form-input" required placeholder="@user or email"/>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Principal ($)</label>
+                    <input id="loan-amt" class="form-input" required type="number" min="1000" placeholder="50,000"/>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Interest (% per year)</label>
+                    <input id="loan-rate" class="form-input" type="number" min="0" step="0.1" value="12">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Tenure (months)</label>
+                    <input id="loan-ten" class="form-input" type="number" min="1" value="6">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Purpose</label>
+                    <input id="loan-note" class="form-input" placeholder="Business expansion"/>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Disburse Immediately?</label>
+                    <select id="loan-disb" class="form-select"><option>Yes</option><option>No</option></select>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-primary" type="submit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                    Create Loan
+                  </button>
+                  <span class="form-msg" id="loan-msg"></span>
+                </div>
+              </form>
+
+              <div style="margin-top:20px">
+                <div class="section-label">Active Loans</div>
+                <div id="loan-list">
+                  <div class="empty-state">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                    <p>No loans created yet</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bills + Account Operations -->
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <!-- Bills -->
+            <div class="card">
+              <div class="card-inner">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Pay Bill for User</div>
+                    <div class="card-sub">Admin-triggered bill payment</div>
+                  </div>
+                  <span class="badge info" id="bill-count-badge">0 today</span>
+                </div>
+                <form id="bill-form">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">User</label>
+                      <input id="bill-user" class="form-input" required placeholder="@username"/>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Bill Type</label>
+                      <select id="bill-type" class="form-select">
+                        <option>Utility</option><option>Power</option><option>TV</option><option>Internet</option><option>Water</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Account / Phone / Meter</label>
+                      <input id="bill-acct" class="form-input" required placeholder="e.g. AC1234567"/>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Amount ($)</label>
+                      <input id="bill-amt" class="form-input" type="number" min="1" required placeholder="0.00"/>
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 17H2a3 3 0 002-3V9a7 7 0 0114 0v5a3 3 0 002 3z"/></svg>
+                      Pay Bill
+                    </button>
+                    <span class="form-msg" id="bill-msg"></span>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Account operations -->
+            <div class="card">
+              <div class="card-inner">
+                <div class="card-header">
+                  <div>
+                    <div class="card-title">Account Operations</div>
+                    <div class="card-sub">Lookup users, add balance, or delete accounts</div>
+                  </div>
+                  <span class="badge info" id="account-status-badge">Ready</span>
+                </div>
+                <form id="account-form">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">User email or ID</label>
+                      <input id="account-query" class="form-input" placeholder="jane@example.com or 14" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Credit amount ($)</label>
+                      <input id="account-amt" class="form-input" type="number" min="1" placeholder="5000" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Note</label>
+                      <input id="account-note" class="form-input" placeholder="Reason for top-up" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Actions</label>
+                      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                        <button class="btn btn-ghost" type="button" onclick="searchAccount()">Lookup</button>
+                        <button class="btn btn-primary" type="button" onclick="creditAccount()">Add Balance</button>
+                        <button class="btn btn-danger btn-sm" type="button" onclick="deleteAccount()">Delete Account</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="account-details" class="account-summary empty-state">
+                    Enter a user email or ID and click Lookup to manage an account.
+                  </div>
+                  <div class="form-actions">
+                    <span class="form-msg" id="account-msg"></span>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ──────────── CARD REQUESTS ──────────── -->
+        <div class="card" style="animation: fadeUp 0.6s 0.32s ease both; margin-bottom: 20px;">
+          <div class="card-inner">
+            <div class="card-header" style="margin-bottom:16px">
+              <div>
+                <div class="card-title">Card Requests</div>
+                <div class="card-sub">Passport-verified card applications pending approval</div>
+              </div>
+              <button class="btn btn-ghost" onclick="loadCardRequests()" style="padding:6px 12px;font-size:0.78rem">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                Refresh
+              </button>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Ref</th>
+                    <th>User</th>
+                    <th>Card Type</th>
+                    <th>Passport / ID</th>
+                    <th>Payment Ref</th>
+                    <th>Fee</th>
+                    <th>Submitted</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="card-req-tbody">
+                  <tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);font-size:0.83rem">Loading card requests…</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <span class="form-msg" id="card-req-msg" style="display:block;margin-top:10px"></span>
+          </div>
+        </div>
+
+        <!-- ──────────── PAYMENT SETTINGS ──────────── -->
+        <div class="card" style="animation: fadeUp 0.6s 0.34s ease both; margin-bottom: 20px;">
+          <div class="card-inner">
+            <div class="card-header" style="margin-bottom:16px">
+              <div>
+                <div class="card-title">Crypto Payment Settings</div>
+                <div class="card-sub">Set wallet addresses shown to users when they request a card</div>
+              </div>
+              <button class="btn btn-ghost" onclick="loadPaySettings()" style="padding:6px 12px;font-size:0.78rem">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                Reload
+              </button>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:16px">
+              <!-- USDT -->
+              <div style="background:rgba(38,161,123,0.06);border:1px solid rgba(38,161,123,0.2);border-radius:14px;padding:16px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                  <span style="width:10px;height:10px;border-radius:50%;background:#26a17b;display:inline-block;flex-shrink:0"></span>
+                  <span style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:#26a17b;text-transform:uppercase;letter-spacing:.05em">USDT</span>
+                </div>
+                <label style="display:block;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px">Network</label>
+                <input class="form-input" id="pay-usdt-network" placeholder="e.g. TRC-20 (Tron)" style="margin-bottom:10px;font-size:0.82rem;padding:8px 10px">
+                <label style="display:block;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px">Wallet Address</label>
+                <input class="form-input" id="pay-usdt-address" placeholder="TRC20 wallet address" style="font-size:0.82rem;padding:8px 10px;font-family:monospace">
+              </div>
+              <!-- BTC -->
+              <div style="background:rgba(247,147,26,0.06);border:1px solid rgba(247,147,26,0.2);border-radius:14px;padding:16px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                  <span style="width:10px;height:10px;border-radius:50%;background:#f7931a;display:inline-block;flex-shrink:0"></span>
+                  <span style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:#f7931a;text-transform:uppercase;letter-spacing:.05em">BTC</span>
+                </div>
+                <label style="display:block;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px">Network</label>
+                <input class="form-input" id="pay-btc-network" placeholder="e.g. Bitcoin" style="margin-bottom:10px;font-size:0.82rem;padding:8px 10px">
+                <label style="display:block;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px">Wallet Address</label>
+                <input class="form-input" id="pay-btc-address" placeholder="Bitcoin address" style="font-size:0.82rem;padding:8px 10px;font-family:monospace">
+              </div>
+              <!-- TRON -->
+              <div style="background:rgba(239,0,39,0.06);border:1px solid rgba(239,0,39,0.2);border-radius:14px;padding:16px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                  <span style="width:10px;height:10px;border-radius:50%;background:#ef0027;display:inline-block;flex-shrink:0"></span>
+                  <span style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:#ef0027;text-transform:uppercase;letter-spacing:.05em">TRON</span>
+                </div>
+                <label style="display:block;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px">Network</label>
+                <input class="form-input" id="pay-tron-network" placeholder="e.g. TRC-20" style="margin-bottom:10px;font-size:0.82rem;padding:8px 10px">
+                <label style="display:block;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px">Wallet Address</label>
+                <input class="form-input" id="pay-tron-address" placeholder="TRX address" style="font-size:0.82rem;padding:8px 10px;font-family:monospace">
+              </div>
+              <!-- ETH -->
+              <div style="background:rgba(98,126,234,0.06);border:1px solid rgba(98,126,234,0.2);border-radius:14px;padding:16px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                  <span style="width:10px;height:10px;border-radius:50%;background:#627eea;display:inline-block;flex-shrink:0"></span>
+                  <span style="font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;color:#627eea;text-transform:uppercase;letter-spacing:.05em">ETH</span>
+                </div>
+                <label style="display:block;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px">Network</label>
+                <input class="form-input" id="pay-eth-network" placeholder="e.g. ERC-20 (Ethereum)" style="margin-bottom:10px;font-size:0.82rem;padding:8px 10px">
+                <label style="display:block;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:5px">Wallet Address</label>
+                <input class="form-input" id="pay-eth-address" placeholder="0x Ethereum address" style="font-size:0.82rem;padding:8px 10px;font-family:monospace">
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px">
+              <button class="btn btn-primary" onclick="savePaySettings()" id="paySettingsBtn">Save Wallet Addresses</button>
+              <span class="form-msg" id="pay-settings-msg" style="display:block"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ──────────── THIRD GRID: Stats ──────────── -->
+        <div class="third-grid" style="animation: fadeUp 0.6s 0.35s ease both;">
+          <!-- Queue Summary -->
+          <div class="card">
+            <div class="card-inner">
+              <div class="card-header" style="margin-bottom:12px">
+                <div>
+                  <div class="card-title">Queue Summary</div>
+                  <div class="card-sub">This session</div>
+                </div>
+              </div>
+              <div id="queue-summary">
+                <div class="stat-row"><span class="stat-label">Total Requests</span><span class="stat-value" id="s-total">3</span></div>
+                <div class="stat-row"><span class="stat-label">Pending</span><span class="stat-value" style="color:var(--warn)" id="s-pending">3</span></div>
+                <div class="stat-row"><span class="stat-label">Approved</span><span class="stat-value" style="color:var(--good)" id="s-approved">0</span></div>
+                <div class="stat-row"><span class="stat-label">Declined</span><span class="stat-value" style="color:var(--bad)" id="s-declined">0</span></div>
+                <div class="stat-row"><span class="stat-label">Total Value (Pending)</span><span class="stat-value" id="s-value">$225,000</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Admin Actions -->
+          <div class="card">
+            <div class="card-inner">
+              <div class="card-header" style="margin-bottom:12px">
+                <div>
+                  <div class="card-title">Admin Actions Log</div>
+                  <div class="card-sub">Latest operations</div>
+                </div>
+              </div>
+              <div id="action-log">
+                <div class="empty-state" style="padding:20px">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <p style="margin-top:8px;font-size:0.8rem">No actions yet this session</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Status -->
+          <div class="card">
+            <div class="card-inner">
+              <div class="card-header" style="margin-bottom:12px">
+                <div>
+                  <div class="card-title">System Status</div>
+                  <div class="card-sub">All services</div>
+                </div>
+                <span class="badge success">Operational</span>
+              </div>
+              <div class="stat-row">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e"></div>
+                  <span class="stat-label">Core Banking API</span>
+                </div>
+                <span class="badge success">Online</span>
+              </div>
+              <div class="stat-row">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e"></div>
+                  <span class="stat-label">Transfer Gateway</span>
+                </div>
+                <span class="badge success">Online</span>
+              </div>
+              <div class="stat-row">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e"></div>
+                  <span class="stat-label">Bill Payment Engine</span>
+                </div>
+                <span class="badge success">Online</span>
+              </div>
+              <div class="stat-row">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#f5c842;box-shadow:0 0 6px #f5c842;animation:pulse 2s infinite"></div>
+                  <span class="stat-label">Fraud Detection</span>
+                </div>
+                <span class="badge pending">Monitoring</span>
+              </div>
+              <div class="stat-row">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e"></div>
+                  <span class="stat-label">Database Cluster</span>
+                </div>
+                <span class="badge success">Online</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </section>
+  </div><!-- /app -->
+
+  <script>
+    // ── Date label
+    const now = new Date();
+    document.getElementById('dateLabel').textContent =
+      now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'})
+      + ' · Manage approvals, loans, interest & operations';
+
+    // ── Data
+    const adminKeyDefault = "CHANGE_ME_ADMIN";
+    let adminKey = localStorage.getItem('adminKey') || adminKeyDefault;
+    let selectedUser = null;
+    const queue = [];
+    const loans = [];
+    const actionLog = [];
+    let billCount = 0;
+    const token = localStorage.getItem('token') || '';
+
+    const fmt = n => '$' + Intl.NumberFormat().format(+n);
+
+    function setAdminKeyStatus() {
+      const status = document.getElementById('admin-key-status');
+      status.textContent = adminKey ? 'Key loaded' : 'Enter admin key';
+      status.style.color = adminKey ? 'var(--teal-bright)' : 'var(--muted)';
+    }
+
+    function getAdminHeaders(body) {
+      const headers = {'Content-Type': 'application/json'};
+      if (adminKey) headers['X-Admin-Key'] = adminKey;
+      return headers;
+    }
+
+    async function adminRequest(path, opts = {}) {
+      const request = {
+        headers: getAdminHeaders(opts.body),
+        ...opts
+      };
+      if (request.body && typeof request.body !== 'string') {
+        request.body = JSON.stringify(request.body);
+      }
+      const res = await fetch(path, request);
+      const payload = await res.json().catch(() => null);
+      if (!res.ok) {
+        const message = payload?.error || payload?.message || 'Admin request failed';
+        throw new Error(message);
+      }
+      return payload;
+    }
+
+    async function refreshAdminQueue() {
+      try {
+        const data = await adminRequest('/api/admin/queue');
+        queue.splice(0, queue.length, ...data.map(tx => ({
+          id: tx.id,
+          type: tx.type || 'Transaction',
+          user: tx.user_name || tx.user_email || `User #${tx.user_id}`,
+          avatar: (tx.user_name || tx.user_email || 'User').slice(0,2).toUpperCase(),
+          color: '#0ea5b7',
+          details: tx.counterparty_info || tx.note || tx.type || 'Detail',
+          amount: Number(tx.amount) || 0,
+          date: tx.requested_at ? tx.requested_at.split('T')[0] : '',
+          status: tx.status || 'Pending'
+        })));
+        paintQueue();
+        logAction(`Loaded ${queue.length} admin queue items`);
+      } catch (err) {
+        console.warn(err);
+        logAction(`Unable to refresh admin queue: ${err.message}`);
+      }
+    }
+
+    async function loadInterestPolicy() {
+      try {
+        const policy = await adminRequest('/api/admin/interest');
+        if (policy.base !== undefined) {
+          document.getElementById('int-rate').value = policy.base;
+          document.getElementById('int-bonus').value = policy.bonus || 0;
+          document.getElementById('int-top').value = policy.topup ? 'Enabled' : 'Disabled';
+          document.getElementById('int-date').value = policy.effective_from || '';
+          document.getElementById('kpi-rate').textContent = `${policy.base.toFixed(1)}%`;
+          document.getElementById('rate-display-val').textContent = policy.base.toFixed(1);
+          document.getElementById('base-pct-label').textContent = `${policy.base.toFixed(1)}%`;
+          const total = policy.topup ? policy.base + (policy.bonus || 0) : policy.base;
+          document.getElementById('total-pct-label').textContent = `${total.toFixed(1)}%`;
+          document.getElementById('base-prog').style.width = `${Math.min(policy.base * 5, 100)}%`;
+          document.getElementById('total-prog').style.width = `${Math.min(total * 5, 100)}%`;
+        }
+      } catch (err) {
+        console.warn('Interest load failed', err);
+      }
+    }
+
+    async function resolveAdminUser(query) {
+      if (!query) throw new Error('Enter an email or user id');
+      const response = await adminRequest(`/api/admin/users?query=${encodeURIComponent(query)}`);
+      if (Array.isArray(response)) {
+        if (!response.length) throw new Error('No users found');
+        return response[0];
+      }
+      return response.user ? {...response.user, account: response.account} : response;
+    }
+
+    function updateSelectedUserDisplay() {
+      const node = document.getElementById('account-details');
+      if (!selectedUser) {
+        node.className = 'account-summary empty-state';
+        node.innerHTML = 'Enter a user email or ID and click Lookup to manage an account.';
+        return;
+      }
+      const balance = selectedUser.account ? selectedUser.account.balance : 0;
+      node.className = 'account-summary';
+      node.innerHTML = `
+        <div style="display:grid;gap:10px;">
+          <div><strong>${selectedUser.full_name || selectedUser.email || 'User'}</strong> · ${selectedUser.email || ''}</div>
+          <div>User ID: ${selectedUser.id}</div>
+          <div>Account: ${selectedUser.account?.account_no || 'N/A'} • ${selectedUser.account?.currency || 'USD'} ${fmt(balance)}</div>
+          <div>Role: ${selectedUser.role || 'user'}</div>
+        </div>
+      `;
+    }
+
+    function showAccountMessage(message, isError = false) {
+      const el = document.getElementById('account-msg');
+      el.textContent = message;
+      el.className = isError ? 'form-msg err' : 'form-msg';
+      setTimeout(() => { if (el.textContent === message) el.textContent = ''; }, 5000);
+    }
+
+    async function searchAccount() {
+      const query = document.getElementById('account-query').value.trim();
+      try {
+        const response = await adminRequest(`/api/admin/users?query=${encodeURIComponent(query)}`);
+        selectedUser = Array.isArray(response)
+          ? response[0]
+          : response.user
+            ? {...response.user, account: response.account}
+            : response;
+        updateSelectedUserDisplay();
+        showAccountMessage('User found. Ready to manage account.');
+      } catch (err) {
+        selectedUser = null;
+        updateSelectedUserDisplay();
+        showAccountMessage(err.message, true);
+      }
+    }
+
+    async function creditAccount() {
+      if (!selectedUser) {
+        showAccountMessage('Lookup a user before adding balance.', true);
+        return;
+      }
+      const amount = Number(document.getElementById('account-amt').value);
+      const note = document.getElementById('account-note').value.trim();
+      if (!amount || amount <= 0) {
+        showAccountMessage('Enter a valid amount to credit.', true);
+        return;
+      }
+      try {
+        const response = await adminRequest(`/api/admin/users/${selectedUser.id}/balance`, {
+          method: 'POST',
+          body: { amount, note }
+        });
+        selectedUser.account.balance = Number(selectedUser.account.balance || 0) + amount;
+        updateSelectedUserDisplay();
+        showAccountMessage(`Balance updated: ${fmt(selectedUser.account.balance)}`);
+        logAction(`Credited ${fmt(amount)} to ${selectedUser.email || selectedUser.full_name}`);
+      } catch (err) {
+        showAccountMessage(err.message, true);
+      }
+    }
+
+    async function deleteAccount() {
+      if (!selectedUser) {
+        showAccountMessage('Lookup a user before deleting.', true);
+        return;
+      }
+      if (!confirm(`Delete account for ${selectedUser.full_name || selectedUser.email}? This cannot be undone.`)) {
+        return;
+      }
+      try {
+        await adminRequest(`/api/admin/users/${selectedUser.id}`, { method: 'DELETE' });
+        showAccountMessage('Account deleted successfully.');
+        logAction(`Deleted account for ${selectedUser.email || selectedUser.full_name}`);
+        selectedUser = null;
+        updateSelectedUserDisplay();
+        refreshAdminQueue();
+      } catch (err) {
+        showAccountMessage(err.message, true);
+      }
+    }
+
+    const statusBadge = s => ({
+      Pending:  '<span class="badge pending">Pending</span>',
+      Approved: '<span class="badge success">Approved</span>',
+      Declined: '<span class="badge failed">Declined</span>'
+    })[s] || s;
+
+    function typeChip(t) {
+      const map = {
+        Transfer:   {bg:'rgba(14,165,183,0.12)', color:'#22d4e8'},
+        Withdrawal: {bg:'rgba(245,200,66,0.12)', color:'#f5c842'},
+        Loan:       {bg:'rgba(139,92,246,0.12)', color:'#a78bfa'}
+      };
+      const c = map[t] || {bg:'rgba(255,255,255,0.06)',color:'#94a3b8'};
+      return `<span class="tx-type" style="background:${c.bg};color:${c.color}">${t}</span>`;
+    }
+
+    // ── Render queue
+    function paintQueue() {
+      const pending = queue.filter(r => r.status === 'Pending').length;
+      const approved = queue.filter(r => r.status === 'Approved').length;
+      const declined = queue.filter(r => r.status === 'Declined').length;
+      const pendingVal = queue.filter(r => r.status === 'Pending').reduce((a,b) => a+b.amount, 0);
+
+      document.getElementById('kpi-pending').textContent = pending;
+      document.getElementById('pending-count').textContent = pending;
+      document.getElementById('s-total').textContent = queue.length;
+      document.getElementById('s-pending').textContent = pending;
+      document.getElementById('s-approved').textContent = approved;
+      document.getElementById('s-declined').textContent = declined;
+      document.getElementById('s-value').textContent = fmt(pendingVal);
+
+      document.getElementById('q-body').innerHTML = queue.map(r => `
+        <tr class="data-row">
+          <td>${typeChip(r.type)}</td>
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar" style="background:${r.color}20;border:1px solid ${r.color}40;color:${r.color}">${r.avatar}</div>
+              <div>
+                <div class="user-cell-name">${r.user}</div>
+                <div class="user-cell-sub">Account holder</div>
+              </div>
+            </div>
+          </td>
+          <td style="color:#94a3b8;font-size:0.82rem">${r.details}</td>
+          <td><span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--white)">${fmt(r.amount)}</span></td>
+          <td style="color:var(--muted);font-size:0.82rem">${r.date}</td>
+          <td>${statusBadge(r.status)}</td>
+          <td>
+            ${r.status === 'Pending'
+              ? `<div style="display:flex;gap:6px">
+                   <button class="action-btn approve" onclick="approve(${r.id})">✓ Approve</button>
+                   <button class="action-btn decline" onclick="decline(${r.id})">✗ Decline</button>
+                 </div>`
+              : `<button class="action-btn view" onclick="">View</button>`
+            }
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // ── Render loans
+    function paintLoans() {
+      document.getElementById('kpi-loans').textContent = loans.filter(l => l.status !== 'Declined').length;
+      const el = document.getElementById('loan-list');
+      if (!loans.length) {
+        el.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><p>No loans created yet</p></div>`;
+        return;
+      }
+      el.innerHTML = loans.map((l, idx) => {
+        const r = (l.rate/100)/12, n = l.tenure, P = l.amount;
+        const emi = r > 0 ? P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1) : P/n;
+        return `
+          <div class="loan-item">
+            <div class="loan-top">
+              <div class="user-cell">
+                <div class="user-avatar" style="background:rgba(14,165,183,0.15);color:var(--teal-bright)">LN</div>
+                <div>
+                  <div class="user-cell-name">${l.user}</div>
+                  <div class="user-cell-sub">${l.note || 'No purpose stated'} · ${l.tenure}m tenure</div>
+                </div>
+              </div>
+              ${statusBadge(l.status)}
+            </div>
+            <div class="loan-meta">
+              <div class="loan-stat"><div class="loan-stat-label">Principal</div><div class="loan-stat-val">${fmt(P)}</div></div>
+              <div class="loan-stat"><div class="loan-stat-label">Rate</div><div class="loan-stat-val">${l.rate}%</div></div>
+              <div class="loan-stat"><div class="loan-stat-label">EMI/mo</div><div class="loan-stat-val">${fmt(emi.toFixed(0))}</div></div>
+            </div>
+            ${l.status === 'Pending' ? `<div style="display:flex;gap:6px;margin-top:10px">
+              <button class="action-btn approve" onclick="loanApprove(${idx})">✓ Approve Loan</button>
+              <button class="action-btn decline" onclick="loanDecline(${idx})">✗ Decline</button>
+            </div>` : ''}
+          </div>`;
+      }).join('');
+    }
+
+    // ── Action log
+    function logAction(msg) {
+      const t = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+      actionLog.unshift({msg, t});
+      const el = document.getElementById('action-log');
+      el.innerHTML = actionLog.slice(0,6).map(a => `
+        <div class="alert-item" style="margin-bottom:6px">
+          <div class="alert-dot" style="background:var(--teal-bright)"></div>
+          <div><div class="alert-text">${a.msg}</div><div class="alert-time">${a.t}</div></div>
+        </div>`).join('');
+    }
+
+    // ── Queue actions
+    async function applyTransactionAction(id, action) {
+      const r = queue.find(x => x.id === id);
+      if (!r || r.status !== 'Pending') return;
+      try {
+        const result = await adminRequest(`/api/admin/transactions/${id}/${action}`, { method: 'POST' });
+        r.status = result.status || (action === 'approve' ? 'Approved' : 'Declined');
+        paintQueue();
+        logAction(`${action === 'approve' ? 'Approved' : 'Declined'} ${r.type} of ${fmt(r.amount)} for ${r.user}`);
+      } catch (err) {
+        logAction(`Failed to ${action} request ${id}: ${err.message}`);
+      }
+    }
+
+    function approve(id) { applyTransactionAction(id, 'approve'); }
+    function decline(id) { applyTransactionAction(id, 'decline'); }
+
+    async function bulkApprove() {
+      const pending = queue.filter(r => r.status === 'Pending');
+      await Promise.all(pending.map(r => applyTransactionAction(r.id, 'approve')));
+      if (pending.length) logAction(`Bulk approved ${pending.length} pending request(s)`);
+    }
+
+    async function bulkDecline() {
+      const pending = queue.filter(r => r.status === 'Pending');
+      await Promise.all(pending.map(r => applyTransactionAction(r.id, 'decline')));
+      if (pending.length) logAction(`Bulk declined ${pending.length} pending request(s)`);
+    }
+
+    // ── Loan actions
+    async function loanApprove(i) {
+      const loan = loans[i];
+      if (!loan) return;
+      try {
+        await adminRequest(`/api/admin/loans/${loan.id}/approve`, { method: 'POST' });
+        loan.status = 'Approved';
+        paintLoans();
+        logAction(`Loan approved for ${loan.user}`);
+      } catch (err) {
+        logAction(`Failed to approve loan for ${loan.user}: ${err.message}`);
+      }
+    }
+    async function loanDecline(i) {
+      const loan = loans[i];
+      if (!loan) return;
+      try {
+        await adminRequest(`/api/admin/loans/${loan.id}/decline`, { method: 'POST' });
+        loan.status = 'Declined';
+        paintLoans();
+        logAction(`Loan declined for ${loan.user}`);
+      } catch (err) {
+        logAction(`Failed to decline loan for ${loan.user}: ${err.message}`);
+      }
+    }
+
+    // ── Interest form
+    document.getElementById('int-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const rate = parseFloat(document.getElementById('int-rate').value);
+      const bonus = parseFloat(document.getElementById('int-bonus').value);
+      const topup = document.getElementById('int-top').value;
+      const date = document.getElementById('int-date').value;
+      const total = topup === 'Enabled' ? rate + bonus : rate;
+      const msg = document.getElementById('int-msg');
+      try {
+        await adminRequest('/api/admin/interest', {
+          method: 'POST',
+          body: { base: rate, bonus, topup: topup === 'Enabled', effective_from: date }
+        });
+        document.getElementById('kpi-rate').textContent = rate.toFixed(1) + '%';
+        document.getElementById('rate-display-val').textContent = rate.toFixed(1);
+        document.getElementById('base-pct-label').textContent = rate.toFixed(1) + '%';
+        document.getElementById('total-pct-label').textContent = total.toFixed(1) + '%';
+        document.getElementById('base-prog').style.width = Math.min(rate * 5, 100) + '%';
+        document.getElementById('total-prog').style.width = Math.min(total * 5, 100) + '%';
+        msg.textContent = `✓ Saved: ${rate}% base${topup==='Enabled'?' + '+bonus+'% bonus='+total+'%':''} · ${date || 'Effective now'}`;
+        logAction(`Interest policy updated to ${rate}% APY`);
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.className = 'form-msg err';
+      }
+      setTimeout(() => msg.textContent = '', 4000);
+    });
+
+    // ── Loan form
+    document.getElementById('loan-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const userQuery = document.getElementById('loan-user').value.trim();
+      const principal = Number(document.getElementById('loan-amt').value);
+      const rate = Number(document.getElementById('loan-rate').value);
+      const tenure = Number(document.getElementById('loan-ten').value);
+      const note = document.getElementById('loan-note').value.trim();
+      const msg = document.getElementById('loan-msg');
+      if (!userQuery || principal <= 0) {
+        msg.textContent = 'Enter a valid user and loan amount';
+        msg.className = 'form-msg err';
+        return;
+      }
+      try {
+        const userData = await resolveAdminUser(userQuery);
+        await adminRequest('/api/admin/loans', {
+          method: 'POST',
+          body: {
+            user_id: userData.id,
+            principal,
+            rate,
+            tenure_months: tenure,
+            note
+          }
+        });
+        msg.textContent = `✓ Loan created for ${userData.email || userData.full_name}`;
+        msg.className = 'form-msg';
+        logAction(`Loan request created for ${userData.email || userData.full_name} (${fmt(principal)})`);
+        e.target.reset();
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.className = 'form-msg err';
+      }
+      setTimeout(() => { if (msg.textContent) msg.textContent = ''; }, 5000);
+    });
+
+    // ── Bills form
+    document.getElementById('bill-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const userQuery = document.getElementById('bill-user').value.trim();
+      const type = document.getElementById('bill-type').value;
+      const acct = document.getElementById('bill-acct').value.trim();
+      const amt = Number(document.getElementById('bill-amt').value);
+      const msg = document.getElementById('bill-msg');
+      if (!userQuery || amt <= 0) {
+        msg.textContent = 'Enter a valid user and amount';
+        msg.className = 'form-msg err';
+        return;
+      }
+      try {
+        const userData = await resolveAdminUser(userQuery);
+        const response = await adminRequest('/api/admin/bills', {
+          method: 'POST',
+          body: { user: userQuery, type, account: acct, amount: amt }
+        });
+        billCount++;
+        document.getElementById('bill-count-badge').textContent = billCount + ' today';
+        document.getElementById('kpi-bills').textContent = billCount;
+        msg.textContent = `✓ ${type} bill of ${fmt(amt)} paid for ${userData.email || userData.full_name}`;
+        msg.className = 'form-msg';
+        logAction(`Bill payment: ${fmt(amt)} ${type} for ${userData.email || userData.full_name}`);
+        e.target.reset();
+      } catch (err) {
+        msg.textContent = err.message;
+        msg.className = 'form-msg err';
+      }
+      setTimeout(() => { if (msg.textContent) msg.textContent = ''; }, 5000);
+    });
+
+    // ── Interest rate visual sync
+    document.getElementById('int-rate').addEventListener('input', function() {
+      const rate = parseFloat(this.value) || 0;
+      const bonus = parseFloat(document.getElementById('int-bonus').value) || 0;
+      const topup = document.getElementById('int-top').value;
+      const total = topup === 'Enabled' ? rate + bonus : rate;
+      document.getElementById('base-pct-label').textContent = rate.toFixed(1) + '%';
+      document.getElementById('total-pct-label').textContent = total.toFixed(1) + '%';
+      document.getElementById('base-prog').style.width = Math.min(rate * 5, 100) + '%';
+      document.getElementById('total-prog').style.width = Math.min(total * 5, 100) + '%';
+    });
+
+    document.getElementById('int-bonus').addEventListener('input', function() {
+      const rate = parseFloat(document.getElementById('int-rate').value) || 0;
+      const bonus = parseFloat(this.value) || 0;
+      const topup = document.getElementById('int-top').value;
+      const total = topup === 'Enabled' ? rate + bonus : rate;
+      document.getElementById('total-pct-label').textContent = total.toFixed(1) + '%';
+      document.getElementById('total-prog').style.width = Math.min(total * 5, 100) + '%';
+    });
+
+    // ── Init
+    document.getElementById('admin-key').addEventListener('input', e => {
+      adminKey = e.target.value.trim();
+      if (adminKey) localStorage.setItem('adminKey', adminKey);
+      setAdminKeyStatus();
+    });
+    
+    /* ─── CARD REQUESTS ─── */
+    async function loadCardRequests() {
+      const tbody = document.getElementById('card-req-tbody');
+      const msgEl = document.getElementById('card-req-msg');
+      try {
+        const data = await adminRequest('/api/admin/card-requests');
+        if (!data.length) {
+          tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);font-size:0.83rem">No card requests yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.map(r => {
+          const statusColor = r.status === 'Approved' ? 'var(--good)' : r.status === 'Declined' ? 'var(--bad)' : 'var(--warn)';
+          const submitted = r.created_at ? r.created_at.slice(0,10) : '—';
+          const actions = r.status === 'Pending'
+            ? `<button class="btn btn-primary" style="padding:4px 10px;font-size:0.75rem;margin-right:4px" onclick="decideCard(${r.id},'approve')">Approve</button>
+               <button class="btn btn-danger" style="padding:4px 10px;font-size:0.75rem" onclick="decideCard(${r.id},'decline')">Decline</button>`
+            : `<span style="font-size:0.78rem;color:var(--muted)">${r.status}</span>`;
+          return `<tr>
+            <td><span style="font-family:monospace;color:var(--teal-bright);font-size:0.8rem">CARD-${String(r.id).padStart(5,'0')}</span></td>
+            <td>
+              <div style="font-size:0.82rem;color:#cbd5e1">${r.user_name || '—'}</div>
+              <div style="font-size:0.72rem;color:var(--muted)">${r.user_email || ''}</div>
+            </td>
+            <td style="font-size:0.82rem">${r.card_type}</td>
+            <td><code style="font-family:monospace;font-size:0.78rem;color:#a5f3fc">${r.passport_ref}</code></td>
+            <td><code style="font-family:monospace;font-size:0.78rem;color:#a5f3fc">${r.payment_ref}</code></td>
+            <td style="font-size:0.82rem;color:var(--good)">$${Number(r.fee_amount).toFixed(2)}</td>
+            <td style="font-size:0.78rem;color:var(--muted)">${submitted}</td>
+            <td><span style="font-size:0.75rem;font-weight:600;color:${statusColor}">${r.status}</span></td>
+            <td>${actions}</td>
+          </tr>`;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="9" style="color:var(--bad);padding:16px;font-size:0.82rem">${err.message}</td></tr>`;
+      }
+    }
+
+    async function decideCard(reqId, action) {
+      const msgEl = document.getElementById('card-req-msg');
+      try {
+        await adminRequest(`/api/admin/card-requests/${reqId}/${action}`, { method: 'POST', body: JSON.stringify({}) });
+        msgEl.textContent = `Card request ${reqId} ${action === 'approve' ? 'approved ✓' : 'declined ✗'}.`;
+        msgEl.style.color = action === 'approve' ? 'var(--good)' : 'var(--bad)';
+        logAction(`Card CARD-${String(reqId).padStart(5,'0')} ${action}d`);
+        loadCardRequests();
+      } catch (err) {
+        msgEl.textContent = 'Error: ' + err.message;
+        msgEl.style.color = 'var(--bad)';
+      }
+    }
+
+    async function loadPaySettings() {
+      try {
+        const s = await fetch('/api/settings/payment').then(r => r.json());
+        ['usdt','btc','tron','eth'].forEach(coin => {
+          const c = s[coin] || {};
+          const netEl = document.getElementById('pay-' + coin + '-network');
+          const addrEl = document.getElementById('pay-' + coin + '-address');
+          if (netEl) netEl.value = c.network || '';
+          if (addrEl) addrEl.value = c.address || '';
+        });
+      } catch {}
+    }
+
+    async function savePaySettings() {
+      const btn = document.getElementById('paySettingsBtn');
+      const msg = document.getElementById('pay-settings-msg');
+      const payload = {};
+      ['usdt','btc','tron','eth'].forEach(coin => {
+        payload[coin] = {
+          network: (document.getElementById('pay-' + coin + '-network')?.value || '').trim(),
+          address: (document.getElementById('pay-' + coin + '-address')?.value || '').trim()
+        };
+      });
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      try {
+        await adminRequest('/api/admin/settings/payment', { method: 'POST', body: JSON.stringify(payload) });
+        msg.textContent = 'Wallet addresses saved!';
+        msg.style.color = 'var(--good)';
+        msg.style.display = 'block';
+        setTimeout(() => { msg.style.display = 'none'; }, 3000);
+      } catch (e) {
+        msg.textContent = 'Save failed: ' + e.message;
+        msg.style.color = 'var(--bad)';
+        msg.style.display = 'block';
+      }
+      btn.disabled = false;
+      btn.textContent = 'Save Wallet Addresses';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (adminKey) document.getElementById('admin-key').value = adminKey;
+      setAdminKeyStatus();
+      refreshAdminQueue();
+      loadInterestPolicy();
+      paintQueue();
+      paintLoans();
+      loadCardRequests();
+      loadPaySettings();
+    });
+  </script>
+</body>
+</html>

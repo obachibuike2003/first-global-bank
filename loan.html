@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover"/>
+  <meta name="theme-color" content="#030712"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <title>Loans — First Global Standard Bank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #0ea5b7;
+      --teal-bright: #22d4e8;
+      --teal-glow: rgba(14,165,183,0.45);
+      --gold: #f5c842;
+      --purple: #8b5cf6;
+      --purple-bright: #a78bfa;
+      --ink: #030712;
+      --ink2: #080e1e;
+      --surface: rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border2: rgba(255,255,255,0.14);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --white: #ffffff;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --warn: #f5c842;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--ink);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    input, textarea, button, a, select { -webkit-user-select: text; user-select: text; }
+
+    /* Noise */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025; pointer-events: none; z-index: 9999;
+    }
+
+    /* Orbs */
+    .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); animation: float 8s ease-in-out infinite; }
+    .orb-1 { width: 600px; height: 600px; background: rgba(139,92,246,0.07); top: -120px; left: -150px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(14,165,183,0.05); bottom: 10%; right: 5%; animation-delay: -3s; }
+    .orb-3 { width: 280px; height: 280px; background: rgba(245,200,66,0.04); top: 50%; right: 30%; animation-delay: -6s; }
+    @keyframes float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-24px) scale(1.04)} }
+
+    /* Grid BG */
+    .grid-bg {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: linear-gradient(rgba(139,92,246,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.03) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 80% 70% at 20% 20%, black, transparent);
+    }
+
+    /* ─── LAYOUT ─── */
+    .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; position: relative; z-index: 1; }
+
+    /* ─── SIDEBAR ─── */
+    .side {
+      background: rgba(3,7,18,0.7);
+      backdrop-filter: blur(20px) saturate(1.4);
+      -webkit-backdrop-filter: blur(20px) saturate(1.4);
+      border-right: 1px solid var(--border);
+      position: sticky; top: 0; height: 100vh;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 20px 18px; border-bottom: 1px solid var(--border); text-decoration: none; }
+    .logo-mark { width: 36px; height: 36px; background: linear-gradient(135deg, var(--teal), #0c8a9a); border-radius: 10px; display: grid; place-items: center; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.95rem; color: #001018; box-shadow: 0 0 16px rgba(14,165,183,0.4); flex-shrink: 0; }
+    .brand-text { font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700; color: var(--white); line-height: 1.2; letter-spacing: 0.02em; text-transform: uppercase; }
+    .brand-text span { color: var(--teal); }
+    .side-nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+    .nav-section { margin-bottom: 4px; }
+    .nav-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 10px 6px; font-weight: 600; }
+    .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; color: #64748b; text-decoration: none; font-size: 0.88rem; font-weight: 400; transition: all 0.2s; margin-bottom: 2px; }
+    .nav-link:hover { background: var(--surface2); color: #cbd5e1; }
+    .nav-link.active { background: linear-gradient(135deg, rgba(139,92,246,0.18), rgba(139,92,246,0.08)); border: 1px solid rgba(139,92,246,0.25); color: var(--white); }
+    .nav-link.active .nav-icon { color: var(--purple-bright); opacity: 1; }
+    .nav-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
+    .nav-badge { margin-left: auto; font-size: 0.7rem; font-weight: 600; background: rgba(14,165,183,0.2); color: var(--teal-bright); border: 1px solid rgba(14,165,183,0.3); padding: 2px 7px; border-radius: 999px; }
+    .side-footer { padding: 14px; border-top: 1px solid var(--border); }
+    .user-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; cursor: pointer; transition: all 0.2s; }
+    .user-chip:hover { background: var(--surface2); border-color: var(--border2); }
+    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--teal), #0c8a9a); display: grid; place-items: center; font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 800; color: #001018; flex-shrink: 0; }
+    .user-name { font-size: 0.85rem; color: #cbd5e1; font-weight: 500; }
+    .user-role { font-size: 0.73rem; color: var(--muted); }
+
+    /* ─── MAIN ─── */
+    .main { display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { position: sticky; top: 0; z-index: 50; background: rgba(3,7,18,0.65); backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4); border-bottom: 1px solid var(--border); height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 24px; }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); }
+    .page-title span { color: var(--muted); font-weight: 400; font-size: 0.85rem; margin-left: 6px; }
+    .search-bar { flex: 1; max-width: 400px; margin-left: auto; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 8px 14px; transition: all 0.2s; }
+    .search-bar:focus-within { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.04); }
+    .search-bar input { flex: 1; border: 0; background: transparent; outline: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; }
+    .search-bar input::placeholder { color: #334155; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; cursor: pointer; color: #64748b; transition: all 0.2s; position: relative; padding: 8px; }
+    .icon-btn:hover { background: var(--surface2); color: #cbd5e1; border-color: var(--border2); }
+    .icon-btn:active { transform: scale(0.95); }
+    .notif-dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); border: 1.5px solid var(--ink); }
+
+    /* ─── CONTENT ─── */
+    .content { padding: 24px; flex: 1; }
+
+    /* ─── CARD ─── */
+    .card { background: rgba(8,14,30,0.6); border: 1px solid var(--border); border-radius: 20px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: border-color 0.2s, box-shadow 0.2s; }
+    .card:hover { border-color: rgba(255,255,255,0.12); }
+    .card-inner { padding: 24px; }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .card-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); letter-spacing: -0.01em; }
+    .card-sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    /* ─── BUTTONS ─── */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; border: none; line-height: 1; min-height: 44px; }
+    .btn:active { transform: scale(0.98); }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: #cbd5e1; }
+    .btn-ghost:hover { border-color: var(--border2); background: var(--surface); color: var(--white); }
+    .btn-primary { background: linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%); color: var(--white); box-shadow: 0 0 20px rgba(139,92,246,0.3), inset 0 1px 0 rgba(255,255,255,0.15); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(139,92,246,0.45); }
+    .btn-teal { background: linear-gradient(135deg, var(--teal) 0%, #0c8a9a 100%); color: var(--white); box-shadow: 0 0 20px rgba(14,165,183,0.3), inset 0 1px 0 rgba(255,255,255,0.15); }
+    .btn-teal:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(14,165,183,0.45); }
+    .btn-sm { padding: 6px 14px; font-size: 0.78rem; min-height: 32px; }
+
+    /* ─── KPI ─── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; animation: fadeUp 0.6s 0.1s ease both; }
+    .kpi-card { background: rgba(8,14,30,0.6); border: 1px solid var(--border); border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); position: relative; overflow: hidden; transition: all 0.3s; aspect-ratio: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .kpi-card::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity 0.4s; }
+    .kpi-card:hover::before { opacity: 1; }
+    .kpi-card:hover { transform: translateY(-2px); }
+    .kpi-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .kpi-label .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .kpi-value { font-family: 'Syne', sans-serif; font-size: 1.7rem; font-weight: 800; color: var(--white); line-height: 1; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .kpi-trend { font-size: 0.78rem; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; }
+    .kpi-trend.up { color: var(--good); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); }
+    .kpi-trend.down { color: var(--bad); background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+    .kpi-trend.neutral { color: var(--warn); background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.2); }
+    .kpi-trend.purple { color: var(--purple-bright); background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); }
+    .kpi-icon { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; }
+
+    /* ─── APPLY FORM HERO ─── */
+    .apply-hero {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(8,14,30,0.8) 60%);
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 24px; padding: 32px;
+      margin-bottom: 20px;
+      animation: fadeUp 0.6s 0.15s ease both;
+    }
+    .apply-hero::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 300px; height: 300px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(139,92,246,0.15), transparent 60%);
+      pointer-events: none;
+    }
+    .apply-hero::after {
+      content: '';
+      position: absolute; bottom: -40px; left: 30%;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(14,165,183,0.08), transparent 60%);
+      pointer-events: none;
+    }
+    .hero-layout { display: grid; grid-template-columns: 1fr 380px; gap: 40px; align-items: start; position: relative; z-index: 1; }
+    .hero-eyebrow { font-size: 0.72rem; font-weight: 700; color: var(--purple-bright); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .hero-eyebrow::before { content: ''; width: 24px; height: 2px; background: var(--purple); border-radius: 2px; }
+    .hero-title { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--white); letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 12px; }
+    .hero-title em { font-style: normal; color: var(--purple-bright); }
+    .hero-desc { font-size: 0.9rem; color: #94a3b8; line-height: 1.6; max-width: 420px; margin-bottom: 24px; }
+    .hero-features { display: flex; flex-direction: column; gap: 10px; }
+    .hero-feat { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #94a3b8; }
+    .hero-feat-icon { width: 28px; height: 28px; border-radius: 8px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.2); display: grid; place-items: center; flex-shrink: 0; }
+
+    /* ─── CALCULATOR ─── */
+    .calc-card {
+      background: rgba(3,7,18,0.7);
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 18px; padding: 24px;
+    }
+    .calc-title { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--white); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+    .calc-title svg { color: var(--purple-bright); }
+
+    .slider-group { margin-bottom: 18px; }
+    .slider-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .slider-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+    .slider-val { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--white); }
+    input[type=range] {
+      width: 100%; height: 4px; border-radius: 999px;
+      appearance: none; -webkit-appearance: none;
+      background: rgba(255,255,255,0.08); outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none; -webkit-appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--purple-bright); border: 2px solid rgba(3,7,18,0.8);
+      box-shadow: 0 0 10px rgba(139,92,246,0.5); cursor: pointer; transition: transform 0.15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    .calc-result {
+      background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 14px; padding: 16px; margin-top: 4px;
+    }
+    .calc-emi { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--purple-bright); line-height: 1; margin-bottom: 4px; }
+    .calc-emi-label { font-size: 0.73rem; color: var(--muted); margin-bottom: 12px; }
+    .calc-breakdown { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .calc-item { text-align: center; }
+    .calc-item-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .calc-item-val { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--white); margin-top: 2px; }
+
+    /* ─── MAIN GRID ─── */
+    .main-grid { display: grid; grid-template-columns: 1fr 360px; gap: 20px; margin-bottom: 20px; animation: fadeUp 0.6s 0.2s ease both; }
+
+    /* ─── APPLICATION FORM ─── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-full { grid-column: span 2; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 0.73rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; }
+    .form-input, .form-select, .form-textarea {
+      padding: 11px 14px; border-radius: 10px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+      outline: none; transition: all 0.2s; width: 100%;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.04); box-shadow: 0 0 0 3px rgba(139,92,246,0.08); }
+    .form-input::placeholder, .form-textarea::placeholder { color: #334155; }
+    .form-select option { background: #080e1e; }
+    .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+    /* ─── LOAN TYPE PICKER ─── */
+    .loan-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+    .loan-type-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 14px 8px; border-radius: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .loan-type-btn:hover { background: var(--surface2); border-color: rgba(139,92,246,0.2); }
+    .loan-type-btn.selected { background: rgba(139,92,246,0.12); border-color: rgba(139,92,246,0.35); }
+    .loan-type-btn.selected .lt-icon { color: var(--purple-bright); }
+    .loan-type-btn.selected .lt-name { color: var(--white); }
+    .lt-icon { color: #64748b; transition: color 0.2s; }
+    .lt-name { font-size: 0.75rem; font-weight: 600; color: #94a3b8; transition: color 0.2s; }
+    .lt-rate { font-size: 0.65rem; color: var(--muted); margin-top: 1px; }
+
+    /* ─── AMORTIZATION TABLE ─── */
+    .amort-table-wrap { max-height: 280px; overflow-y: auto; border-radius: 12px; border: 1px solid var(--border); }
+    .amort-table { width: 100%; border-collapse: collapse; }
+    .amort-table th { position: sticky; top: 0; background: rgba(8,14,30,0.95); text-align: left; font-size: 0.7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    .amort-row { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+    .amort-row:hover { background: rgba(255,255,255,0.02); }
+    .amort-row td { padding: 10px 14px; font-size: 0.82rem; }
+    .amort-row.current-month td { background: rgba(139,92,246,0.06); }
+    .month-num { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--purple-bright); }
+
+    /* ─── ACTIVE LOANS ─── */
+    .second-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; animation: fadeUp 0.6s 0.25s ease both; }
+
+    .loan-card-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 18px; transition: all 0.25s; cursor: pointer;
+      position: relative; overflow: hidden;
+    }
+    .loan-card-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 999px 999px 0 0; }
+    .loan-card-item.active-loan::before { background: linear-gradient(90deg, var(--purple), var(--purple-bright)); }
+    .loan-card-item.paid-loan::before { background: linear-gradient(90deg, var(--good), #16a34a); }
+    .loan-card-item.overdue-loan::before { background: linear-gradient(90deg, var(--bad), #dc2626); }
+    .loan-card-item:hover { border-color: rgba(255,255,255,0.14); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+
+    .loan-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .loan-card-type { display: flex; align-items: center; gap: 8px; }
+    .loan-type-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
+    .loan-card-name { font-size: 0.88rem; font-weight: 600; color: var(--white); }
+    .loan-card-id { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+    .badge.active   { color: var(--purple-bright); background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.25); }
+    .badge.success  { color: var(--good); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); }
+    .badge.overdue  { color: var(--bad);  background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.2); }
+    .badge.pending  { color: var(--warn); background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.2); }
+
+    .loan-amount { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--white); letter-spacing: -0.02em; margin-bottom: 4px; }
+    .loan-amount-sub { font-size: 0.75rem; color: var(--muted); margin-bottom: 14px; }
+
+    .loan-prog-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; margin-bottom: 8px; }
+    .loan-prog { height: 100%; border-radius: 999px; transition: width 0.8s ease; }
+    .loan-prog-meta { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); margin-bottom: 14px; }
+
+    .loan-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .loan-stat { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; text-align: center; }
+    .loan-stat-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .loan-stat-val { font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; color: var(--white); margin-top: 2px; }
+
+    .loan-card-footer { display: flex; gap: 8px; margin-top: 14px; }
+    .loan-footer-btn { flex: 1; padding: 8px; border-radius: 9px; background: var(--surface); border: 1px solid var(--border); color: #94a3b8; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; text-align: center; }
+    .loan-footer-btn:hover { background: var(--surface2); color: var(--white); border-color: var(--border2); }
+    .loan-footer-btn.pay { color: var(--purple-bright); border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.06); }
+    .loan-footer-btn.pay:hover { background: rgba(139,92,246,0.15); }
+
+    /* ─── NEXT PAYMENT CARD ─── */
+    .next-pay-card {
+      background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(8,14,30,0.9));
+      border: 1px solid rgba(139,92,246,0.25); border-radius: 20px; padding: 22px;
+      position: relative; overflow: hidden;
+    }
+    .next-pay-card::after { content: ''; position: absolute; top: -50px; right: -50px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,0.12), transparent 60%); }
+
+    .eligibility-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+    .elig-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.8rem; color: #94a3b8; }
+    .elig-score { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--white); }
+    .elig-prog-bg { height: 8px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
+    .elig-prog { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--good), #16a34a); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+
+    /* ─── SECTION LABEL ─── */
+    .section-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } .hero-layout { grid-template-columns: 1fr; } .main-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 1024px) { .app { grid-template-columns: 1fr; } .side { display: none !important; } }
+    @media (max-width: 768px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .second-grid { grid-template-columns: 1fr; } .form-grid { grid-template-columns: 1fr; } .form-full { grid-column: span 1; } .loan-types { grid-template-columns: repeat(2,1fr); } .content { padding: 16px; } .apply-hero { padding: 20px; } .hero-title { font-size: 1.5rem; } .calc-breakdown { grid-template-columns: 1fr 1fr; } }
+
+    @media (max-width: 480px) {
+      :root { font-size: 13px; }
+      .content { padding: 12px; }
+      .topbar { height: 52px; padding: 0 8px; }
+      .topbar-actions { gap: 4px; }
+      .icon-btn { min-width: 44px; min-height: 44px; }
+      .apply-hero { padding: 16px; border-radius: 16px; }
+      .hero-title { font-size: 1.3rem; }
+      .hero-sub { font-size: 0.85rem; }
+      .loan-types { grid-template-columns: 1fr; gap: 8px; }
+      .loan-type-btn { padding: 10px 12px; font-size: 0.82rem; }
+      .kpi-grid { gap: 10px; }
+      .kpi-card { padding: 14px; }
+      .kpi-value { font-size: 1.3rem; }
+      .form-grid { gap: 12px; }
+      .form-input, .form-select { padding: 9px 12px; font-size: 0.86rem; }
+      .form-label { font-size: 0.68rem; }
+      .calc-breakdown { grid-template-columns: 1fr; }
+      .calc-item { padding: 12px; }
+      .amort-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .amort-table table { min-width: 420px; }
+      .btn { padding: 9px 14px; font-size: 0.82rem; }
+      .btn-lg { padding: 12px 20px; font-size: 0.9rem; }
+      .modal { padding: 20px; max-width: calc(100vw - 24px); width: calc(100vw - 24px); border-radius: 18px; }
+      .modal-title { font-size: 1rem; }
+    }
+
+    @media (max-width: 360px) {
+      .content { padding: 10px; }
+      .apply-hero { padding: 12px; }
+      .hero-title { font-size: 1.1rem; }
+      .kpi-card { padding: 12px; }
+      .form-input, .form-select { padding: 8px 10px; }
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9998;
+      background: rgba(8,14,30,0.95); border: 1px solid rgba(139,92,246,0.3);
+      border-radius: 14px; padding: 14px 20px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-icon { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: rgba(139,92,246,0.2); }
+    .toast-text { font-size: 0.85rem; font-weight: 500; color: var(--white); }
+    .toast-sub { font-size: 0.73rem; color: var(--muted); margin-top: 1px; }
+
+    /* Modal overlay */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(2,6,23,0.8); backdrop-filter: blur(8px); z-index: 1000; display: grid; place-items: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: rgba(8,14,30,0.98); border: 1px solid rgba(139,92,246,0.25); border-radius: 24px; padding: 32px; max-width: 480px; width: 90%; animation: slideIn 0.3s ease; position: relative; }
+    .modal-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; cursor: pointer; color: var(--muted); transition: all 0.2s; }
+    .modal-close:hover { color: var(--white); background: var(--surface2); }
+    .modal-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--white); margin-bottom: 6px; }
+    .modal-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 24px; }
+    .modal-amount-display { font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800; color: var(--purple-bright); text-align: center; margin: 20px 0; }
+    .modal-amount-label { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: -14px; margin-bottom: 20px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    /* ─── BOTTOM NAV ─── */
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(5,10,22,.97);backdrop-filter:blur(20px) saturate(1.5);border-top:1px solid rgba(255,255,255,.08);padding:6px 0 max(6px,env(safe-area-inset-bottom))}
+    .bottom-nav-inner{display:flex}
+    .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;padding:6px 4px;text-decoration:none;cursor:pointer;transition:transform .15s;-webkit-tap-highlight-color:transparent}
+    .bnav-item:active{transform:scale(.90)}
+    .bnav-icon{width:22px;height:22px;color:#475569;transition:color .2s}
+    .bnav-label{font-size:.6rem;font-weight:500;color:#475569;transition:color .2s}
+    .bnav-item.active .bnav-icon,.bnav-item.active .bnav-label{color:#22d4e8}
+    @media(max-width:1024px){.bottom-nav{display:block}.content{padding-bottom:80px !important}}
+  </style>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="grid-bg"></div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <div class="toast-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+    </div>
+    <div>
+      <div class="toast-text" id="toast-text">Application submitted!</div>
+      <div class="toast-sub" id="toast-sub">We'll review and respond within 24 hours.</div>
+    </div>
+  </div>
+
+  <!-- Pay Modal -->
+  <div class="modal-overlay" id="pay-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-title">Make a Repayment</div>
+      <div class="modal-sub" id="modal-loan-name">Personal Loan · LN-2024-001</div>
+      <div class="modal-amount-display" id="modal-emi-amount">$0</div>
+      <div class="modal-amount-label">Monthly EMI due</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Payment Amount</label>
+        <input class="form-input" id="modal-pay-amt" type="number" placeholder="Enter amount…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select class="form-select">
+          <option>Account Balance</option>
+          <option>Card ending 7734</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" style="flex:1" onclick="processPayment()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Pay Now
+        </button>
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="side">
+      <a class="brand" href="index.html">
+        <div class="logo-mark">$</div>
+        <div class="brand-text">First Global<br><span>Standard Bank</span></div>
+      </a>
+      <nav class="side-nav">
+        <div class="nav-section">
+          <div class="nav-label">Main</div>
+          <a href="dashboard.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="transfers.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <span>Transfers</span>
+            <span class="nav-badge">2</span>
+          </a>
+          <a href="bills.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-1 .1-1.3.5l-.5.5c-.3.4-.3.9 0 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 4.5 5.5c.4.3.9.3 1.3 0l.5-.5c.4-.3.6-.8.5-1.3z"/></svg>
+            <span>Flights</span>
+          </a>
+          <a href="cards.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+            <span>Cards</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-label">Services</div>
+          <a href="branches.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/></svg>
+            <span>Branches</span>
+          </a>
+          <a href="#" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-8 8-8 8s-8-3-8-8V6l8-4z"/></svg>
+            <span>Investments</span>
+          </a>
+          <a href="loans.html" class="nav-link active">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <span>Loans</span>
+          </a>
+          <a href="support.html" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            <span>Support</span>
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-label">Account</div>
+          <a href="#" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Profile</span>
+          </a>
+          <a href="#" class="nav-link">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+            <span>Settings</span>
+          </a>
+          <a href="#" class="nav-link" onclick="localStorage.removeItem('token');localStorage.removeItem('user');window.location.href='login.html'">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            <span>Sign Out</span>
+          </a>
+        </div>
+      </nav>
+      <div class="side-footer">
+        <div class="user-chip">
+          <div class="avatar-sm">--</div>
+          <div>
+            <div class="user-name">Account Holder</div>
+            <div class="user-role">—</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <section class="main">
+      <header class="topbar">
+        <div class="page-title">Loans <span>/ Borrow & Manage</span></div>
+        <div class="search-bar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input placeholder="Search loan history…">
+        </div>
+        <div class="topbar-actions">
+          <div class="icon-btn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <div class="notif-dot"></div>
+          </div>
+          <div class="icon-btn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+
+        <!-- KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card" style="border-color:rgba(139,92,246,0.15)">
+            <div class="kpi-icon" style="background:rgba(139,92,246,0.1)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <div class="kpi-label"><div class="dot" style="background:#a78bfa"></div>Active Loans</div>
+            <div class="kpi-value">0</div>
+            <span class="kpi-trend neutral">No active loans</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(239,68,68,0.1)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.8"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            </div>
+            <div class="kpi-label"><div class="dot" style="background:#ef4444"></div>Total Borrowed</div>
+            <div class="kpi-value">$0</div>
+            <span class="kpi-trend neutral">—</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(34,197,94,0.1)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.8"><path d="M9 12l2 2 4-4M7 2v20l5-3 5 3V2"/></svg>
+            </div>
+            <div class="kpi-label"><div class="dot" style="background:#22c55e"></div>Total Repaid</div>
+            <div class="kpi-value">$0</div>
+            <span class="kpi-trend neutral">—</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(245,200,66,0.1)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5c842" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </div>
+            <div class="kpi-label"><div class="dot" style="background:#f5c842"></div>Next Due</div>
+            <div class="kpi-value">—</div>
+            <span class="kpi-trend neutral">No upcoming EMI</span>
+          </div>
+        </div>
+
+        <!-- ─── APPLY HERO ─── -->
+        <div class="apply-hero">
+          <div class="hero-layout">
+            <div class="hero-left">
+              <div class="hero-eyebrow">Smart Lending</div>
+              <h1 class="hero-title">Get the funds<br>you <em>deserve</em></h1>
+              <p class="hero-desc">Apply for a personal, business, or mortgage loan in minutes. Competitive rates, flexible repayment, and instant approval decisions for eligible customers.</p>
+              <div class="hero-features">
+                <div class="hero-feat">
+                  <div class="hero-feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+                  <span>Instant pre-approval decisions based on your profile</span>
+                </div>
+                <div class="hero-feat">
+                  <div class="hero-feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M12 2l8 4v6c0 5-8 8-8 8s-8-3-8-8V6l8-4z"/></svg></div>
+                  <span>Rates from 8% APR — among the most competitive</span>
+                </div>
+                <div class="hero-feat">
+                  <div class="hero-feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+                  <span>Flexible tenures from 3 months to 60 months</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- EMI Calculator -->
+            <div class="calc-card">
+              <div class="calc-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h8M8 14h4"/></svg>
+                EMI Calculator
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-row">
+                  <span class="slider-label">Loan Amount</span>
+                  <span class="slider-val" id="calc-amt-val">$50,000</span>
+                </div>
+                <input type="range" id="calc-amt" min="5000" max="500000" step="5000" value="50000">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-row">
+                  <span class="slider-label">Interest Rate</span>
+                  <span class="slider-val" id="calc-rate-val">12% p.a.</span>
+                </div>
+                <input type="range" id="calc-rate" min="5" max="30" step="0.5" value="12">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-row">
+                  <span class="slider-label">Tenure</span>
+                  <span class="slider-val" id="calc-tenure-val">24 months</span>
+                </div>
+                <input type="range" id="calc-tenure" min="3" max="60" step="1" value="24">
+              </div>
+
+              <div class="calc-result">
+                <div class="calc-emi" id="calc-emi">$2,354</div>
+                <div class="calc-emi-label">Monthly EMI</div>
+                <div class="calc-breakdown">
+                  <div class="calc-item">
+                    <div class="calc-item-label">Principal</div>
+                    <div class="calc-item-val" id="calc-principal">$50,000</div>
+                  </div>
+                  <div class="calc-item">
+                    <div class="calc-item-label">Total Interest</div>
+                    <div class="calc-item-val" id="calc-interest">$6,496</div>
+                  </div>
+                  <div class="calc-item">
+                    <div class="calc-item-label">Total Payable</div>
+                    <div class="calc-item-val" id="calc-total">$56,496</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── MAIN GRID: Application Form + Amortization ─── -->
+        <div class="main-grid">
+          <!-- Application Form -->
+          <div class="card">
+            <div class="card-inner">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Apply for a Loan</div>
+                  <div class="card-sub">Fill in your details for a quick decision</div>
+                </div>
+                <span class="badge active">Pre-approved ✓</span>
+              </div>
+
+              <!-- Loan type selector -->
+              <div class="loan-types" id="loan-type-grid">
+                <button class="loan-type-btn selected" data-type="Personal" data-rate="12">
+                  <svg class="lt-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <span class="lt-name">Personal</span>
+                  <span class="lt-rate">From 12% APR</span>
+                </button>
+                <button class="loan-type-btn" data-type="Business" data-rate="14">
+                  <svg class="lt-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+                  <span class="lt-name">Business</span>
+                  <span class="lt-rate">From 14% APR</span>
+                </button>
+                <button class="loan-type-btn" data-type="Mortgage" data-rate="9">
+                  <svg class="lt-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M9 22V12h6v10"/></svg>
+                  <span class="lt-name">Mortgage</span>
+                  <span class="lt-rate">From 9% APR</span>
+                </button>
+                <button class="loan-type-btn" data-type="Auto" data-rate="11">
+                  <svg class="lt-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v5"/><circle cx="16" cy="17" r="2"/><circle cx="7" cy="17" r="2"/></svg>
+                  <span class="lt-name">Auto</span>
+                  <span class="lt-rate">From 11% APR</span>
+                </button>
+                <button class="loan-type-btn" data-type="Education" data-rate="8">
+                  <svg class="lt-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                  <span class="lt-name">Education</span>
+                  <span class="lt-rate">From 8% APR</span>
+                </button>
+                <button class="loan-type-btn" data-type="Emergency" data-rate="16">
+                  <svg class="lt-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  <span class="lt-name">Emergency</span>
+                  <span class="lt-rate">From 16% APR</span>
+                </button>
+              </div>
+
+              <form id="loan-application-form">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label">Loan Amount ($)</label>
+                    <input class="form-input" id="app-amount" type="number" min="1000" placeholder="e.g. 50,000" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Repayment Period</label>
+                    <select class="form-select" id="app-tenure">
+                      <option value="3">3 months</option>
+                      <option value="6">6 months</option>
+                      <option value="12">12 months</option>
+                      <option value="18">18 months</option>
+                      <option value="24" selected>24 months</option>
+                      <option value="36">36 months</option>
+                      <option value="48">48 months</option>
+                      <option value="60">60 months</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Monthly Income ($)</label>
+                    <input class="form-input" id="app-income" type="number" placeholder="e.g. 6,800" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Employment Status</label>
+                    <select class="form-select">
+                      <option>Full-time Employed</option>
+                      <option>Self-employed</option>
+                      <option>Business Owner</option>
+                      <option>Contract/Freelance</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Employer / Business Name</label>
+                    <input class="form-input" placeholder="ACME Corporation">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Collateral (optional)</label>
+                    <select class="form-select">
+                      <option>None</option>
+                      <option>Real Estate</option>
+                      <option>Vehicle</option>
+                      <option>Fixed Deposit</option>
+                    </select>
+                  </div>
+                  <div class="form-group form-full">
+                    <label class="form-label">Purpose of Loan</label>
+                    <textarea class="form-textarea" placeholder="Briefly describe what the loan will be used for…"></textarea>
+                  </div>
+                </div>
+
+                <!-- Live EMI preview -->
+                <div id="emi-preview" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:12px;padding:14px 18px;margin:16px 0;display:none">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                      <div style="font-size:0.73rem;color:var(--muted);margin-bottom:3px">Estimated Monthly EMI</div>
+                      <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:var(--purple-bright)" id="emi-preview-val">—</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-size:0.73rem;color:var(--muted);margin-bottom:3px">Total Payable</div>
+                      <div style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--white)" id="total-preview-val">—</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-size:0.73rem;color:var(--muted);margin-bottom:3px">Selected Type</div>
+                      <div style="font-size:0.88rem;font-weight:600;color:var(--white)" id="type-preview-val">Personal</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:4px">
+                  <button class="btn btn-primary" type="submit" style="flex:1">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+                    Submit Application
+                  </button>
+                  <button class="btn btn-ghost" type="reset">Clear</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Right panel: Eligibility + Amortization -->
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <!-- Eligibility -->
+            <div class="next-pay-card">
+              <div style="position:relative;z-index:1">
+                <div style="font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;color:var(--white);margin-bottom:4px">Loan Eligibility</div>
+                <div style="font-size:0.78rem;color:#94a3b8;margin-bottom:16px">Based on your current profile</div>
+
+                <div class="eligibility-bar">
+                  <div class="elig-header"><span>Credit Score</span><span class="elig-score">742 / 850</span></div>
+                  <div class="elig-prog-bg"><div class="elig-prog" style="width:87%"></div></div>
+                </div>
+                <div class="eligibility-bar">
+                  <div class="elig-header"><span>Debt-to-Income Ratio</span><span class="elig-score">28%</span></div>
+                  <div class="elig-prog-bg"><div class="elig-prog" style="width:72%;background:linear-gradient(90deg,var(--teal),var(--teal-bright))"></div></div>
+                </div>
+                <div class="eligibility-bar">
+                  <div class="elig-header"><span>Max Eligible Amount</span><span class="elig-score">$75,000</span></div>
+                  <div class="elig-prog-bg"><div class="elig-prog" style="width:90%;background:linear-gradient(90deg,var(--purple),var(--purple-bright))"></div></div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+                  <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:10px;text-align:center">
+                    <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Account Age</div>
+                    <div style="font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;color:var(--good);margin-top:3px">4 Years</div>
+                  </div>
+                  <div style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2);border-radius:10px;padding:10px;text-align:center">
+                    <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">On-time Payments</div>
+                    <div style="font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;color:var(--purple-bright);margin-top:3px">98%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Amortization Table -->
+            <div class="card" style="flex:1">
+              <div class="card-inner" style="padding-bottom:0">
+                <div class="card-header" style="margin-bottom:12px">
+                  <div>
+                    <div class="card-title">Amortization Schedule</div>
+                    <div class="card-sub" id="amort-sub">24 months · $50,000 at 12%</div>
+                  </div>
+                </div>
+              </div>
+              <div class="amort-table-wrap" style="border-left:none;border-right:none;border-bottom:none;border-radius:0 0 20px 20px">
+                <table class="amort-table">
+                  <thead>
+                    <tr>
+                      <th>Mo.</th>
+                      <th>EMI</th>
+                      <th>Principal</th>
+                      <th>Interest</th>
+                      <th>Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody id="amort-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── ACTIVE LOANS ─── -->
+        <div class="section-label">Your Loans</div>
+        <div id="loans-container">
+          <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:16px;padding:48px 24px;text-align:center;color:var(--muted)">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 16px;display:block;opacity:0.3"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <div style="font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;color:rgba(255,255,255,0.3);margin-bottom:6px">No Loan History</div>
+            <div style="font-size:0.82rem">Your active and past loans will appear here</div>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </section>
+  </div><!-- /app -->
+
+  <script>
+    // ── Helpers
+    const fmt = n => '$' + Intl.NumberFormat('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}).format(+n);
+    const fmtFull = n => '$' + Intl.NumberFormat('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}).format(+n);
+
+    function calcEMI(P, rate, n) {
+      const r = (rate/100)/12;
+      if (r === 0) return P/n;
+      return P * r * Math.pow(1+r,n) / (Math.pow(1+r,n)-1);
+    }
+
+    // ── EMI Calculator (hero sliders)
+    function updateCalc() {
+      const P = +document.getElementById('calc-amt').value;
+      const rate = +document.getElementById('calc-rate').value;
+      const n = +document.getElementById('calc-tenure').value;
+      const emi = calcEMI(P, rate, n);
+      const totalPay = emi * n;
+      const totalInt = totalPay - P;
+
+      document.getElementById('calc-amt-val').textContent = fmt(P);
+      document.getElementById('calc-rate-val').textContent = rate + '% p.a.';
+      document.getElementById('calc-tenure-val').textContent = n + ' months';
+      document.getElementById('calc-emi').textContent = fmtFull(emi);
+      document.getElementById('calc-principal').textContent = fmt(P);
+      document.getElementById('calc-interest').textContent = fmt(totalInt);
+      document.getElementById('calc-total').textContent = fmt(totalPay);
+
+      generateAmortization(P, rate, n);
+      document.getElementById('amort-sub').textContent = `${n} months · ${fmt(P)} at ${rate}%`;
+    }
+
+    // ── Amortization table
+    function generateAmortization(P, rate, n) {
+      const r = (rate/100)/12;
+      const emi = calcEMI(P, rate, n);
+      let balance = P;
+      let html = '';
+      for (let i=1; i<=n; i++) {
+        const interest = balance * r;
+        const principal = emi - interest;
+        balance = Math.max(balance - principal, 0);
+        html += `<tr class="amort-row${i===1?' current-month':''}">
+          <td><span class="month-num">${i}</span></td>
+          <td style="color:var(--white)">${fmtFull(emi)}</td>
+          <td style="color:var(--teal-bright)">${fmtFull(principal)}</td>
+          <td style="color:#94a3b8">${fmtFull(interest)}</td>
+          <td style="color:var(--muted)">${fmtFull(balance)}</td>
+        </tr>`;
+      }
+      document.getElementById('amort-body').innerHTML = html;
+    }
+
+    ['calc-amt','calc-rate','calc-tenure'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateCalc);
+    });
+    updateCalc();
+
+    // ── Loan type selector
+    let selectedRate = 12;
+    let selectedType = 'Personal';
+    document.querySelectorAll('.loan-type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.loan-type-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedRate = +btn.dataset.rate;
+        selectedType = btn.dataset.type;
+        document.getElementById('type-preview-val').textContent = selectedType;
+        updateEMIPreview();
+      });
+    });
+
+    // ── Application form live EMI preview
+    function updateEMIPreview() {
+      const amt = +document.getElementById('app-amount').value;
+      const tenure = +document.getElementById('app-tenure').value;
+      if (!amt || !tenure) { document.getElementById('emi-preview').style.display = 'none'; return; }
+      const emi = calcEMI(amt, selectedRate, tenure);
+      const total = emi * tenure;
+      document.getElementById('emi-preview-val').textContent = fmtFull(emi);
+      document.getElementById('total-preview-val').textContent = fmt(total);
+      document.getElementById('type-preview-val').textContent = selectedType;
+      document.getElementById('emi-preview').style.display = 'block';
+    }
+
+    document.getElementById('app-amount').addEventListener('input', updateEMIPreview);
+    document.getElementById('app-tenure').addEventListener('change', updateEMIPreview);
+
+    // ── API helpers
+    const API = '/api';
+    const auth = { token: localStorage.getItem('token') || '' };
+    function apiHeaders(extra = {}) {
+      const h = { 'Content-Type': 'application/json' };
+      if (auth.token) h['X-Auth-Token'] = auth.token;
+      return Object.assign(h, extra);
+    }
+    async function api(path, opts = {}) {
+      const r = await fetch(API + path, { headers: apiHeaders(), credentials: 'include', ...opts });
+      if (!r.ok) throw new Error(await r.text());
+      return r.json();
+    }
+    function ensureAuth() {
+      if (!auth.token) window.location.href = 'login.html';
+    }
+
+    function applyUser(user) {
+      const initials = (user.full_name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+      document.querySelectorAll('.user-name').forEach(el => el.textContent = user.full_name || user.email || 'Account Holder');
+      document.querySelectorAll('.user-role').forEach(el => el.textContent = 'Checking Account');
+      document.querySelectorAll('.avatar-sm').forEach(el => el.textContent = initials);
+    }
+    async function loadUserInfo() {
+      try { applyUser(JSON.parse(localStorage.getItem('user') || '{}')); } catch {}
+      try {
+        const { user } = await api('/me');
+        applyUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
+      } catch {}
+    }
+
+    async function loadLoans() {
+      try {
+        const loans = await api('/loans');
+        const container = document.getElementById('loans-container');
+        if (!container) return;
+        if (!loans.length) {
+          container.innerHTML = `<div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:16px;padding:48px 24px;text-align:center;color:var(--muted)">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.3"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <div style="font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;color:rgba(255,255,255,0.3);margin-bottom:6px">No Loan History</div>
+            <div style="font-size:0.82rem">Your active and past loans will appear here</div>
+          </div>`;
+          return;
+        }
+        const statusColors = { Pending: '#f5c842', Approved: '#22c55e', Declined: '#ef4444' };
+        container.innerHTML = loans.map(l => `
+          <div style="background:rgba(8,14,30,0.6);border:1px solid var(--border);border-radius:16px;padding:20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--white)">${l.note || 'Loan'}</div>
+              <span style="font-size:0.75rem;font-weight:600;padding:3px 10px;border-radius:999px;background:rgba(245,200,66,0.1);color:${statusColors[l.status] || '#f5c842'};border:1px solid ${statusColors[l.status] || '#f5c842'}40">${l.status}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+              <div><div style="font-size:0.7rem;color:var(--muted)">Principal</div><div style="font-weight:700;color:var(--white)">${fmtFull(l.principal)}</div></div>
+              <div><div style="font-size:0.7rem;color:var(--muted)">Rate</div><div style="font-weight:700;color:var(--teal-bright)">${l.rate}% p.a.</div></div>
+              <div><div style="font-size:0.7rem;color:var(--muted)">Tenure</div><div style="font-weight:700;color:var(--white)">${l.tenure_months} months</div></div>
+            </div>
+          </div>`).join('');
+      } catch {}
+    }
+
+    // ── Submit form
+    document.getElementById('loan-application-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      const principal = parseInt(document.getElementById('app-amount').value) || 0;
+      const tenure_months = parseInt(document.getElementById('app-tenure').value) || 0;
+      const note = `${selectedType} loan application`;
+      try {
+        await api('/loans', {
+          method: 'POST',
+          body: JSON.stringify({ principal, rate: selectedRate, tenure_months, note })
+        });
+        showToast('Application submitted!', 'Under review — you\'ll hear back within 24 hours.');
+        e.target.reset();
+        document.getElementById('emi-preview').style.display = 'none';
+        loadLoans();
+      } catch (err) {
+        showToast('Error', err.message || 'Submission failed.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // ── Toast
+    function showToast(title, sub) {
+      document.getElementById('toast-text').textContent = title;
+      document.getElementById('toast-sub').textContent = sub;
+      const t = document.getElementById('toast');
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 4000);
+    }
+
+    // ── Pay modal
+    function openModal(name, emi) {
+      document.getElementById('modal-loan-name').textContent = name;
+      document.getElementById('modal-emi-amount').textContent = emi;
+      document.getElementById('modal-pay-amt').value = emi.replace('$','').replace(',','');
+      document.getElementById('pay-modal').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('pay-modal').classList.remove('open');
+    }
+    document.getElementById('pay-modal').addEventListener('click', e => {
+      if (e.target === document.getElementById('pay-modal')) closeModal();
+    });
+    function processPayment() {
+      closeModal();
+      showToast('Payment processed!', 'Your EMI payment has been applied successfully.');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      ensureAuth();
+      loadUserInfo();
+      loadLoans();
+    });
+  </script>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="dashboard.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="bnav-label">Home</span></a>
+    <a href="transfers.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span class="bnav-label">Transfer</span></a>
+    <a href="bills.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-1 .1-1.3.5l-.5.5c-.3.4-.3.9 0 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 4.5 5.5c.4.3.9.3 1.3 0l.5-.5c.4-.3.6-.8.5-1.3z"/></svg><span class="bnav-label">Flights</span></a>
+    <a href="cards.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><span class="bnav-label">Cards</span></a>
+    <a href="support.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span class="bnav-label">Support</span></a>
+  </div>
+</nav>
+</body>
+</html>

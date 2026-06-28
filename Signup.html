@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
+  <meta name="theme-color" content="#030712" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Create Account — First Global Standard Bank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #0ea5b7;
+      --teal-bright: #22d4e8;
+      --teal-glow: rgba(14,165,183,0.35);
+      --gold: #f5c842;
+      --ink: #030712;
+      --ink2: #060d1a;
+      --surface: rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-focus: rgba(14,165,183,0.5);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --white: #ffffff;
+      --error: #f87171;
+      --success: #4ade80;
+      --warn: #fbbf24;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--ink);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Noise */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.025; pointer-events: none; z-index: 9999;
+    }
+
+    /* ── BACKGROUND ── */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 0;
+      background: var(--ink2); overflow: hidden;
+    }
+    .bg-layer::before {
+      content: '';
+      position: absolute; top: -100px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(14,165,183,0.1), transparent 65%);
+      animation: driftA 14s ease-in-out infinite alternate;
+    }
+    .bg-layer::after {
+      content: '';
+      position: absolute; bottom: -100px; left: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(245,200,66,0.05), transparent 65%);
+      animation: driftB 18s ease-in-out infinite alternate;
+    }
+    .grid-bg {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(14,165,183,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14,165,183,0.03) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, black, transparent);
+    }
+    @keyframes driftA { from { transform: translate(0,0) scale(1); } to { transform: translate(-50px,40px) scale(1.15); } }
+    @keyframes driftB { from { transform: translate(0,0); } to { transform: translate(40px,-30px) scale(1.1); } }
+
+    /* ── LAYOUT ── */
+    .page-wrap {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      display: flex; flex-direction: column;
+      padding: 32px 48px 48px;
+      position: relative;
+      border-right: 1px solid var(--border);
+      animation: slideInLeft 0.65s ease both;
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute; top: 0; right: -1px; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, var(--teal), transparent);
+      opacity: 0.3;
+    }
+
+    /* Brand */
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 48px; }
+    .logo-mark {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--teal), #0c8a9a);
+      display: grid; place-items: center;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem; color: #001018;
+      box-shadow: 0 0 16px rgba(14,165,183,0.4);
+    }
+    .brand-text { font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 700; color: var(--white); letter-spacing: 0.03em; line-height: 1.25; }
+    .brand-text span { color: var(--teal); }
+
+    /* Left content */
+    .left-content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .left-eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-bottom: 14px; }
+    .left-title { font-family: 'Syne', sans-serif; font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 800; color: var(--white); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 16px; }
+    .left-title span { background: linear-gradient(90deg, var(--teal-bright), #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .left-sub { font-size: 0.95rem; color: #64748b; line-height: 1.7; max-width: 42ch; margin-bottom: 40px; font-weight: 300; }
+
+    /* Perks list */
+    .perks { display: flex; flex-direction: column; gap: 16px; margin-bottom: 48px; }
+    .perk { display: flex; gap: 14px; align-items: flex-start; }
+    .perk-icon {
+      width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+      display: grid; place-items: center;
+      border: 1px solid rgba(14,165,183,0.2);
+    }
+    .perk-icon.teal { background: rgba(14,165,183,0.1); color: var(--teal-bright); }
+    .perk-icon.gold { background: rgba(245,200,66,0.1); color: var(--gold); border-color: rgba(245,200,66,0.2); }
+    .perk-icon.green { background: rgba(34,197,94,0.1); color: #4ade80; border-color: rgba(34,197,94,0.2); }
+    .perk-body h5 { font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--white); margin-bottom: 3px; }
+    .perk-body p { font-size: 0.83rem; color: #64748b; line-height: 1.5; }
+
+    /* Social proof */
+    .social-proof {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 18px; border-radius: 14px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    }
+    .avatars { display: flex; }
+    .avatars span {
+      width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--ink);
+      background: linear-gradient(135deg, #0ea5b7, #0c8a9a);
+      margin-right: -9px; display: grid; place-items: center;
+      font-size: 0.6rem; font-weight: 700; color: #001018;
+    }
+    .proof-text { font-size: 0.82rem; color: #475569; padding-left: 14px; }
+    .proof-text strong { color: #94a3b8; }
+
+    @media (max-width: 900px) {
+      .left-panel { display: none; }
+      .page-wrap { grid-template-columns: 1fr; }
+    }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      display: flex; flex-direction: column;
+      padding: 32px 48px 48px;
+      overflow-y: auto;
+      animation: slideInRight 0.65s ease both;
+    }
+
+    .right-topbar { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 32px; }
+    .signin-link { font-size: 0.88rem; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .signin-link:hover { color: var(--text); }
+    .signin-link strong { color: var(--teal); }
+
+    .right-content { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 480px; margin: 0 auto; width: 100%; }
+
+    /* ── STEP INDICATOR ── */
+    .steps-indicator { display: flex; align-items: center; gap: 0; margin-bottom: 36px; }
+    .step-dot {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.78rem; font-weight: 600; color: #334155;
+      transition: color 0.3s;
+    }
+    .step-dot.active { color: var(--teal-bright); }
+    .step-dot.done { color: #22c55e; }
+    .dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255,255,255,0.04); border: 1px solid #1e293b;
+      display: grid; place-items: center;
+      font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 800;
+      transition: all 0.3s;
+    }
+    .step-dot.active .dot { background: rgba(14,165,183,0.15); border-color: var(--teal); color: var(--teal-bright); box-shadow: 0 0 12px rgba(14,165,183,0.3); }
+    .step-dot.done .dot { background: rgba(34,197,94,0.15); border-color: #22c55e; color: #22c55e; }
+    .step-connector { flex: 1; height: 1px; background: #1e293b; margin: 0 8px; }
+    .step-connector.done { background: linear-gradient(90deg, #22c55e, var(--teal)); }
+
+    /* ── HEADING ── */
+    .form-header { margin-bottom: 28px; }
+    .form-title { font-family: 'Syne', sans-serif; font-size: 1.65rem; font-weight: 800; color: var(--white); margin-bottom: 6px; letter-spacing: -0.02em; }
+    .form-sub { font-size: 0.9rem; color: var(--muted); font-weight: 300; }
+
+    /* ── FORM ── */
+    .signup-form { display: flex; flex-direction: column; gap: 18px; }
+
+    /* Step panels */
+    .step-panel { display: none; flex-direction: column; gap: 18px; }
+    .step-panel.active { display: flex; animation: fadeIn 0.35s ease both; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Row */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* Field */
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field-label { font-size: 0.77rem; color: #94a3b8; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; }
+
+    .input-wrap { position: relative; }
+    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #334155; pointer-events: none; transition: color 0.25s; }
+    .field-input {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 12px; padding: 13px 14px 13px 42px;
+      color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+      transition: all 0.25s; outline: none;
+    }
+    .field-input.no-icon { padding-left: 14px; }
+    .field-input::placeholder { color: #1e293b; }
+    .field-input:focus { border-color: var(--border-focus); background: rgba(14,165,183,0.04); box-shadow: 0 0 0 3px rgba(14,165,183,0.1); }
+    .input-wrap:focus-within .input-icon { color: var(--teal); }
+
+    select.field-input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23334155' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; }
+    select.field-input option { background: #0d1a2e; }
+
+    .field.error .field-input { border-color: rgba(248,113,113,0.5); }
+    .field-error { font-size: 0.78rem; color: var(--error); display: none; }
+    .field.error .field-error { display: block; }
+    .field-hint { font-size: 0.78rem; color: #334155; }
+
+    /* Password strength */
+    .strength-bar { display: flex; gap: 4px; margin-top: 2px; }
+    .strength-seg { flex: 1; height: 3px; border-radius: 2px; background: #1e293b; transition: background 0.3s; }
+    .strength-label { font-size: 0.75rem; color: #334155; margin-top: 3px; }
+
+    /* Toggle password */
+    .input-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #334155; cursor: pointer; transition: color 0.2s; padding: 2px; }
+    .input-toggle:hover { color: #64748b; }
+
+    /* Terms checkbox */
+    .terms-row { display: flex; gap: 10px; align-items: flex-start; }
+    .check-input { display: none; }
+    .custom-check {
+      width: 18px; height: 18px; border-radius: 5px; flex-shrink: 0;
+      border: 1px solid #334155; background: rgba(255,255,255,0.03);
+      display: grid; place-items: center; transition: all 0.2s; margin-top: 2px; cursor: pointer;
+    }
+    .check-input:checked ~ .custom-check { background: var(--teal); border-color: var(--teal); }
+    .check-input:checked ~ .custom-check::after { content: '✓'; color: #001018; font-size: 0.7rem; font-weight: 700; }
+    .terms-text { font-size: 0.83rem; color: #475569; line-height: 1.5; cursor: pointer; }
+    .terms-text a { color: var(--teal); text-decoration: none; }
+    .terms-text a:hover { color: var(--teal-bright); }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 10px; }
+    .btn-next {
+      flex: 1; padding: 14px;
+      background: linear-gradient(135deg, var(--teal), #0c8a9a);
+      border: none; border-radius: 13px; color: var(--white);
+      font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: all 0.25s; letter-spacing: 0.01em;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 0 28px rgba(14,165,183,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+      position: relative; overflow: hidden;
+    }
+    .btn-next:hover { transform: translateY(-2px); box-shadow: 0 6px 36px rgba(14,165,183,0.5); }
+    .btn-next:active { transform: translateY(0); }
+    .btn-next.loading { pointer-events: none; opacity: 0.8; }
+    .btn-back {
+      padding: 14px 20px; border-radius: 13px;
+      border: 1px solid var(--border); background: transparent;
+      color: #64748b; font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-back:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+
+    .spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; display:none; }
+    .btn-next.loading .spinner { display:block; }
+    .btn-next.loading .btn-lbl { display:none; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* Alert */
+    .alert { padding:13px 16px; border-radius:11px; font-size:0.88rem; display:none; align-items:center; gap:10px; }
+    .alert.show { display:flex; }
+    .alert.error { background:rgba(248,113,113,0.08); border:1px solid rgba(248,113,113,0.2); color:var(--error); }
+    .alert.success { background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.2); color:var(--success); }
+
+    /* ── SUCCESS STATE ── */
+    .success-screen { display: none; text-align: center; flex-direction: column; align-items: center; gap: 20px; padding: 20px 0; }
+    .success-screen.show { display: flex; animation: fadeIn 0.5s ease both; }
+    .success-icon {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: rgba(74,222,128,0.12); border: 2px solid rgba(74,222,128,0.3);
+      display: grid; place-items: center; margin: 0 auto;
+      animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both;
+    }
+    @keyframes popIn { from { transform:scale(0); opacity:0; } to { transform:scale(1); opacity:1; } }
+    .success-title { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; color:var(--white); }
+    .success-sub { color:var(--muted); max-width:36ch; line-height:1.6; }
+    .btn-dashboard { display:inline-flex; align-items:center; gap:8px; padding:14px 32px; background:linear-gradient(135deg,var(--teal),#0c8a9a); border:none; border-radius:13px; color:var(--white); font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; text-decoration:none; box-shadow:0 0 28px rgba(14,165,183,0.35); transition:all 0.25s; }
+    .btn-dashboard:hover { transform:translateY(-2px); box-shadow:0 6px 36px rgba(14,165,183,0.5); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes slideInLeft { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes slideInRight { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+
+    /* ──── COMPREHENSIVE MOBILE RESPONSIVE ──── */
+    @media (max-width: 1024px) {
+      .page-wrap { grid-template-columns: 1fr; }
+      .left-panel { display: none; }
+      .right-panel { width: 100%; }
+    }
+
+    @media (max-width: 900px) {
+      .mobile-brand { display: flex !important; }
+      .right-panel { padding: 20px 18px 30px; }
+    }
+
+    @media (max-width: 768px) {
+      :root { font-size: 14px; }
+      
+      .right-panel {
+        padding: 16px 16px 24px;
+        max-width: 100%;
+      }
+      
+      .mobile-brand { margin-bottom: 20px; }
+      .logo-mark { 
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+      }
+      
+      .brand-text { font-size: 0.62rem; }
+      
+      .right-topbar { 
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      
+      .signin-link { font-size: 0.78rem; }
+      
+      .steps-indicator {
+        gap: 8px;
+        margin-bottom: 24px;
+      }
+      
+      .step-dot {
+        flex-direction: column;
+        gap: 6px;
+      }
+      
+      .step-dot .dot {
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+      }
+      
+      .step-dot span { font-size: 0.68rem; }
+      
+      .step-connector { height: 8px; }
+      
+      .form-header { margin-bottom: 20px; }
+      .form-title { font-size: 1.2rem; }
+      .form-sub { font-size: 0.82rem; }
+      
+      .form-row { 
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      
+      .field { gap: 5px; }
+      .field-label { font-size: 0.72rem; }
+      
+      .field-input {
+        padding: 10px 36px;
+        font-size: 0.9rem;
+      }
+      
+      .input-icon { left: 10px; }
+      .input-icon-right { right: 10px; }
+      
+      .field-error { font-size: 0.72rem; }
+      
+      .check-label { font-size: 0.8rem; }
+      
+      .btn-submit {
+        padding: 11px;
+        font-size: 0.95rem;
+        min-height: 44px;
+        border-radius: 11px;
+      }
+      
+      .btn-secondary {
+        padding: 11px;
+        font-size: 0.95rem;
+        min-height: 44px;
+      }
+      
+      .help-text { font-size: 0.78rem; }
+      
+      .alert { 
+        font-size: 0.8rem;
+        padding: 10px 12px;
+      }
+      
+      .step-panel { padding: 0; }
+    }
+
+    @media (max-width: 600px) {
+      :root { font-size: 13px; }
+      
+      .right-panel { padding: 14px 12px 20px; }
+      .form-row { grid-template-columns: 1fr; }
+      
+      .form-title { font-size: 1.1rem; }
+      .form-sub { font-size: 0.78rem; }
+      
+      .field { gap: 4px; }
+      .field-label { font-size: 0.68rem; }
+      
+      .field-input {
+        padding: 9px 32px;
+        font-size: 0.85rem;
+      }
+      
+      .input-icon { 
+        left: 8px;
+        width: 14px;
+        height: 14px;
+      }
+      
+      .input-icon-right { 
+        right: 8px;
+        width: 14px;
+        height: 14px;
+      }
+      
+      .btn-submit { 
+        padding: 10px;
+        font-size: 0.9rem;
+        min-height: 40px;
+      }
+      
+      .btn-secondary {
+        padding: 10px;
+        font-size: 0.9rem;
+      }
+      
+      .help-text { font-size: 0.75rem; }
+      .field-error { font-size: 0.68rem; }
+      .check-label { font-size: 0.78rem; }
+      
+      .steps-indicator { gap: 6px; }
+      .step-dot .dot { 
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+      }
+      
+      .step-connector { height: 6px; }
+      
+      .step-dot span { font-size: 0.6rem; }
+      .right-topbar { margin-bottom: 16px; }
+      .signin-link { font-size: 0.74rem; }
+      
+      .alert { font-size: 0.76rem; }
+      
+      .perk { margin-bottom: 12px; }
+      .perk-icon { 
+        width: 32px;
+        height: 32px;
+      }
+      
+      .perk-body h5 { font-size: 0.85rem; }
+      .perk-body p { font-size: 0.75rem; }
+    }
+
+    @media (max-width: 480px) {
+      :root { font-size: 12px; }
+      
+      .right-panel { padding: 12px 10px 16px; }
+      
+      .mobile-brand { margin-bottom: 16px; gap: 6px; }
+      .logo-mark { 
+        width: 24px;
+        height: 24px;
+        font-size: 0.7rem;
+      }
+      
+      .brand-text { 
+        font-size: 0.55rem;
+        line-height: 1.1;
+      }
+      
+      .form-title { font-size: 1rem; }
+      .form-sub { font-size: 0.74rem; }
+      
+      .field-label { font-size: 0.64rem; }
+      .field-input {
+        padding: 8px 28px;
+        font-size: 0.8rem;
+      }
+      
+      .btn-submit {
+        padding: 9px;
+        font-size: 0.85rem;
+        min-height: 36px;
+      }
+      
+      .btn-secondary {
+        padding: 9px;
+        font-size: 0.85rem;
+      }
+      
+      .steps-indicator { 
+        gap: 4px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      
+      .step-dot .dot {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+      }
+      
+      .step-connector { 
+        height: 4px;
+        flex-basis: 100%;
+      }
+      
+      .step-dot span { font-size: 0.55rem; }
+      
+      .right-topbar { margin-bottom: 12px; }
+      .signin-link { font-size: 0.7rem; }
+      
+      .alert { 
+        font-size: 0.72rem;
+        padding: 8px 10px;
+      }
+      
+      .field-error { font-size: 0.63rem; }
+      .check-label { font-size: 0.74rem; }
+      .help-text { font-size: 0.7rem; }
+      
+      .perk { margin-bottom: 10px; }
+      .perk-icon { width: 28px; height: 28px; }
+      .perk-body h5 { font-size: 0.8rem; }
+      .perk-body p { font-size: 0.7rem; }
+    }
+
+    @media (max-width: 360px) {
+      .right-panel { padding: 10px 8px 12px; }
+      .form-title { font-size: 0.95rem; }
+      .field { gap: 3px; }
+      .form-row { gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-layer"><div class="grid-bg"></div></div>
+
+  <div class="page-wrap">
+
+    <!-- ══ LEFT PANEL ══ -->
+    <div class="left-panel">
+      <a class="brand" href="index.html">
+        <div class="logo-mark">$</div>
+        <div class="brand-text">First Global<br><span>Standard Bank</span></div>
+      </a>
+
+      <div class="left-content">
+        <div class="left-eyebrow">Open Your Account</div>
+        <h1 class="left-title">Banking that puts<br><span>you first.</span><br>Always.</h1>
+        <p class="left-sub">Join thousands of customers who have made the switch to smarter, fee-free banking. It takes just 3 minutes.</p>
+
+        <div class="perks">
+          <div class="perk">
+            <div class="perk-icon teal">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-8 8-8 8s-8-3-8-8V6l8-4z"/></svg>
+            </div>
+            <div class="perk-body">
+              <h5>Zero Monthly Fees</h5>
+              <p>No account fees, ever. Keep every dollar you earn.</p>
+            </div>
+          </div>
+          <div class="perk">
+            <div class="perk-icon gold">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="perk-body">
+              <h5>Instant Transfers</h5>
+              <p>Send and receive money in real-time, anywhere.</p>
+            </div>
+          </div>
+          <div class="perk">
+            <div class="perk-icon green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><circle cx="8" cy="15" r="1.5" fill="currentColor"/></svg>
+            </div>
+            <div class="perk-body">
+              <h5>Free Debit Mastercard</h5>
+              <p>Virtual + physical card. Works worldwide, zero FX fees.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="social-proof">
+          <div class="avatars">
+            <span>JA</span><span>MK</span><span>RL</span><span>SO</span>
+          </div>
+          <div class="proof-text">
+            <strong>150,000+ customers</strong> already banking with us
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RIGHT PANEL ══ -->
+    <div class="right-panel">
+
+      <!-- Mobile brand -->
+      <a class="mobile-brand brand" href="index.html">
+        <div class="logo-mark">$</div>
+        <div class="brand-text">First Global <span>Standard Bank</span></div>
+      </a>
+
+      <div class="right-topbar">
+        <a class="signin-link" href="login.html">Already a member? <strong>Sign in →</strong></a>
+      </div>
+
+      <div class="right-content">
+
+        <!-- Steps Indicator -->
+        <div class="steps-indicator" id="stepsIndicator">
+          <div class="step-dot active" id="dotStep1">
+            <div class="dot">1</div>
+            <span>Personal</span>
+          </div>
+          <div class="step-connector" id="conn1"></div>
+          <div class="step-dot" id="dotStep2">
+            <div class="dot">2</div>
+            <span>Security</span>
+          </div>
+          <div class="step-connector" id="conn2"></div>
+          <div class="step-dot" id="dotStep3">
+            <div class="dot">3</div>
+            <span>Confirm</span>
+          </div>
+        </div>
+
+        <!-- Form Header -->
+        <div class="form-header" id="formHeader">
+          <h2 class="form-title" id="formTitle">Personal Information</h2>
+          <p class="form-sub" id="formSub">Let's start with the basics — it takes under a minute.</p>
+        </div>
+
+        <!-- Alert -->
+        <div class="alert" id="alertBox" style="margin-bottom:12px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <span id="alertMsg"></span>
+        </div>
+
+        <!-- FORM -->
+        <form class="signup-form" id="signupForm" novalidate>
+
+          <!-- STEP 1: Personal -->
+          <div class="step-panel active" id="stepPanel1">
+            <div class="form-row">
+              <div class="field" id="fFirstName">
+                <label class="field-label">First Name</label>
+                <div class="input-wrap">
+                  <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <input class="field-input" type="text" id="firstName" placeholder="John" autocomplete="given-name">
+                </div>
+                <span class="field-error">First name is required.</span>
+              </div>
+              <div class="field" id="fLastName">
+                <label class="field-label">Last Name</label>
+                <div class="input-wrap">
+                  <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <input class="field-input" type="text" id="lastName" placeholder="Doe" autocomplete="family-name">
+                </div>
+                <span class="field-error">Last name is required.</span>
+              </div>
+            </div>
+
+            <div class="field" id="fEmail">
+              <label class="field-label">Email Address</label>
+              <div class="input-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                <input class="field-input" type="email" id="email" placeholder="john@example.com" autocomplete="email">
+              </div>
+              <span class="field-error">Please enter a valid email.</span>
+            </div>
+
+            <div class="field" id="fPhone">
+              <label class="field-label">Phone Number</label>
+              <div class="input-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 011.18 1.18 2 2 0 013.19 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.91 8.09a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                <input class="field-input" type="tel" id="phone" placeholder="+1 (555) 000-0000" autocomplete="tel">
+              </div>
+              <span class="field-error">Phone number is required.</span>
+            </div>
+
+            <div class="form-row">
+              <div class="field" id="fDob">
+                <label class="field-label">Date of Birth</label>
+                <div class="input-wrap">
+                  <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                  <input class="field-input" type="date" id="dob">
+                </div>
+                <span class="field-error">Date of birth is required.</span>
+              </div>
+              <div class="field" id="fAccType">
+                <label class="field-label">Account Type</label>
+                <div class="input-wrap">
+                  <select class="field-input no-icon" id="accType" style="padding-left:14px">
+                    <option value="">Select type</option>
+                    <option value="personal">Personal</option>
+                    <option value="business">Business</option>
+                    <option value="savings">Savings</option>
+                    <option value="enterprise">Enterprise</option>
+                  </select>
+                </div>
+                <span class="field-error">Please select an account type.</span>
+              </div>
+            </div>
+
+            <button type="button" class="btn-next" onclick="goToStep(2)">
+              <span class="btn-lbl">Continue →</span>
+              <div class="spinner"></div>
+            </button>
+          </div>
+
+          <!-- STEP 2: Security -->
+          <div class="step-panel" id="stepPanel2">
+
+            <div class="field" id="fUsername">
+              <label class="field-label">Username</label>
+              <div class="input-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input class="field-input" type="text" id="username" placeholder="john_doe123" autocomplete="username">
+              </div>
+              <span class="field-error">Username is required (letters, numbers, _ only).</span>
+            </div>
+
+            <div class="field" id="fPass">
+              <label class="field-label">Create Password</label>
+              <div class="input-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                <input class="field-input" type="password" id="password" placeholder="Create a strong password" autocomplete="new-password" oninput="checkStrength(this.value)">
+                <button type="button" class="input-toggle" onclick="toggleVis('password', this)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <div class="strength-bar">
+                <div class="strength-seg" id="s1"></div>
+                <div class="strength-seg" id="s2"></div>
+                <div class="strength-seg" id="s3"></div>
+                <div class="strength-seg" id="s4"></div>
+              </div>
+              <div class="strength-label" id="strengthLabel">Enter a password</div>
+              <span class="field-error">Password must be at least 8 characters.</span>
+            </div>
+
+            <div class="field" id="fConfirm">
+              <label class="field-label">Confirm Password</label>
+              <div class="input-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                <input class="field-input" type="password" id="confirmPass" placeholder="Repeat your password" autocomplete="new-password">
+                <button type="button" class="input-toggle" onclick="toggleVis('confirmPass', this)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <span class="field-error">Passwords do not match.</span>
+            </div>
+
+            <div class="field" id="fPin">
+              <label class="field-label">Transaction PIN <span style="color:#334155;font-weight:400;text-transform:none">(4 digits)</span></label>
+              <div class="input-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 7h3a5 5 0 010 10h-3m-6 0H6A5 5 0 016 7h3"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                <input class="field-input" type="password" inputmode="numeric" maxlength="4" id="pin" placeholder="e.g. 4852">
+              </div>
+              <span class="field-error">PIN must be exactly 4 digits.</span>
+            </div>
+
+            <div class="btn-row">
+              <button type="button" class="btn-back" onclick="goToStep(1)">← Back</button>
+              <button type="button" class="btn-next" onclick="goToStep(3)">
+                <span class="btn-lbl">Continue →</span>
+                <div class="spinner"></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP 3: Confirm -->
+          <div class="step-panel" id="stepPanel3">
+
+            <!-- Summary -->
+            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;">
+              <div style="font-size:0.75rem;color:var(--teal);letter-spacing:0.08em;font-weight:600;text-transform:uppercase;margin-bottom:2px">Account Summary</div>
+              <div style="display:flex;justify-content:space-between;font-size:0.88rem;">
+                <span style="color:#475569">Name</span>
+                <span id="summaryName" style="color:#cbd5e1;font-weight:500"></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.88rem;">
+                <span style="color:#475569">Email</span>
+                <span id="summaryEmail" style="color:#cbd5e1;font-weight:500"></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.88rem;">
+                <span style="color:#475569">Username</span>
+                <span id="summaryUsername" style="color:#cbd5e1;font-weight:500"></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.88rem;">
+                <span style="color:#475569">Account Type</span>
+                <span id="summaryType" style="color:#cbd5e1;font-weight:500;text-transform:capitalize"></span>
+              </div>
+            </div>
+
+            <!-- Terms -->
+            <label class="terms-row">
+              <input type="checkbox" class="check-input" id="termsCheck">
+              <div class="custom-check"></div>
+              <span class="terms-text">I agree to First Global Standard Bank's <a href="#">Terms of Service</a>, <a href="#">Privacy Policy</a>, and confirm I am at least 18 years old.</span>
+            </label>
+
+            <label class="terms-row">
+              <input type="checkbox" class="check-input" id="marketingCheck">
+              <div class="custom-check"></div>
+              <span class="terms-text">I'd like to receive account updates and promotions via email. (Optional)</span>
+            </label>
+
+            <div class="btn-row">
+              <button type="button" class="btn-back" onclick="goToStep(2)">← Back</button>
+              <button type="submit" class="btn-next" id="submitBtn">
+                <span class="btn-lbl">Create Account →</span>
+                <div class="spinner"></div>
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+        <!-- SUCCESS SCREEN -->
+        <div class="success-screen" id="successScreen">
+          <div class="success-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <h2 class="success-title">Account Created! 🎉</h2>
+          <p class="success-sub">Welcome to First Global Standard Bank. Your account is ready. Check your email to verify and get started.</p>
+          <a href="login.html" class="btn-dashboard">Go to Sign In →</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+
+    const stepTitles = {
+      1: { title: 'Personal Information', sub: "Let's start with the basics — it takes under a minute." },
+      2: { title: 'Security Setup', sub: 'Create a secure password and PIN to protect your account.' },
+      3: { title: 'Review & Confirm', sub: 'Everything look right? Create your account below.' },
+    };
+
+    function goToStep(step) {
+      // Validate current step first (except back)
+      if (step > currentStep) {
+        if (!validateStep(currentStep)) return;
+      }
+
+      // Update dots
+      for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById(`dotStep${i}`);
+        dot.className = 'step-dot';
+        if (i < step) dot.classList.add('done');
+        else if (i === step) dot.classList.add('active');
+      }
+
+      // Update connectors
+      document.getElementById('conn1').className = 'step-connector' + (step > 1 ? ' done' : '');
+      document.getElementById('conn2').className = 'step-connector' + (step > 2 ? ' done' : '');
+
+      // Panels
+      document.getElementById(`stepPanel${currentStep}`).classList.remove('active');
+      document.getElementById(`stepPanel${step}`).classList.add('active');
+
+      // Title
+      document.getElementById('formTitle').textContent = stepTitles[step].title;
+      document.getElementById('formSub').textContent = stepTitles[step].sub;
+
+      // Summary on step 3
+      if (step === 3) populateSummary();
+
+      hideAlert();
+      currentStep = step;
+    }
+
+    function validateStep(step) {
+      hideAlert();
+      if (step === 1) {
+        const first = document.getElementById('firstName').value.trim();
+        const last = document.getElementById('lastName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const dob = document.getElementById('dob').value;
+        const accType = document.getElementById('accType').value;
+        let ok = true;
+        setErr('fFirstName', !first); if (!first) ok = false;
+        setErr('fLastName', !last); if (!last) ok = false;
+        setErr('fEmail', !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ok = false;
+        setErr('fPhone', !phone); if (!phone) ok = false;
+        setErr('fDob', !dob); if (!dob) ok = false;
+        setErr('fAccType', !accType); if (!accType) ok = false;
+        return ok;
+      }
+      if (step === 2) {
+        const user = document.getElementById('username').value.trim();
+        const pass = document.getElementById('password').value;
+        const conf = document.getElementById('confirmPass').value;
+        const pin = document.getElementById('pin').value;
+        let ok = true;
+        setErr('fUsername', !/^[a-zA-Z0-9_]{3,}$/.test(user)); if (!/^[a-zA-Z0-9_]{3,}$/.test(user)) ok = false;
+        setErr('fPass', pass.length < 8); if (pass.length < 8) ok = false;
+        setErr('fConfirm', pass !== conf); if (pass !== conf) ok = false;
+        setErr('fPin', !/^\d{4}$/.test(pin)); if (!/^\d{4}$/.test(pin)) ok = false;
+        return ok;
+      }
+      return true;
+    }
+
+    function setErr(fieldId, hasError) {
+      document.getElementById(fieldId)?.classList.toggle('error', hasError);
+    }
+
+    function hideAlert() {
+      document.getElementById('alertBox').className = 'alert';
+    }
+
+    function populateSummary() {
+      const first = document.getElementById('firstName').value;
+      const last = document.getElementById('lastName').value;
+      document.getElementById('summaryName').textContent = `${first} ${last}`;
+      document.getElementById('summaryEmail').textContent = document.getElementById('email').value;
+      document.getElementById('summaryUsername').textContent = document.getElementById('username').value;
+      document.getElementById('summaryType').textContent = document.getElementById('accType').value;
+    }
+
+    // Password strength
+    function checkStrength(val) {
+      const segs = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3'), document.getElementById('s4')];
+      const label = document.getElementById('strengthLabel');
+      segs.forEach(s => s.style.background = '#1e293b');
+      if (!val) { label.style.color = '#334155'; label.textContent = 'Enter a password'; return; }
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const colors = ['#ef4444','#f97316','#eab308','#22c55e'];
+      const labels = ['Weak','Fair','Good','Strong'];
+      for (let i = 0; i < score; i++) segs[i].style.background = colors[score - 1];
+      label.style.color = colors[score - 1];
+      label.textContent = labels[score - 1] || 'Very Weak';
+    }
+
+    // Toggle visibility
+    function toggleVis(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.innerHTML = show
+        ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+        : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    }
+
+    // Form submit
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const termsCheck = document.getElementById('termsCheck');
+      if (!termsCheck.checked) {
+        const a = document.getElementById('alertBox');
+        a.className = 'alert error show';
+        document.getElementById('alertMsg').textContent = 'Please accept the Terms of Service to continue.';
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.classList.add('loading');
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            full_name: `${firstName} ${lastName}`,
+            email,
+            phone,
+            password
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Registration failed.');
+        }
+
+        localStorage.setItem('token', data.token);
+        const a = document.getElementById('alertBox');
+        a.className = 'alert success show';
+        document.getElementById('alertMsg').textContent = '✓ Account created! Redirecting to dashboard…';
+        setTimeout(() => window.location.href = 'dashboard.html', 1200);
+      } catch (error) {
+        const a = document.getElementById('alertBox');
+        a.className = 'alert error show';
+        document.getElementById('alertMsg').textContent = error.message || 'Unable to create account.';
+      } finally {
+        btn.classList.remove('loading');
+      }
+    });
+  </script>
+</body>
+</html>

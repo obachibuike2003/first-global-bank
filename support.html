@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover"/>
+  <title>Support — First Global Standard Bank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #0ea5b7; --teal-bright: #22d4e8; --gold: #f5c842;
+      --ink: #030712; --surface: rgba(255,255,255,0.04); --surface2: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+      --text: #e2e8f0; --muted: #64748b; --white: #ffffff;
+      --good: #22c55e; --bad: #ef4444; --warn: #f5c842;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--ink); color: var(--text); overflow-x: hidden; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E"); opacity: 0.025; pointer-events: none; z-index: 9999; }
+    .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); animation: float 8s ease-in-out infinite; }
+    .orb-1 { width: 600px; height: 600px; background: rgba(14,165,183,0.07); top: -100px; left: -150px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(245,200,66,0.04); bottom: 10%; right: 5%; animation-delay: -3s; }
+    .orb-3 { width: 300px; height: 300px; background: rgba(14,165,183,0.05); top: 50%; right: 20%; animation-delay: -5s; }
+    @keyframes float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-24px) scale(1.04)} }
+    .grid-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(14,165,183,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(14,165,183,0.025) 1px,transparent 1px); background-size: 80px 80px; mask-image: radial-gradient(ellipse 80% 70% at 30% 30%, black, transparent); }
+
+    /* ─── LAYOUT ─── */
+    .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; position: relative; z-index: 1; }
+
+    /* ─── SIDEBAR ─── */
+    .side { background: rgba(3,7,18,0.7); backdrop-filter: blur(20px) saturate(1.4); border-right: 1px solid var(--border); position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 20px 18px; border-bottom: 1px solid var(--border); text-decoration: none; }
+    .logo-mark { width: 36px; height: 36px; background: linear-gradient(135deg,var(--teal),#0c8a9a); border-radius: 10px; display: grid; place-items: center; font-family: 'Syne',sans-serif; font-weight: 800; font-size: 0.95rem; color: #001018; box-shadow: 0 0 16px rgba(14,165,183,0.4); flex-shrink: 0; }
+    .brand-text { font-family: 'Syne',sans-serif; font-size: 0.72rem; font-weight: 700; color: var(--white); line-height: 1.2; letter-spacing: 0.02em; text-transform: uppercase; }
+    .brand-text span { color: var(--teal); }
+    .side-nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+    .nav-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 12px 10px 6px; font-weight: 600; }
+    .nav-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; color: #64748b; text-decoration: none; font-size: 0.88rem; font-weight: 400; transition: all 0.2s; margin-bottom: 2px; }
+    .nav-link:hover { background: var(--surface2); color: #cbd5e1; }
+    .nav-link.active { background: linear-gradient(135deg,rgba(14,165,183,0.15),rgba(14,165,183,0.07)); border: 1px solid rgba(14,165,183,0.2); color: var(--white); }
+    .nav-link.active svg { color: var(--teal-bright); opacity: 1; }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
+    .side-footer { padding: 14px; border-top: 1px solid var(--border); }
+    .user-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; cursor: pointer; transition: all 0.2s; }
+    .user-chip:hover { background: var(--surface2); }
+    .avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,var(--teal),#0c8a9a); display: grid; place-items: center; font-family: 'Syne',sans-serif; font-size: 0.75rem; font-weight: 800; color: #001018; flex-shrink: 0; }
+    .user-name { font-size: 0.85rem; color: #cbd5e1; font-weight: 500; }
+    .user-role { font-size: 0.73rem; color: var(--muted); }
+
+    /* ─── MAIN ─── */
+    .main { display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { position: sticky; top: 0; z-index: 50; background: rgba(3,7,18,0.65); backdrop-filter: blur(20px) saturate(1.4); border-bottom: 1px solid var(--border); height: 64px; display: flex; align-items: center; gap: 12px; padding: 0 24px; }
+    .page-title { font-family: 'Syne',sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); }
+    .page-title span { color: var(--muted); font-weight: 400; font-size: 0.85rem; margin-left: 6px; }
+    .search-bar { flex: 1; max-width: 400px; margin-left: auto; display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 8px 14px; transition: all 0.2s; }
+    .search-bar:focus-within { border-color: rgba(14,165,183,0.4); background: rgba(14,165,183,0.04); }
+    .search-bar input { flex: 1; border: 0; background: transparent; outline: none; color: var(--text); font-family: 'DM Sans',sans-serif; font-size: 0.88rem; }
+    .search-bar input::placeholder { color: #334155; }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); display: grid; place-items: center; cursor: pointer; color: #64748b; transition: all 0.2s; }
+    .icon-btn:hover { background: var(--surface2); color: #cbd5e1; }
+
+    /* ─── CONTENT ─── */
+    .content { padding: 24px; flex: 1; }
+    .page-header { margin-bottom: 28px; animation: fadeUp 0.5s 0.1s ease both; }
+    .page-header h2 { font-family: 'Syne',sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--white); letter-spacing: -0.02em; }
+    .page-header p { font-size: 0.88rem; color: var(--muted); margin-top: 4px; }
+
+    /* ─── PANEL ─── */
+    .panel { background: rgba(8,14,30,0.6); border: 1px solid var(--border); border-radius: 20px; backdrop-filter: blur(10px); transition: border-color 0.2s; }
+
+    /* ─── MAIN GRID ─── */
+    .support-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+
+    /* ─── FORM ─── */
+    .form-panel { padding: 28px; animation: fadeUp 0.5s 0.15s ease both; }
+    .section-title { font-family: 'Syne',sans-serif; font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+    .section-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 24px; }
+
+    .form-field { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 7px; }
+    .form-label .req { color: var(--bad); margin-left: 2px; }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 11px; padding: 11px 14px;
+      color: var(--white); font-family: 'DM Sans',sans-serif; font-size: 0.92rem;
+      transition: all 0.2s; outline: none;
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: #2d3748; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: rgba(14,165,183,0.45); background: rgba(14,165,183,0.04); box-shadow: 0 0 0 3px rgba(14,165,183,0.08); }
+    .form-input.err, .form-textarea.err { border-color: rgba(239,68,68,0.5); }
+    .form-textarea { resize: vertical; min-height: 130px; font-family: 'DM Sans',sans-serif; line-height: 1.6; }
+    .form-select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+    .form-select option { background: #0a1020; color: var(--white); }
+    .select-wrap { position: relative; }
+    .select-wrap::after { content: ''; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--muted); pointer-events: none; }
+
+    .err-msg { font-size: 0.72rem; color: var(--bad); margin-top: 4px; display: none; }
+    .err-msg.show { display: block; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* Priority pills */
+    .priority-row { display: flex; gap: 8px; margin-bottom: 18px; }
+    .priority-btn {
+      flex: 1; padding: 9px 12px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; text-align: center;
+      font-family: 'DM Sans',sans-serif;
+    }
+    .priority-btn:hover { border-color: var(--border2); color: #cbd5e1; }
+    .priority-btn.sel-low { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.08); color: var(--good); }
+    .priority-btn.sel-med { border-color: rgba(245,200,66,0.4); background: rgba(245,200,66,0.08); color: var(--warn); }
+    .priority-btn.sel-high { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.08); color: var(--bad); }
+
+    /* Char counter */
+    .field-footer { display: flex; justify-content: space-between; margin-top: 5px; }
+    .char-count { font-size: 0.7rem; color: var(--muted); }
+
+    /* Submit button */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 11px 22px; border-radius: 11px;
+      font-family: 'DM Sans',sans-serif; font-size: 0.88rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; border: none; line-height: 1;
+    }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: #cbd5e1; }
+    .btn-ghost:hover { border-color: var(--border2); background: var(--surface); color: var(--white); }
+    .btn-primary { background: linear-gradient(135deg,var(--teal) 0%,#0c8a9a 100%); color: var(--white); box-shadow: 0 0 20px rgba(14,165,183,0.3),inset 0 1px 0 rgba(255,255,255,0.15); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(14,165,183,0.45); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .form-actions { display: flex; gap: 10px; margin-top: 8px; }
+
+    /* Spinner */
+    .spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+    .loading .spinner { display: block; }
+    .loading .btn-text { display: none; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+
+    /* Feedback msg */
+    .submit-msg { padding: 12px 14px; border-radius: 11px; font-size: 0.85rem; margin-top: 14px; display: none; }
+    .submit-msg.success { display: flex; align-items: center; gap: 8px; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); color: var(--good); }
+    .submit-msg.error { display: flex; align-items: center; gap: 8px; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: var(--bad); }
+
+    /* ─── RIGHT STACK ─── */
+    .right-stack { display: flex; flex-direction: column; gap: 20px; animation: fadeUp 0.5s 0.22s ease both; }
+
+    /* Contact card */
+    .contact-card { padding: 24px; }
+    .contact-title { font-family: 'Syne',sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--white); margin-bottom: 16px; }
+    .contact-item { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+    .contact-item:last-child { margin-bottom: 0; }
+    .contact-icon { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0; }
+    .contact-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+    .contact-value { font-size: 0.88rem; color: #cbd5e1; font-weight: 500; }
+    .contact-sub { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+
+    /* Status card */
+    .status-card { padding: 22px; }
+    .status-title { font-family: 'Syne',sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--white); margin-bottom: 14px; }
+    .status-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; transition: all 0.2s; }
+    .status-item:last-child { margin-bottom: 0; }
+    .status-item:hover { border-color: rgba(255,255,255,0.12); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .status-dot.green { background: var(--good); box-shadow: 0 0 6px var(--good); animation: pulse 2s ease-in-out infinite; }
+    .status-dot.yellow { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .status-name { font-size: 0.84rem; color: #cbd5e1; flex: 1; }
+    .status-tag { font-size: 0.68rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
+    .status-tag.op { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); color: var(--good); }
+    .status-tag.deg { background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.2); color: var(--warn); }
+
+    /* FAQ card */
+    .faq-card { padding: 22px; }
+    .faq-title { font-family: 'Syne',sans-serif; font-size: 0.92rem; font-weight: 700; color: var(--white); margin-bottom: 14px; }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 0; cursor: pointer;
+      font-size: 0.84rem; color: #cbd5e1; font-weight: 500;
+      transition: color 0.2s; user-select: none;
+    }
+    .faq-q:hover { color: var(--teal-bright); }
+    .faq-q svg { flex-shrink: 0; transition: transform 0.3s; }
+    .faq-item.open .faq-q svg { transform: rotate(180deg); }
+    .faq-a { font-size: 0.82rem; color: var(--muted); line-height: 1.6; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s; }
+    .faq-item.open .faq-a { max-height: 200px; padding-bottom: 12px; }
+
+    /* ─── BOTTOM SECTION ─── */
+    .bottom-section { margin-top: 24px; animation: fadeUp 0.5s 0.3s ease both; }
+    .bottom-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+    .quick-card { padding: 22px; text-align: center; cursor: pointer; transition: all 0.3s; }
+    .quick-card:hover { border-color: rgba(14,165,183,0.25); transform: translateY(-3px); }
+    .quick-icon { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; margin: 0 auto 14px; }
+    .quick-name { font-family: 'Syne',sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+    .quick-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+
+    /* Tickets history */
+    .tickets-section { margin-top: 24px; animation: fadeUp 0.5s 0.35s ease both; }
+    .tickets-panel { padding: 24px; }
+    .tickets-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .ticket-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 16px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 14px;
+      margin-bottom: 10px; transition: all 0.2s; cursor: pointer;
+    }
+    .ticket-item:last-child { margin-bottom: 0; }
+    .ticket-item:hover { border-color: rgba(255,255,255,0.12); }
+    .ticket-num { font-family: 'Syne',sans-serif; font-size: 0.7rem; font-weight: 700; color: var(--teal-bright); background: rgba(14,165,183,0.1); border: 1px solid rgba(14,165,183,0.2); padding: 3px 8px; border-radius: 6px; flex-shrink: 0; margin-top: 1px; }
+    .ticket-subject { font-size: 0.88rem; font-weight: 500; color: #cbd5e1; margin-bottom: 3px; }
+    .ticket-meta { font-size: 0.72rem; color: var(--muted); }
+    .ticket-status { margin-left: auto; flex-shrink: 0; font-size: 0.7rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+    .ticket-status.open { background: rgba(14,165,183,0.1); border: 1px solid rgba(14,165,183,0.25); color: var(--teal-bright); }
+    .ticket-status.resolved { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); color: var(--good); }
+    .ticket-status.pending { background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.2); color: var(--warn); }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 1100px) { .support-grid { grid-template-columns: 1fr; } .bottom-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 980px) {
+      .app { grid-template-columns: 72px 1fr; }
+      .brand-text, .nav-label, .nav-link span, .user-name, .user-role { display: none; }
+      .brand { justify-content: center; padding: 16px; }
+      .nav-link { justify-content: center; padding: 12px; }
+      .nav-link svg { margin: 0; opacity: 1; }
+      .user-chip { justify-content: center; padding: 10px; }
+    }
+    @media (max-width: 720px) {
+      .app { grid-template-columns: 1fr; }
+      .side { display: none; }
+      .form-row { grid-template-columns: 1fr; }
+      .bottom-grid { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+      .topbar { padding: 0 12px; height: 56px; }
+      .icon-btn { min-width: 44px; min-height: 44px; }
+      .search-bar { display: none; }
+      .page-header h2 { font-size: 1.3rem; }
+    }
+
+    @media (max-width: 480px) {
+      :root { font-size: 13px; }
+      .content { padding: 12px; }
+      .topbar { height: 52px; padding: 0 8px; }
+      .topbar-actions { gap: 4px; }
+      .page-header { margin-bottom: 16px; }
+      .page-header h2 { font-size: 1.2rem; }
+      .page-header p { font-size: 0.82rem; }
+      .panel { border-radius: 16px; }
+      .panel-header, .form-body, .ticket-header { padding: 14px; }
+      .form-label { font-size: 0.68rem; }
+      .form-input, .form-select, textarea.form-input { padding: 9px 12px; font-size: 0.86rem; border-radius: 10px; }
+      textarea.form-input { min-height: 100px; }
+      .priority-btns { flex-wrap: wrap; gap: 6px; }
+      .priority-btn { padding: 6px 10px; font-size: 0.74rem; flex: 1; min-width: 70px; text-align: center; }
+      .btn { padding: 9px 14px; font-size: 0.82rem; }
+      .btn-lg { padding: 12px 20px; font-size: 0.9rem; }
+      .ticket-row { flex-direction: column; gap: 6px; align-items: flex-start; }
+      .ticket-status { align-self: flex-start; }
+    }
+
+    @media (max-width: 360px) {
+      .content { padding: 10px; }
+      .panel-header, .form-body { padding: 10px; }
+      .form-input, .form-select { padding: 8px 10px; }
+    }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    /* ─── BOTTOM NAV ─── */
+    .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(5,10,22,.97);backdrop-filter:blur(20px) saturate(1.5);border-top:1px solid rgba(255,255,255,.08);padding:6px 0 max(6px,env(safe-area-inset-bottom))}
+    .bottom-nav-inner{display:flex}
+    .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;padding:6px 4px;text-decoration:none;cursor:pointer;transition:transform .15s;-webkit-tap-highlight-color:transparent}
+    .bnav-item:active{transform:scale(.90)}
+    .bnav-icon{width:22px;height:22px;color:#475569;transition:color .2s}
+    .bnav-label{font-size:.6rem;font-weight:500;color:#475569;transition:color .2s}
+    .bnav-item.active .bnav-icon,.bnav-item.active .bnav-label{color:#22d4e8}
+    @media(max-width:720px){.bottom-nav{display:block}.content{padding-bottom:80px !important}}
+  </style>
+</head>
+<body>
+  <div class="bg-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+  <div class="grid-bg"></div>
+
+  <div class="app">
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="side">
+      <a class="brand" href="index.html">
+        <div class="logo-mark">$</div>
+        <div class="brand-text">First Global<br><span>Standard Bank</span></div>
+      </a>
+      <nav class="side-nav">
+        <div class="nav-label">Main</div>
+        <a href="dashboard.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Dashboard</span></a>
+        <a href="transfers.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span>Transfers</span></a>
+        <a href="bills.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-1 .1-1.3.5l-.5.5c-.3.4-.3.9 0 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 4.5 5.5c.4.3.9.3 1.3 0l.5-.5c.4-.3.6-.8.5-1.3z"/></svg><span>Flights</span></a>
+        <a href="cards.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><span>Cards</span></a>
+        <div class="nav-label" style="margin-top:8px">Services</div>
+        <a href="branches.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M9 22V12h6v10"/></svg><span>Branches</span></a>
+        <a href="support.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Support</span></a>
+        <a href="#" class="nav-link" onclick="localStorage.removeItem('token');localStorage.removeItem('user');window.location.href='login.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Sign Out</span></a>
+      </nav>
+      <div class="side-footer">
+        <div class="user-chip">
+          <div class="avatar-sm">--</div>
+          <div><div class="user-name">Account Holder</div><div class="user-role">—</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ═══ MAIN ═══ -->
+    <section class="main">
+      <header class="topbar">
+        <div class="page-title">Support <span>/ Help Center</span></div>
+        <div class="search-bar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input placeholder="Search help articles…">
+        </div>
+        <div class="topbar-actions">
+          <div class="icon-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg></div>
+          <div class="icon-btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg></div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-header">
+          <h2>How can we help you?</h2>
+          <p>Submit a support ticket, browse FAQs, or reach us directly — we're here 24/7.</p>
+        </div>
+
+        <div class="support-grid">
+
+          <!-- ═══ TICKET FORM ═══ -->
+          <div class="panel form-panel">
+            <div class="section-title">Submit a Support Ticket</div>
+            <div class="section-sub">Our team typically responds within 2–4 hours</div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">Full Name <span class="req">*</span></label>
+                <input class="form-input" id="f_name" type="text" placeholder="John A. Doe">
+                <div class="err-msg" id="e_name">Please enter your name</div>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Email Address <span class="req">*</span></label>
+                <input class="form-input" id="f_email" type="email" placeholder="john@email.com">
+                <div class="err-msg" id="e_email">Please enter a valid email</div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-field">
+                <label class="form-label">Category <span class="req">*</span></label>
+                <div class="select-wrap">
+                  <select class="form-select" id="f_category">
+                    <option value="" hidden>Select category</option>
+                    <option>Account & Login</option>
+                    <option>Card Issues</option>
+                    <option>Transfers & Payments</option>
+                    <option>Loan & Credit</option>
+                    <option>Fraud & Security</option>
+                    <option>Billing & Fees</option>
+                    <option>Technical Bug</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div class="err-msg" id="e_category">Please select a category</div>
+              </div>
+              <div class="form-field">
+                <label class="form-label">Subject <span class="req">*</span></label>
+                <input class="form-input" id="f_subject" type="text" placeholder="e.g. Card not working at ATM">
+                <div class="err-msg" id="e_subject">Please enter a subject</div>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">Priority</label>
+              <div class="priority-row">
+                <button type="button" class="priority-btn sel-low" id="pLow" onclick="setPriority('low')">🟢 Low</button>
+                <button type="button" class="priority-btn" id="pMed" onclick="setPriority('medium')">🟡 Medium</button>
+                <button type="button" class="priority-btn" id="pHigh" onclick="setPriority('high')">🔴 High</button>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label class="form-label">Message <span class="req">*</span></label>
+              <textarea class="form-textarea" id="f_message" placeholder="Describe your issue in detail. Include any error messages, transaction IDs, or steps to reproduce the problem…" oninput="updateChar()"></textarea>
+              <div class="field-footer">
+                <div class="err-msg" id="e_message" style="margin-top:0">Please describe your issue</div>
+                <div class="char-count" id="charCount">0 / 1000</div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-ghost" type="button" onclick="clearForm()">Clear</button>
+              <button class="btn btn-primary" id="submitBtn" onclick="submitTicket()">
+                <span class="btn-text">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  Submit Ticket
+                </span>
+                <div class="spinner"></div>
+              </button>
+            </div>
+
+            <div class="submit-msg" id="submitMsg"></div>
+          </div>
+
+          <!-- ═══ RIGHT ═══ -->
+          <div class="right-stack">
+
+            <!-- Contact -->
+            <div class="panel contact-card">
+              <div class="contact-title">Get in Touch</div>
+
+              <div class="contact-item">
+                <div class="contact-icon" style="background:rgba(14,165,183,0.1)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22d4e8" stroke-width="1.8"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                  <div class="contact-label">Email</div>
+                  <div class="contact-value">firstglobalstandardbank@gmail.com</div>
+                  <div class="contact-sub">Response within 2–4 hours</div>
+                </div>
+              </div>
+
+              <div class="contact-item">
+                <div class="contact-icon" style="background:rgba(34,197,94,0.1)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 016 1.18 2 2 0 018 3.19v3a2 2 0 01-1.44 1.93l-2.86.86a16 16 0 006.52 6.52l.86-2.86A2 2 0 0118 10.73v3a2 2 0 01-2.18 2z"/></svg>
+                </div>
+                <div>
+                  <div class="contact-label">Phone</div>
+                  <div class="contact-value">+1 (575) 519-4807</div>
+                  <div class="contact-sub">Mon–Fri, 9 AM – 6 PM EST</div>
+                </div>
+              </div>
+
+              <div class="contact-item">
+                <div class="contact-icon" style="background:rgba(139,92,246,0.1)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                </div>
+                <div>
+                  <div class="contact-label">Live Chat</div>
+                  <div class="contact-value">Chat with an Agent</div>
+                  <div class="contact-sub">Available 24/7</div>
+                </div>
+              </div>
+
+              <div class="contact-item" style="margin-bottom:0">
+                <div class="contact-icon" style="background:rgba(245,200,66,0.1)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f5c842" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div>
+                  <div class="contact-label">WhatsApp</div>
+                  <div class="contact-value">+48 723 944 174</div>
+                  <div class="contact-sub">24/7 — card blocking & fraud reports</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="panel status-card">
+              <div class="status-title">System Status</div>
+              <div class="status-item"><div class="status-dot green"></div><span class="status-name">Core Banking</span><span class="status-tag op">Operational</span></div>
+              <div class="status-item"><div class="status-dot green"></div><span class="status-name">Card Payments</span><span class="status-tag op">Operational</span></div>
+              <div class="status-item"><div class="status-dot green"></div><span class="status-name">Wire Transfers</span><span class="status-tag op">Operational</span></div>
+              <div class="status-item"><div class="status-dot yellow"></div><span class="status-name">Mobile App</span><span class="status-tag deg">Degraded</span></div>
+              <div class="status-item"><div class="status-dot green"></div><span class="status-name">Online Portal</span><span class="status-tag op">Operational</span></div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="panel faq-card">
+              <div class="faq-title">Frequently Asked</div>
+              <div class="faq-item open">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                  How do I reset my transaction PIN?
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="faq-a">Go to Dashboard → Settings → Security → Change Transaction PIN. You'll need to verify via your registered email or phone number.</div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                  Why is my card declined?
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="faq-a">Check if your card is frozen, your spending limit is exceeded, or international payments are disabled. You can manage all settings in the Cards section.</div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                  How long do wire transfers take?
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="faq-a">Domestic transfers typically arrive same day. International wire transfers take 1–3 business days depending on the destination country and receiving bank.</div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-q" onclick="toggleFaq(this)">
+                  Is my money FDIC insured?
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="faq-a">Yes. All deposits are FDIC-insured up to $250,000 per depositor. Your money is protected even if the bank were to fail.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick actions row -->
+        <div class="bottom-section">
+          <div class="bottom-grid">
+            <div class="panel quick-card" onclick="window.location='transfers.html'">
+              <div class="quick-icon" style="background:rgba(14,165,183,0.1)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22d4e8" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </div>
+              <div class="quick-name">Transfer Issue</div>
+              <div class="quick-desc">Report a failed or missing transfer and get it resolved fast</div>
+            </div>
+            <div class="panel quick-card" onclick="window.location='cards.html'">
+              <div class="quick-icon" style="background:rgba(245,200,66,0.1)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f5c842" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+              </div>
+              <div class="quick-name">Block My Card</div>
+              <div class="quick-desc">Instantly freeze or report your card as lost or stolen</div>
+            </div>
+            <div class="panel quick-card">
+              <div class="quick-icon" style="background:rgba(239,68,68,0.1)">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div class="quick-name">Report Fraud</div>
+              <div class="quick-desc">Suspicious activity on your account? Report it immediately</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ticket history -->
+        <div class="tickets-section">
+          <div class="panel tickets-panel">
+            <div class="tickets-header">
+              <div>
+                <div class="section-title">My Tickets</div>
+                <div class="section-sub" style="margin-bottom:0">Your recent support requests</div>
+              </div>
+              <button class="btn btn-ghost" style="padding:7px 14px;font-size:0.78rem">View All</button>
+            </div>
+
+            <div id="tickets-container">
+              <div style="padding:32px 16px;text-align:center;color:var(--muted)">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.3"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                <div style="font-size:0.82rem">No support tickets yet</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </section>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    const API = '/api';
+    function apiHeaders(extra = {}) {
+      const h = { 'Content-Type': 'application/json' };
+      if (token) h['X-Auth-Token'] = token;
+      return Object.assign(h, extra);
+    }
+    async function apiFetch(path, opts = {}) {
+      const r = await fetch(API + path, { headers: apiHeaders(), credentials: 'include', ...opts });
+      if (!r.ok) throw new Error(await r.text());
+      return r.json();
+    }
+
+    function applyUser(user) {
+      const initials = (user.full_name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+      document.querySelectorAll('.user-name').forEach(el => el.textContent = user.full_name || user.email || 'Account Holder');
+      document.querySelectorAll('.user-role').forEach(el => el.textContent = 'Checking Account');
+      document.querySelectorAll('.avatar-sm').forEach(el => el.textContent = initials);
+      const nameEl = document.getElementById('f_name');
+      const emailEl = document.getElementById('f_email');
+      if (nameEl && !nameEl.value) nameEl.value = user.full_name || '';
+      if (emailEl && !emailEl.value) emailEl.value = user.email || '';
+    }
+    async function loadUserInfo() {
+      try { applyUser(JSON.parse(localStorage.getItem('user') || '{}')); } catch {}
+      try {
+        const { user } = await apiFetch('/me');
+        applyUser(user);
+        localStorage.setItem('user', JSON.stringify(user));
+      } catch {}
+    }
+
+    async function loadTickets() {
+      try {
+        const tickets = await apiFetch('/support');
+        const container = document.getElementById('tickets-container');
+        if (!container) return;
+        if (!tickets.length) {
+          container.innerHTML = `<div style="padding:32px 16px;text-align:center;color:var(--muted)">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;opacity:0.3"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            <div style="font-size:0.82rem">No support tickets yet</div>
+          </div>`;
+          return;
+        }
+        const statusColor = { Open: '#22d4e8', Closed: '#22c55e', Pending: '#f5c842' };
+        container.innerHTML = tickets.map(t => `
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+            <div>
+              <div style="font-size:0.88rem;font-weight:500;color:var(--white);margin-bottom:4px">${t.subject || 'Support Request'}</div>
+              <div style="font-size:0.75rem;color:var(--muted)">${new Date(t.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+            </div>
+            <span style="font-size:0.72rem;font-weight:600;padding:3px 9px;border-radius:999px;background:rgba(34,212,232,0.1);color:${statusColor[t.status]||'#22d4e8'};border:1px solid ${statusColor[t.status]||'#22d4e8'}40;white-space:nowrap">${t.status||'Open'}</span>
+          </div>`).join('');
+      } catch {}
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadUserInfo();
+      loadTickets();
+    });
+
+    let priority = 'low';
+
+    function setPriority(p) {
+      priority = p;
+      ['low','med','high'].forEach(k => {
+        const btn = document.getElementById('p' + k.charAt(0).toUpperCase() + k.slice(1));
+        if (btn) btn.className = 'priority-btn';
+      });
+      const map = { low: 'pLow', medium: 'pMed', high: 'pHigh' };
+      const cls = { low: 'sel-low', medium: 'sel-med', high: 'sel-high' };
+      document.getElementById(map[p]).className = 'priority-btn ' + cls[p];
+    }
+
+    function updateChar() {
+      const val = document.getElementById('f_message').value;
+      document.getElementById('charCount').textContent = `${val.length} / 1000`;
+    }
+
+    function toggleFaq(el) {
+      const item = el.parentElement;
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    }
+
+    function gv(id) { return (document.getElementById(id)?.value || '').trim(); }
+    function setErr(id, errId, bad) {
+      document.getElementById(id)?.classList.toggle('err', bad);
+      const e = document.getElementById(errId);
+      if (e) e.classList.toggle('show', bad);
+      return bad;
+    }
+
+    function clearForm() {
+      ['f_name','f_email','f_subject','f_message'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      const cat = document.getElementById('f_category');
+      if (cat) cat.selectedIndex = 0;
+      setPriority('low');
+      updateChar();
+      document.getElementById('submitMsg').className = 'submit-msg';
+      ['e_name','e_email','e_subject','e_category','e_message'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.classList.remove('show');
+      });
+    }
+
+    async function submitTicket() {
+      const name = gv('f_name'), email = gv('f_email');
+      const subject = gv('f_subject'), category = gv('f_category'), message = gv('f_message');
+
+      let ok = true;
+      ok = !setErr('f_name', 'e_name', !name) && ok;
+      ok = !setErr('f_email', 'e_email', !email || !email.includes('@')) && ok;
+      ok = !setErr('f_subject', 'e_subject', !subject) && ok;
+      ok = !setErr('f_category', 'e_category', !category) && ok;
+      ok = !setErr('f_message', 'e_message', message.length < 10) && ok;
+      if (!ok) return;
+
+      const btn = document.getElementById('submitBtn');
+      btn.classList.add('loading'); btn.disabled = true;
+
+      try {
+        const response = await fetch('/api/support', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Token': token
+          },
+          credentials: 'include',
+          body: JSON.stringify({ name, email, subject, category, message, priority })
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || 'Support request failed');
+        }
+      } catch (error) {
+        btn.classList.remove('loading'); btn.disabled = false;
+        const msg = document.getElementById('submitMsg');
+        msg.className = 'submit-msg bad';
+        msg.textContent = 'Unable to submit ticket: ' + error.message;
+        return;
+      }
+
+      // Always show success in UI demo
+      await new Promise(r => setTimeout(r, 1400));
+      btn.classList.remove('loading'); btn.disabled = false;
+
+      const msg = document.getElementById('submitMsg');
+      msg.className = 'submit-msg success';
+      msg.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Ticket submitted! We'll get back to you at <strong>${email}</strong> within 2–4 hours.`;
+
+      clearForm();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="dashboard.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="bnav-label">Home</span></a>
+    <a href="transfers.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span class="bnav-label">Transfer</span></a>
+    <a href="bills.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-1 .1-1.3.5l-.5.5c-.3.4-.3.9 0 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 4.5 5.5c.4.3.9.3 1.3 0l.5-.5c.4-.3.6-.8.5-1.3z"/></svg><span class="bnav-label">Flights</span></a>
+    <a href="cards.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><span class="bnav-label">Cards</span></a>
+    <a href="support.html" class="bnav-item active"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span class="bnav-label">Support</span></a>
+  </div>
+</nav>
+</body>
+</html>

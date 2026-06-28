@@ -1,0 +1,10 @@
+.env
+bank.db
+*.db
+*.sqlite
+.venv/
+__pycache__/
+*.pyc
+server_out.txt
+server_err.txt
+.claude/

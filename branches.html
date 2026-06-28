@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover"/>
+<meta name="theme-color" content="#030712"/>
+<title>Branches & ATMs — First Global Standard Bank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#0ea5b7; --teal-bright:#22d4e8; --gold:#f5c842;
+  --ink:#030712; --ink2:#060d1a;
+  --surface:rgba(255,255,255,0.04); --surface2:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.13);
+  --text:#e2e8f0; --muted:#64748b; --white:#fff;
+  --error:#f87171; --success:#4ade80; --warn:#fbbf24;
+  --shadow:0 20px 50px rgba(0,0,0,0.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--ink2);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:.025;pointer-events:none;z-index:9999}
+
+/* ── APP LAYOUT ── */
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+@media(max-width:900px){.app{grid-template-columns:1fr}}
+
+/* ── SIDEBAR ── */
+.side{
+  background:rgba(3,7,18,.75);backdrop-filter:blur(16px);
+  border-right:1px solid var(--border);
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  display:flex;flex-direction:column;
+  transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.brand{display:flex;align-items:center;gap:10px;padding:20px 16px;border-bottom:1px solid var(--border)}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--teal),#0c8a9a);display:grid;place-items:center;font-family:'Syne',sans-serif;font-weight:800;color:#001018;font-size:.95rem;box-shadow:0 0 16px rgba(14,165,183,.4);flex-shrink:0}
+.brand-text{font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;color:var(--white);letter-spacing:.03em;line-height:1.25}
+.brand-text span{color:var(--teal)}
+.nav{padding:12px 10px;flex:1}
+.nav-label{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#1e3a4c;padding:8px 10px 4px;margin-top:8px}
+.nav a{display:flex;align-items:center;gap:10px;padding:11px 10px;border-radius:11px;color:var(--muted);text-decoration:none;font-size:.88rem;transition:all .2s;margin-bottom:2px}
+.nav a:hover{background:var(--surface);color:var(--text)}
+.nav a.active{background:linear-gradient(135deg,rgba(14,165,183,.15),rgba(14,165,183,.06));color:var(--white);border:1px solid rgba(14,165,183,.25)}
+.nav a svg{flex-shrink:0;opacity:.7}
+.nav a.active svg{opacity:1;color:var(--teal-bright)}
+.side-footer{padding:12px 16px;border-top:1px solid var(--border)}
+.side-user{display:flex;align-items:center;gap:10px}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--teal),#0c8a9a);display:grid;place-items:center;font-family:'Syne',sans-serif;font-weight:800;font-size:.7rem;color:#001018;flex-shrink:0}
+.user-info{font-size:.8rem;color:#94a3b8;line-height:1.3}
+.user-info strong{color:var(--text);display:block;font-size:.85rem}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;min-height:100vh;overflow-y:auto}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:rgba(3,7,18,.6);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  height:64px;display:flex;align-items:center;gap:12px;
+  padding:0 24px;position:sticky;top:0;z-index:40;flex-shrink:0;
+}
+.hamburger{display:none;background:none;border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:9px;font-size:1rem;cursor:pointer;place-items:center;flex-shrink:0}
+@media(max-width:900px){.hamburger{display:grid}}
+.search-wrap{flex:1;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:9px 14px;max-width:400px}
+.search-wrap input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem}
+.search-wrap input::placeholder{color:#334155}
+.top-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.badge-verified{font-size:.72rem;background:rgba(74,222,128,.12);color:var(--success);border:1px solid rgba(74,222,128,.25);border-radius:999px;padding:4px 10px;font-weight:600}
+
+/* ── CONTENT ── */
+.content{padding:28px 24px;flex:1}
+.page-header{margin-bottom:28px;animation:fadeUp .5s ease both}
+.page-eyebrow{font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:8px}
+.page-title{font-family:'Syne',sans-serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:800;color:var(--white);letter-spacing:-.02em;margin-bottom:6px}
+.page-sub{font-size:.9rem;color:var(--muted);max-width:55ch;font-weight:300}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+@media(max-width:700px){.stats-row{grid-template-columns:1fr 1fr}}
+.stat-card{
+  background:rgba(8,15,30,.9);border:1px solid var(--border);border-radius:16px;
+  padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;
+  animation:fadeUp .5s ease both;
+  position:relative;overflow:hidden;
+  aspect-ratio:1;
+}
+.stat-card::before{content:'';position:absolute;top:-1px;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,rgba(14,165,183,.25),transparent)}
+.stat-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
+.stat-icon.teal{background:rgba(14,165,183,.12);color:var(--teal-bright);border:1px solid rgba(14,165,183,.2)}
+.stat-icon.gold{background:rgba(245,200,66,.1);color:var(--gold);border:1px solid rgba(245,200,66,.2)}
+.stat-icon.green{background:rgba(74,222,128,.1);color:var(--success);border:1px solid rgba(74,222,128,.2)}
+.stat-icon.blue{background:rgba(96,165,250,.1);color:#60a5fa;border:1px solid rgba(96,165,250,.2)}
+.stat-num{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--white);line-height:1}
+.stat-lbl{font-size:.75rem;color:var(--muted);margin-top:2px}
+
+/* ── MAIN GRID ── */
+.main-grid{display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start}
+@media(max-width:1100px){.main-grid{grid-template-columns:1fr 320px}}
+@media(max-width:800px){.main-grid{grid-template-columns:1fr}}
+
+/* ── CARD ── */
+.card{
+  background:rgba(8,15,30,.9);border:1px solid var(--border);border-radius:20px;
+  padding:20px;box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+  animation:fadeUp .5s ease both;
+}
+.card::before{content:'';position:absolute;top:-1px;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,rgba(14,165,183,.25),transparent)}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--white);display:flex;align-items:center;gap:8px}
+.card-title svg{color:var(--teal-bright);opacity:.9}
+
+/* ── MAP ── */
+.map-card{animation-delay:.05s}
+.map-toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.city-btn{
+  padding:7px 14px;border-radius:999px;font-size:.78rem;font-weight:500;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;
+}
+.city-btn:hover{border-color:rgba(14,165,183,.3);color:var(--text);background:rgba(14,165,183,.06)}
+.city-btn.active{border-color:rgba(14,165,183,.5);background:rgba(14,165,183,.12);color:var(--teal-bright)}
+.map-wrap{
+  border-radius:14px;overflow:hidden;
+  border:1px solid var(--border);
+  height:420px;position:relative;
+}
+.map-wrap iframe{width:100%;height:100%;border:0;display:block}
+.map-overlay-badge{
+  position:absolute;bottom:14px;left:14px;z-index:10;
+  background:rgba(6,13,26,.88);backdrop-filter:blur(8px);
+  border:1px solid rgba(14,165,183,.25);border-radius:10px;
+  padding:8px 12px;font-size:.75rem;color:#94a3b8;
+  display:flex;align-items:center;gap:6px;pointer-events:none;
+}
+.map-overlay-badge strong{color:var(--teal-bright)}
+.map-live-dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 6px var(--success);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.filter-pill{padding:6px 14px;border-radius:999px;font-size:.78rem;font-weight:500;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.filter-pill:hover{border-color:rgba(14,165,183,.3);color:var(--text)}
+.filter-pill.active{border-color:rgba(14,165,183,.5);background:rgba(14,165,183,.1);color:var(--teal-bright)}
+.search-branch{
+  flex:1;display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:8px 12px;min-width:140px;max-width:220px;
+}
+.search-branch input{background:none;border:none;outline:none;color:var(--text);font-size:.82rem;font-family:'DM Sans',sans-serif;width:100%}
+.search-branch input::placeholder{color:#334155}
+
+/* ── BRANCH LIST ── */
+.branch-list{display:flex;flex-direction:column;gap:10px;max-height:520px;overflow-y:auto;padding-right:4px}
+.branch-list::-webkit-scrollbar{width:4px}
+.branch-list::-webkit-scrollbar-track{background:transparent}
+.branch-list::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
+
+.branch-item{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;cursor:pointer;transition:all .25s;
+  display:flex;gap:12px;align-items:flex-start;
+  position:relative;
+}
+.branch-item:hover{border-color:rgba(14,165,183,.25);background:rgba(14,165,183,.05)}
+.branch-item.active-branch{border-color:rgba(14,165,183,.45);background:rgba(14,165,183,.08);box-shadow:0 0 16px rgba(14,165,183,.08)}
+.branch-item.active-branch::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;background:var(--teal);border-radius:0 2px 2px 0}
+
+.branch-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;font-size:1rem}
+.branch-icon.hq{background:rgba(14,165,183,.12);border:1px solid rgba(14,165,183,.2)}
+.branch-icon.atm{background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.2)}
+.branch-icon.std{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2)}
+
+.branch-info{flex:1;min-width:0}
+.branch-name{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;color:var(--white);margin-bottom:3px}
+.branch-addr{font-size:.78rem;color:var(--muted);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.branch-meta{display:flex;gap:8px;flex-wrap:wrap}
+.meta-pill{font-size:.68rem;padding:2px 8px;border-radius:999px;font-weight:500;border:1px solid transparent}
+.meta-open{background:rgba(74,222,128,.1);color:var(--success);border-color:rgba(74,222,128,.2)}
+.meta-closed{background:rgba(248,113,113,.08);color:var(--error);border-color:rgba(248,113,113,.2)}
+.meta-atm{background:rgba(245,200,66,.1);color:var(--gold);border-color:rgba(245,200,66,.2)}
+.meta-24h{background:rgba(96,165,250,.1);color:#60a5fa;border-color:rgba(96,165,250,.2)}
+
+.branch-view-btn{
+  padding:6px 12px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:.75rem;font-family:'DM Sans',sans-serif;
+  cursor:pointer;transition:all .2s;flex-shrink:0;align-self:center;
+}
+.branch-view-btn:hover{border-color:rgba(14,165,183,.35);color:var(--teal-bright);background:rgba(14,165,183,.06)}
+
+/* ── DETAIL PANEL ── */
+.detail-card{animation-delay:.15s}
+.detail-empty{text-align:center;padding:32px 16px;color:#334155;font-size:.88rem}
+.detail-empty svg{display:block;margin:0 auto 12px;opacity:.3}
+.detail-content{display:none}
+.detail-content.show{display:block}
+.detail-img{width:100%;height:160px;border-radius:12px;overflow:hidden;margin-bottom:16px;position:relative;background:linear-gradient(135deg,rgba(14,165,183,.1),rgba(14,165,183,.04));border:1px solid rgba(14,165,183,.15);display:flex;align-items:center;justify-content:center}
+.detail-map-mini{width:100%;height:100%;border:0}
+.detail-name{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;color:var(--white);margin-bottom:4px}
+.detail-addr{font-size:.82rem;color:var(--muted);margin-bottom:12px;line-height:1.5}
+.detail-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.detail-rows{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.detail-row{display:flex;gap:10px;align-items:center;font-size:.83rem}
+.detail-row-icon{width:30px;height:30px;border-radius:8px;background:rgba(14,165,183,.1);border:1px solid rgba(14,165,183,.15);display:grid;place-items:center;flex-shrink:0;color:var(--teal-bright)}
+.detail-row-label{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}
+.detail-row-val{color:var(--text);font-weight:500}
+.btn-directions{width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--teal),#0c8a9a);color:var(--white);font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 20px rgba(14,165,183,.3)}
+.btn-directions:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(14,165,183,.45)}
+
+/* ── MOBILE NAV DRAWER ── */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:50}
+body.nav-open .drawer-overlay{display:block}
+@media(max-width:900px){
+  .side{position:fixed;left:0;top:0;height:100vh;z-index:60;transform:translateX(-100%);width:260px}
+  body.nav-open .side{transform:translateX(0)}
+}
+
+@media(max-width:480px){
+  :root{font-size:13px}
+  .content{padding:12px}
+  .topbar{height:52px;padding:0 8px}
+  .topbar-actions{gap:4px}
+  .hamburger{min-width:44px;min-height:44px}
+  .stats-row{grid-template-columns:1fr;gap:10px}
+  .stat-card{padding:12px 14px}
+  .stat-num{font-size:1.1rem}
+  .stat-lbl{font-size:.7rem}
+  .map-wrap{height:280px}
+  .city-btn{padding:5px 10px;font-size:.72rem}
+  .filter-pill{padding:5px 10px;font-size:.72rem}
+  .search-branch{min-width:100%;max-width:100%}
+  .filter-bar{flex-direction:column;align-items:flex-start}
+  .branch-list{max-height:360px}
+  .branch-item{padding:10px 12px;gap:10px}
+  .branch-icon{width:32px;height:32px}
+  .branch-name{font-size:.82rem}
+  .branch-addr{font-size:.72rem}
+  .card{padding:14px;border-radius:16px}
+  .card-title{font-size:.88rem}
+}
+
+@media(max-width:360px){
+  .content{padding:10px}
+  .stats-row{gap:8px}
+  .stat-card{padding:10px 12px}
+  .map-wrap{height:240px}
+  .branch-item{padding:8px 10px}
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.stat-card:nth-child(1){animation-delay:.05s}
+.stat-card:nth-child(2){animation-delay:.1s}
+.stat-card:nth-child(3){animation-delay:.15s}
+.stat-card:nth-child(4){animation-delay:.2s}
+/* ─── BOTTOM NAV ─── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(5,10,22,.97);backdrop-filter:blur(20px) saturate(1.5);border-top:1px solid rgba(255,255,255,.08);padding:6px 0 max(6px,env(safe-area-inset-bottom))}
+.bottom-nav-inner{display:flex}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;padding:6px 4px;text-decoration:none;cursor:pointer;transition:transform .15s;-webkit-tap-highlight-color:transparent}
+.bnav-item:active{transform:scale(.90)}
+.bnav-icon{width:22px;height:22px;color:#475569;transition:color .2s}
+.bnav-label{font-size:.6rem;font-weight:500;color:#475569;transition:color .2s}
+.bnav-item.active .bnav-icon,.bnav-item.active .bnav-label{color:#22d4e8}
+@media(max-width:900px){.bottom-nav{display:block}.content{padding-bottom:80px !important}}
+</style>
+</head>
+<body>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+
+<div class="app">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="side" id="sidebar">
+    <div class="brand">
+      <div class="logo-mark">$</div>
+      <div class="brand-text">First Global<br><span>Standard Bank</span></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="transfers.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Transfers
+      </a>
+      <a href="bills.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-1 .1-1.3.5l-.5.5c-.3.4-.3.9 0 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 4.5 5.5c.4.3.9.3 1.3 0l.5-.5c.4-.3.6-.8.5-1.3z"/></svg>
+        Flight Tickets
+      </a>
+      <a href="cards.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        Cards
+      </a>
+      <a class="active" href="branches.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Branches
+      </a>
+      <a href="support.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+        Support
+      </a>
+      <div class="nav-label">Account</div>
+      <a href="index.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Back to Home
+      </a>
+    </nav>
+    <div class="side-footer">
+      <div class="side-user">
+        <div class="avatar" id="sideAvatar">?</div>
+        <div class="user-info"><strong id="sideUserName">Account Holder</strong>Checking Account</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <section class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" aria-label="Open menu">☰</button>
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="topSearch" placeholder="Search branches or cities…" oninput="filterBranches()"/>
+      </div>
+      <div class="top-right">
+        <span class="badge-verified">✓ Verified</span>
+        <div class="avatar" id="topAvatar" style="width:34px;height:34px;font-size:.68rem">?</div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-eyebrow">Network</div>
+        <h1 class="page-title">Branches & ATMs</h1>
+        <p class="page-sub">Find your nearest First Global Standard Bank branch or ATM anywhere in the world.</p>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon teal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          </div>
+          <div><div class="stat-num">9</div><div class="stat-lbl">Total Locations</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon gold">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+          </div>
+          <div><div class="stat-num">4</div><div class="stat-lbl">ATM Locations</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <div><div class="stat-num">3</div><div class="stat-lbl">24/7 ATMs</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10A15.3 15.3 0 018 12a15.3 15.3 0 014-10z"/></svg>
+          </div>
+          <div><div class="stat-num">8</div><div class="stat-lbl">Countries Covered</div></div>
+        </div>
+      </div>
+
+      <!-- Main Grid -->
+      <div class="main-grid">
+
+        <!-- Left: Map + List -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+          <!-- Map Card -->
+          <div class="card map-card">
+            <div class="card-head">
+              <div class="card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 018 8c0 5.25-8 13-8 13S4 15.25 4 10a8 8 0 018-8z"/></svg>
+                Live Map
+              </div>
+              <div style="font-size:.75rem;color:var(--muted)">Click a branch to focus</div>
+            </div>
+
+            <!-- City quick-select -->
+            <div class="map-toolbar" id="cityBtns">
+              <button class="city-btn active" onclick="setCityFilter('all',this)">All Cities</button>
+              <button class="city-btn" onclick="setCityFilter('New York',this)">New York</button>
+              <button class="city-btn" onclick="setCityFilter('London',this)">London</button>
+              <button class="city-btn" onclick="setCityFilter('Sydney',this)">Sydney</button>
+              <button class="city-btn" onclick="setCityFilter('Dubai',this)">Dubai</button>
+              <button class="city-btn" onclick="setCityFilter('Toronto',this)">Toronto</button>
+              <button class="city-btn" onclick="setCityFilter('Singapore',this)">Singapore</button>
+            </div>
+
+            <div class="map-wrap">
+              <iframe id="mapFrame" title="Branch Map"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=-180%2C-60%2C180%2C85&layer=mapnik">
+              </iframe>
+              <div class="map-overlay-badge">
+                <div class="map-live-dot"></div>
+                Showing <strong id="mapCity">Global</strong> — OpenStreetMap
+              </div>
+            </div>
+          </div>
+
+          <!-- Branch List Card -->
+          <div class="card" style="animation-delay:.1s">
+            <div class="card-head">
+              <div class="card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+                All Branches
+              </div>
+              <div class="filter-bar" style="margin-bottom:0;gap:6px">
+                <div class="search-branch">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                  <input id="branchSearch" placeholder="Filter…" oninput="filterBranches()">
+                </div>
+              </div>
+            </div>
+
+            <div class="filter-bar" style="margin-bottom:14px">
+              <button class="filter-pill active" onclick="setTypeFilter('all',this)">All</button>
+              <button class="filter-pill" onclick="setTypeFilter('branch',this)">Branches</button>
+              <button class="filter-pill" onclick="setTypeFilter('atm',this)">ATMs Only</button>
+              <button class="filter-pill" onclick="setTypeFilter('24h',this)">24/7</button>
+            </div>
+
+            <div class="branch-list" id="branchList"></div>
+          </div>
+        </div>
+
+        <!-- Right: Detail Panel -->
+        <div class="card detail-card" id="detailCard">
+          <div class="card-title" style="margin-bottom:16px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 018 8c0 5.25-8 13-8 13S4 15.25 4 10a8 8 0 018-8z"/></svg>
+            Branch Details
+          </div>
+
+          <div class="detail-empty" id="detailEmpty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+            <p>Select a branch from the list<br>to view details</p>
+          </div>
+
+          <div class="detail-content" id="detailContent">
+            <div class="detail-img">
+              <iframe id="detailMap" class="detail-map-mini" title="Branch location" src="" style="border:0;width:100%;height:100%"></iframe>
+            </div>
+            <div class="detail-name" id="detailName"></div>
+            <div class="detail-addr" id="detailAddr"></div>
+            <div class="detail-tags" id="detailTags"></div>
+            <div class="detail-rows" id="detailRows"></div>
+            <button class="btn-directions" id="detailDirections" onclick="openDirections()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M12 5l7 7-7 7"/></svg>
+              Get Directions
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /main-grid -->
+    </div><!-- /content -->
+  </section>
+</div>
+
+<script>
+/* ── BRANCH DATA ── */
+const BRANCHES = [];
+
+const CITY_BBOXES = {
+  'New York':    '-74.10,40.70,-73.70,40.90',
+  'London':      '-0.15,51.48,0.10,51.53',
+  'Sydney':      '151.20,-33.88,151.23,-33.86',
+  'Dubai':       '55.25,25.19,55.28,25.21',
+  'Toronto':     '-79.40,43.65,-79.37,43.67',
+  'Singapore':   '103.84,1.28,103.86,1.29',
+};
+
+let activeFilter = { city:'all', type:'all', search:'' };
+let activeId = null;
+let activeDirectionUrl = '';
+
+/* ── MAP ── */
+function setMap(bbox, cityLabel) {
+  document.getElementById('mapFrame').src =
+    `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik`;
+  document.getElementById('mapCity').textContent = cityLabel;
+}
+function focusMap(lat, lng, city) {
+  const pad = 0.018;
+  const bbox = `${lng-pad},${lat-pad},${lng+pad},${lat+pad}`;
+  setMap(bbox, city);
+}
+
+/* ── FILTERS ── */
+function setCityFilter(city, btn) {
+  document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter.city = city;
+  if (city !== 'all' && CITY_BBOXES[city]) {
+    setMap(CITY_BBOXES[city], city);
+  } else {
+    setMap('-180,-60,180,85', 'Global');
+  }
+  renderList();
+}
+function setTypeFilter(type, btn) {
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter.type = type;
+  renderList();
+}
+function filterBranches() {
+  const s1 = document.getElementById('topSearch').value.toLowerCase();
+  const s2 = document.getElementById('branchSearch').value.toLowerCase();
+  activeFilter.search = s1 || s2;
+  renderList();
+}
+
+function getFiltered() {
+  return BRANCHES.filter(b => {
+    if (activeFilter.city !== 'all' && b.city !== activeFilter.city) return false;
+    if (activeFilter.type === 'branch' && b.type !== 'branch') return false;
+    if (activeFilter.type === 'atm' && b.type !== 'atm') return false;
+    if (activeFilter.type === '24h' && !b.hours24) return false;
+    if (activeFilter.search) {
+      const q = activeFilter.search;
+      if (!b.name.toLowerCase().includes(q) && !b.city.toLowerCase().includes(q) && !b.address.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+/* ── RENDER LIST ── */
+function renderList() {
+  const list = document.getElementById('branchList');
+  const filtered = getFiltered();
+  if (!filtered.length) {
+    list.innerHTML = `<div style="text-align:center;color:#334155;padding:28px;font-size:.85rem">No branches found.</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(b => {
+    const iconClass = b.type === 'atm' ? 'atm' : (b.id === 1 ? 'hq' : 'std');
+    const iconEmoji = b.type === 'atm' ? '🏧' : '🏦';
+    return `
+    <div class="branch-item ${activeId === b.id ? 'active-branch' : ''}" onclick="selectBranch(${b.id})" data-id="${b.id}">
+      <div class="branch-icon ${iconClass}">${iconEmoji}</div>
+      <div class="branch-info">
+        <div class="branch-name">${b.name}</div>
+        <div class="branch-addr">${b.address}</div>
+        <div class="branch-meta">
+          <span class="meta-pill ${b.open ? 'meta-open' : 'meta-closed'}">${b.open ? '● Open' : '● Closed'}</span>
+          ${b.atm ? '<span class="meta-pill meta-atm">ATM</span>' : ''}
+          ${b.hours24 ? '<span class="meta-pill meta-24h">24/7</span>' : ''}
+        </div>
+      </div>
+      <button class="branch-view-btn" onclick="event.stopPropagation();selectBranch(${b.id})">View →</button>
+    </div>`;
+  }).join('');
+}
+
+/* ── SELECT BRANCH ── */
+function selectBranch(id) {
+  const b = BRANCHES.find(x => x.id === id);
+  if (!b) return;
+  activeId = id;
+
+  // Highlight in list
+  document.querySelectorAll('.branch-item').forEach(el => {
+    el.classList.toggle('active-branch', +el.dataset.id === id);
+  });
+
+  // Update map
+  focusMap(b.lat, b.lng, b.city);
+
+  // Update detail panel
+  document.getElementById('detailEmpty').style.display = 'none';
+  const content = document.getElementById('detailContent');
+  content.classList.add('show');
+
+  // Mini map
+  const pad = 0.012;
+  document.getElementById('detailMap').src =
+    `https://www.openstreetmap.org/export/embed.html?bbox=${b.lng-pad},${b.lat-pad},${b.lng+pad},${b.lat+pad}&layer=mapnik&marker=${b.lat},${b.lng}`;
+
+  document.getElementById('detailName').textContent = b.name;
+  document.getElementById('detailAddr').textContent = b.address;
+
+  // Tags
+  document.getElementById('detailTags').innerHTML = b.tags.map(t =>
+    `<span class="meta-pill meta-atm" style="font-size:.72rem">${t}</span>`
+  ).join('');
+
+  // Rows
+  document.getElementById('detailRows').innerHTML = `
+    <div class="detail-row">
+      <div class="detail-row-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+      <div><div class="detail-row-label">City</div><div class="detail-row-val">${b.city}</div></div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-row-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 011.18 1.18 2 2 0 013.19 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11z"/></svg></div>
+      <div><div class="detail-row-label">Phone</div><div class="detail-row-val">${b.phone}</div></div>
+    </div>
+
+    <div class="detail-row">
+      <div class="detail-row-icon" style="${b.open ? 'background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.2);color:var(--success)' : 'background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.2);color:var(--error)'}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      </div>
+      <div><div class="detail-row-label">Status</div><div class="detail-row-val" style="color:${b.open ? 'var(--success)' : 'var(--error)'}">${b.open ? 'Currently Open' : 'Currently Closed'}</div></div>
+    </div>
+  `;
+
+  activeDirectionUrl = `https://www.openstreetmap.org/?mlat=${b.lat}&mlon=${b.lng}#map=16/${b.lat}/${b.lng}`;
+}
+
+function openDirections() {
+  if (activeDirectionUrl) window.open(activeDirectionUrl, '_blank');
+}
+
+/* ── MOBILE NAV ── */
+document.getElementById('hamburger')?.addEventListener('click', () => document.body.classList.toggle('nav-open'));
+document.getElementById('drawerOverlay')?.addEventListener('click', () => document.body.classList.remove('nav-open'));
+document.querySelectorAll('.nav a').forEach(a => a.addEventListener('click', () => document.body.classList.remove('nav-open')));
+
+/* ── API + BOOT ── */
+const API = "/api";
+const auth = { token: localStorage.getItem("token") || "" };
+function apiHeaders(extra={}) {
+  const h = {"Content-Type":"application/json"};
+  if (auth.token) h["X-Auth-Token"] = auth.token;
+  return Object.assign(h, extra);
+}
+async function apiFetch(path, opts={}) {
+  const r = await fetch(API+path, {headers:apiHeaders(), credentials:"include", ...opts});
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+function applyUser(u) {
+  if (!u) return;
+  const initials = (u.full_name || 'U').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  const el = id => document.getElementById(id);
+  if (el('sideAvatar')) el('sideAvatar').textContent = initials;
+  if (el('topAvatar'))  el('topAvatar').textContent  = initials;
+  if (el('sideUserName')) el('sideUserName').textContent = u.full_name || u.email || 'Account Holder';
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  // Show cached name instantly
+  try { applyUser(JSON.parse(localStorage.getItem('user') || '{}')); } catch {}
+  // Refresh from API
+  try {
+    const { user } = await apiFetch('/me');
+    applyUser(user);
+    localStorage.setItem('user', JSON.stringify(user));
+  } catch {}
+
+  // Try to load from backend; fall back to static data
+  try {
+    const data = await apiFetch('/branches');
+    if (data && data.length) {
+      BRANCHES.splice(0, BRANCHES.length, ...data.map((b,i) => ({
+        id: b.id || i+1,
+        name: b.name || `${b.city} Branch`,
+        city: b.city,
+        address: b.address || b.city,
+        hours: b.hours || 'Mon–Fri: 8AM–5PM',
+        phone: b.phone || 'N/A',
+        type: b.type || 'branch',
+        atm: b.atm || false,
+        open: b.open !== undefined ? b.open : true,
+        hours24: b.hours24 || false,
+        lat: b.lat || 6.4281,
+        lng: b.lng || 3.4219,
+        tags: b.tags || ['Branch'],
+      })));
+    }
+  } catch { /* use static data */ }
+
+  renderList();
+  // Auto-select first
+  if (BRANCHES.length) selectBranch(BRANCHES[0].id);
+});
+</script>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a href="dashboard.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="bnav-label">Home</span></a>
+    <a href="transfers.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg><span class="bnav-label">Transfer</span></a>
+    <a href="bills.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-1 .1-1.3.5l-.5.5c-.3.4-.3.9 0 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 4.5 5.5c.4.3.9.3 1.3 0l.5-.5c.4-.3.6-.8.5-1.3z"/></svg><span class="bnav-label">Flights</span></a>
+    <a href="cards.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg><span class="bnav-label">Cards</span></a>
+    <a href="support.html" class="bnav-item"><svg class="bnav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span class="bnav-label">Support</span></a>
+  </div>
+</nav>
+</body>
+</html>
