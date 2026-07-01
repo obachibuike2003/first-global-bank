@@ -1188,6 +1188,18 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('returnDate').min = today;
 });
 </script>
-  <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js');</script>
+  <style>#pwa-fab{position:fixed;bottom:88px;right:20px;z-index:9999;display:none;align-items:center;gap:8px;padding:11px 18px;background:linear-gradient(135deg,#0ea5b7,#0c8a9a);color:#fff;border:none;border-radius:999px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;box-shadow:0 4px 24px rgba(14,165,183,0.45);transition:transform .2s;}#pwa-fab svg{width:18px;height:18px;flex-shrink:0;}@media(min-width:769px){#pwa-fab{bottom:24px;}}</style>
+  <button id="pwa-fab" title="Install App">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16l-4-4h2.5V4h3v8H16l-4 4z"/><path d="M20 18v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2"/></svg>
+    Install App
+  </button>
+  <script>
+    if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js');
+    let _deferredPrompt;
+    const fab=document.getElementById('pwa-fab');
+    window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;fab.style.display='flex';});
+    fab.addEventListener('click',async()=>{if(!_deferredPrompt)return;_deferredPrompt.prompt();const{outcome}=await _deferredPrompt.userChoice;if(outcome==='accepted')fab.style.display='none';_deferredPrompt=null;});
+    window.addEventListener('appinstalled',()=>fab.style.display='none');
+  </script>
 </body>
 </html>
