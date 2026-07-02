@@ -1315,7 +1315,12 @@ def admin_set_interest():
 def admin_loans():
     u, err = require_admin_guard()
     if err: return err
-    rows = q("select * from loans order by id desc").fetchall()
+    rows = q("""
+        select l.*, u.full_name as user_name, u.email as user_email
+        from loans l
+        left join users u on u.id = l.user_id
+        order by l.id desc
+    """).fetchall()
     return jsonify([row(r) for r in rows])
 
 @app.post("/api/admin/loans")
