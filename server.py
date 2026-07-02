@@ -4,7 +4,7 @@ import sqlite3, secrets, json, re
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, g, send_from_directory, abort
 from flask_cors import CORS
-from flask_mail import Mail, Message
+import requests as http
 from werkzeug.security import generate_password_hash, check_password_hash
 import random
 
@@ -551,30 +551,27 @@ ADMIN_KEY = "CHANGE_ME_ADMIN"
 
 app = Flask(__name__, static_url_path='', static_folder='.')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-app.config["MAIL_SERVER"]         = "smtp.gmail.com"
-app.config["MAIL_PORT"]           = 587
-app.config["MAIL_USE_TLS"]        = True
-app.config["MAIL_USERNAME"]       = "firstglobalstandardbank@gmail.com"
-app.config["MAIL_PASSWORD"]       = "xhltmnhqwxpyxtua"
-app.config["MAIL_DEFAULT_SENDER"] = "firstglobalstandardbank@gmail.com"
-mail = Mail(app)
+BREVO_API_KEY    = os.environ.get("BREVO_API_KEY", "")
+MAIL_FROM_EMAIL  = os.environ.get("MAIL_FROM", "firstglobalstandardbank@gmail.com")
 CORS(app, supports_credentials=True)
 
 def send_email(to_addr, subject, html_body):
     try:
-        msg = Message(subject=subject, recipients=[to_addr])
-        msg.html = html_body
-        # Anti-spam headers
-        msg.extra_headers = {
-            "X-Mailer": "FirstGlobalStandardBank-Mailer/1.0",
-            "X-Entity-Ref-ID": secrets.token_hex(16),
-            "Precedence": "bulk",
-            "Auto-Submitted": "auto-generated",
-            "List-Unsubscribe": f"<mailto:{FROM_NAME}?subject=unsubscribe>",
-            "Reply-To": "noreply@firstglobalstandardbank.com",
-        }
-        mail.send(msg)
-        print(f"[email] sent OK to {to_addr}")
+        resp = http.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers={"api-key": BREVO_API_KEY, "Content-Type": "application/json"},
+            json={
+                "sender": {"name": FROM_NAME, "email": MAIL_FROM_EMAIL},
+                "to": [{"email": to_addr}],
+                "subject": subject,
+                "htmlContent": html_body,
+            },
+            timeout=10,
+        )
+        if resp.status_code in (200, 201):
+            print(f"[email] sent OK to {to_addr}")
+        else:
+            print(f"[email] Brevo error {resp.status_code}: {resp.text}")
     except Exception as exc:
         print(f"[email] FAILED to {to_addr}: {exc}")
 
