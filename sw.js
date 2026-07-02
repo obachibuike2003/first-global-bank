@@ -11,6 +11,8 @@ const STATIC = [
   '/loan.html',
   '/support.html',
   '/branches.html',
+  '/forgot-password.html',
+  '/reset-password.html',
   '/manifest.json'
 ];
 

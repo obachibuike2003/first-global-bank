@@ -449,6 +449,42 @@ def send_pending_transfer_email(to_email, full_name, amount, currency, counterpa
     )
 
 
+def send_password_reset_email(to_email, full_name, reset_url):
+    body = f"""
+    <p style="margin:0 0 18px;color:#94a3b8;font-size:0.9rem;line-height:1.65">
+      Hi <strong style="color:#e2e8f0">{full_name}</strong>,<br>
+      We received a request to reset your password. Click the button below to set a new one.
+      This link expires in <strong style="color:#e2e8f0">1 hour</strong>.
+    </p>
+
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px">
+      <tr>
+        <td style="background:linear-gradient(135deg,#0ea5b7,#0c8a9a);border-radius:12px;box-shadow:0 0 24px rgba(14,165,183,0.35)">
+          <a href="{reset_url}" style="display:inline-block;padding:13px 30px;color:#ffffff;text-decoration:none;font-family:'DM Sans','Segoe UI',Arial,sans-serif;font-weight:500;font-size:0.9rem;letter-spacing:0.01em">Reset Password &rarr;</a>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:11px;margin-bottom:20px">
+      <tr><td style="padding:13px 16px">
+        <span style="color:#f87171;font-size:0.78rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase">Didn't Request This?</span><br>
+        <span style="color:#475569;font-size:0.8rem;line-height:1.6">If you did not request a password reset, ignore this email — your password will remain unchanged.</span>
+      </td></tr>
+    </table>
+
+    <p style="color:#475569;font-size:0.78rem;line-height:1.6">
+      Or copy and paste this link into your browser:<br>
+      <span style="color:#22d4e8;word-break:break-all;font-size:0.75rem">{reset_url}</span>
+    </p>
+    """
+    send_email(to_email, "Reset Your Password — First Global Standard Bank", _email_shell(
+        "Password Reset Request",
+        f"Requested {datetime.utcnow().strftime('%d %b %Y, %H:%M')} UTC · Expires in 1 hour",
+        body
+    ))
+
+
 def send_card_status_email(to_email, full_name, status, card_req_id, card_type="Virtual"):
     approved = status == "Approved"
     accent   = "#4ade80" if approved else "#f87171"
@@ -653,6 +689,14 @@ CREATE TABLE IF NOT EXISTS settings (
     key   TEXT NOT NULL UNIQUE,
     value TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS password_resets (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id),
+    token      TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used       INTEGER NOT NULL DEFAULT 0
+);
 """
 
 def bootstrap():
@@ -842,6 +886,44 @@ def summary():
 
     return jsonify({"balance": bal, "income7d": income7d, "expenses7d": expenses7d, "delta": delta})
 
+
+@app.post("/api/auth/forgot-password")
+def forgot_password():
+    b = request.get_json(force=True)
+    email = (b.get("email") or "").strip().lower()
+    user = q("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+    if user:
+        # Invalidate any existing unused tokens for this user
+        q("UPDATE password_resets SET used=1 WHERE user_id=? AND used=0", (user["id"],), commit=True)
+        token = secrets.token_hex(32)
+        q("""INSERT INTO password_resets(user_id, token, created_at, expires_at, used)
+             VALUES(?,?,?,?,?)""",
+          (user["id"], token, datetime.utcnow().isoformat(),
+           (datetime.utcnow()+timedelta(hours=1)).isoformat(), 0), commit=True)
+        base = request.host_url.rstrip("/")
+        reset_url = f"{base}/reset-password.html?token={token}"
+        send_password_reset_email(email, user["full_name"], reset_url)
+    # Always return ok to avoid revealing whether email exists
+    return jsonify({"ok": True})
+
+@app.post("/api/auth/reset-password")
+def reset_password_endpoint():
+    b = request.get_json(force=True)
+    token = (b.get("token") or "").strip()
+    new_pwd = b.get("password") or ""
+    if not token or len(new_pwd) < 8:
+        return jsonify({"error": "Password must be at least 8 characters"}), 400
+    reset = q("""SELECT * FROM password_resets
+                 WHERE token=? AND used=0 AND expires_at > ?""",
+              (token, datetime.utcnow().isoformat())).fetchone()
+    if not reset:
+        return jsonify({"error": "This reset link is invalid or has expired"}), 400
+    pwd_hash = generate_password_hash(new_pwd)
+    q("UPDATE users SET password_hash=? WHERE id=?", (pwd_hash, reset["user_id"]), commit=True)
+    q("UPDATE password_resets SET used=1 WHERE id=?", (reset["id"],), commit=True)
+    # Invalidate all sessions so old password can't be reused
+    q("DELETE FROM sessions WHERE user_id=?", (reset["user_id"],), commit=True)
+    return jsonify({"ok": True})
 
 @app.post("/api/transfers")
 def create_transfer():
