@@ -778,21 +778,23 @@ def register():
     if q("select 1 from users where email=?", (email,)).fetchone():
         return jsonify({"error":"Email already used"}), 409
 
-    pwd_hash = generate_password_hash(pwd)
-    cur = q("insert into users(full_name,email,phone,password_hash,role,created_at) values(?,?,?,?,?,?)",
-            (full_name, email, phone, pwd_hash, "user", datetime.utcnow().isoformat()), commit=True)
-    uid = q("select last_insert_rowid() id").fetchone()["id"]
+    try:
+        pwd_hash = generate_password_hash(pwd)
+        q("insert into users(full_name,email,phone,password_hash,role,created_at) values(?,?,?,?,?,?)",
+          (full_name, email, phone, pwd_hash, "user", datetime.utcnow().isoformat()), commit=True)
+        uid = q("select last_insert_rowid() id").fetchone()["id"]
 
-    # create primary account
-    acct_no = "22" + str(uid).zfill(8)  # simple demo format
-    q("""insert into accounts(user_id,account_no,currency,balance,created_at)
-         values(?,?,?,?,?)""", (uid, acct_no, "USD", 0, datetime.utcnow().isoformat()), commit=True)
+        acct_no = "22" + str(uid).zfill(8)
+        q("""insert into accounts(user_id,account_no,currency,balance,created_at)
+             values(?,?,?,?,?)""", (uid, acct_no, "USD", 0, datetime.utcnow().isoformat()), commit=True)
 
-    # login session
-    token = new_token()
-    q("""insert into sessions(user_id, token, created_at, expires_at)
-         values(?,?,?,?)""", (uid, token, datetime.utcnow().isoformat(),
-                              (datetime.utcnow()+timedelta(days=14)).isoformat()), commit=True)
+        token = new_token()
+        q("""insert into sessions(user_id, token, created_at, expires_at)
+             values(?,?,?,?)""", (uid, token, datetime.utcnow().isoformat(),
+                                  (datetime.utcnow()+timedelta(days=14)).isoformat()), commit=True)
+    except Exception as exc:
+        print(f"[register] DB error: {exc}")
+        return jsonify({"error": "Registration failed. Please try again."}), 500
 
     send_welcome_email(email, full_name, acct_no)
     return jsonify({"ok": True, "token": token, "user_id": uid, "account_no": acct_no})
