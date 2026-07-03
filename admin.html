@@ -2,6 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
+  <script>
+    (function(){
+      var p = new URLSearchParams(window.location.search);
+      if(p.get('unlocked') !== '1'){
+        window.location.replace('/admin-login.html');
+      } else {
+        history.replaceState(null,'','/admin.html');
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover"/>
   <meta name="theme-color" content="#ef4444"/>
   <link rel="manifest" href="/admin-manifest.json">
@@ -1064,17 +1074,6 @@
   </div><!-- /app -->
 
   <script>
-    // ── PIN guard: must arrive via login page with ?unlocked=1
-    (function() {
-      const p = new URLSearchParams(window.location.search);
-      if (p.get('unlocked') !== '1') {
-        window.location.replace('/admin-login.html');
-      } else {
-        // Remove token from URL so refreshing forces re-login
-        history.replaceState(null, '', '/admin.html');
-      }
-    })();
-
     // ── Date label
     const now = new Date();
     document.getElementById('dateLabel').textContent =
