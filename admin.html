@@ -360,9 +360,134 @@
     /* ─── PROGRESS BAR ─── */
     .prog-bar-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; margin-top: 6px; }
     .prog-bar { height: 100%; border-radius: 999px; }
+
+    /* ─── PIN LOCK SCREEN ─── */
+    #pin-lock {
+      position: fixed; inset: 0; z-index: 99999;
+      background: radial-gradient(ellipse at 50% 0%, rgba(120,8,8,0.55) 0%, #030712 65%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0; padding: 32px 20px 40px;
+      transition: opacity 0.45s ease, visibility 0.45s ease;
+    }
+    #pin-lock.unlocked { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    .pin-logo-wrap {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      border: 2px solid rgba(239,68,68,0.35);
+      box-shadow: 0 0 40px rgba(239,68,68,0.25), 0 0 0 8px rgba(239,68,68,0.06);
+      display: grid; place-items: center; margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .pin-logo-wrap img { width: 72px; height: 72px; object-fit: contain; border-radius: 50%; }
+
+    .pin-title {
+      font-family: 'Syne', sans-serif; font-size: 1.45rem; font-weight: 700;
+      color: #f1f5f9; margin-bottom: 6px; letter-spacing: -0.01em;
+    }
+    .pin-sub {
+      font-size: 0.82rem; color: #64748b; margin-bottom: 32px; text-align: center;
+    }
+
+    .pin-dots {
+      display: flex; gap: 18px; margin-bottom: 44px;
+    }
+    .pin-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      background: transparent;
+      transition: all 0.18s ease;
+    }
+    .pin-dot.filled {
+      background: #ef4444;
+      border-color: #ef4444;
+      box-shadow: 0 0 10px rgba(239,68,68,0.6);
+    }
+    .pin-dot.error {
+      background: #fca5a5;
+      border-color: #fca5a5;
+    }
+
+    .pin-pad {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 14px; width: 100%; max-width: 300px;
+    }
+    .pin-key {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.06);
+      color: #e2e8f0;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.5rem; font-weight: 500;
+      cursor: pointer;
+      display: grid; place-items: center;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      max-width: 88px; justify-self: center; width: 100%;
+    }
+    .pin-key:active, .pin-key.pressed {
+      background: rgba(239,68,68,0.22);
+      transform: scale(0.92);
+      box-shadow: 0 0 18px rgba(239,68,68,0.2);
+    }
+    .pin-key.pin-clear, .pin-key.pin-back {
+      font-size: 0.82rem; color: #94a3b8; background: transparent;
+    }
+    .pin-key.pin-clear:active, .pin-key.pin-back:active {
+      background: rgba(255,255,255,0.06); color: #e2e8f0;
+    }
+
+    .pin-footer {
+      margin-top: 32px; font-size: 0.72rem; color: #334155;
+      letter-spacing: 0.04em; text-align: center;
+    }
+
+    @keyframes pin-shake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-10px)}
+      40%{transform:translateX(10px)}
+      60%{transform:translateX(-8px)}
+      80%{transform:translateX(8px)}
+    }
+    .pin-dots.shake { animation: pin-shake 0.38s ease; }
   </style>
 </head>
 <body>
+
+  <!-- ═══ PIN LOCK SCREEN ═══ -->
+  <div id="pin-lock">
+    <div class="pin-logo-wrap">
+      <img src="/icons/logo.jpeg" alt="FGSB">
+    </div>
+    <div class="pin-title">Welcome back</div>
+    <div class="pin-sub">Enter your 4-digit PIN to continue</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" data-digit="1">1</button>
+      <button class="pin-key" data-digit="2">2</button>
+      <button class="pin-key" data-digit="3">3</button>
+      <button class="pin-key" data-digit="4">4</button>
+      <button class="pin-key" data-digit="5">5</button>
+      <button class="pin-key" data-digit="6">6</button>
+      <button class="pin-key" data-digit="7">7</button>
+      <button class="pin-key" data-digit="8">8</button>
+      <button class="pin-key" data-digit="9">9</button>
+      <button class="pin-key pin-clear" id="pin-clear-btn">Clear</button>
+      <button class="pin-key" data-digit="0">0</button>
+      <button class="pin-key pin-back" id="pin-back-btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12H3m0 0l6-6m-6 6l6 6"/></svg>
+      </button>
+    </div>
+    <div class="pin-footer">FGSB Admin Panel &middot; Secured Access</div>
+  </div>
+
   <div class="bg-orbs">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
@@ -1700,6 +1825,68 @@
       searchAccount();
       document.getElementById('account-query').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+
+    /* ─── PIN LOCK ─── */
+    (function() {
+      const CORRECT = '9050';
+      let entered = '';
+      const lock   = document.getElementById('pin-lock');
+      const dots   = document.getElementById('pin-dots');
+
+      function renderDots() {
+        for (let i = 0; i < 4; i++) {
+          document.getElementById('pd' + i).classList.toggle('filled', i < entered.length);
+        }
+      }
+
+      function flash(type) {
+        for (let i = 0; i < 4; i++) {
+          const d = document.getElementById('pd' + i);
+          d.classList.add(type); d.classList.remove('filled');
+        }
+        dots.classList.add('shake');
+        setTimeout(() => {
+          dots.classList.remove('shake');
+          for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.remove(type);
+          entered = ''; renderDots();
+        }, 420);
+      }
+
+      function pressKey(digit) {
+        if (entered.length >= 4) return;
+        entered += digit;
+        renderDots();
+        if (entered.length === 4) {
+          if (entered === CORRECT) {
+            setTimeout(() => lock.classList.add('unlocked'), 200);
+          } else {
+            setTimeout(() => flash('error'), 120);
+          }
+        }
+      }
+
+      document.querySelectorAll('.pin-key[data-digit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          btn.classList.add('pressed');
+          setTimeout(() => btn.classList.remove('pressed'), 120);
+          pressKey(btn.dataset.digit);
+        });
+      });
+
+      document.getElementById('pin-back-btn').addEventListener('click', () => {
+        entered = entered.slice(0, -1); renderDots();
+      });
+      document.getElementById('pin-clear-btn').addEventListener('click', () => {
+        entered = ''; renderDots();
+      });
+
+      document.addEventListener('keydown', e => {
+        if (lock.classList.contains('unlocked')) return;
+        if (e.key >= '0' && e.key <= '9') pressKey(e.key);
+        else if (e.key === 'Backspace') { entered = entered.slice(0, -1); renderDots(); }
+        else if (e.key === 'Escape') { entered = ''; renderDots(); }
+      });
+    })();
 
     window.addEventListener('DOMContentLoaded', () => {
       if (adminKey) document.getElementById('admin-key').value = adminKey;
