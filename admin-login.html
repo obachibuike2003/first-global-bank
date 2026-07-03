@@ -215,6 +215,7 @@
       render();
       if (val.length === 4) {
         if (val === PIN) {
+          sessionStorage.setItem('admin_unlocked', '1');
           setTimeout(() => { window.location.href = '/admin.html'; }, 180);
         } else {
           setTimeout(wrong, 130);
