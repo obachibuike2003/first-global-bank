@@ -629,7 +629,7 @@ def close_conn(_exc):
 def q(sql, args=(), commit=False):
     conn = db()
     cur = conn.cursor()
-    cur.execute(sql, args if args else None)
+    cur.execute(sql, args)
     if commit:
         conn.commit()
     return _DictCursor(cur)
