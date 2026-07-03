@@ -189,8 +189,7 @@
       renderDots();
       if (val.length === 4) {
         if (val === PIN) {
-          sessionStorage.setItem('admin_unlocked', '1');
-          setTimeout(() => { window.location.href = '/admin.html'; }, 200);
+          setTimeout(() => { window.location.href = '/admin.html?unlocked=1'; }, 200);
         } else {
           setTimeout(showError, 120);
         }

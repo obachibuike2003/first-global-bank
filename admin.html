@@ -1064,10 +1064,16 @@
   </div><!-- /app -->
 
   <script>
-    // ── PIN guard: redirect to login if not unlocked this session
-    if (!sessionStorage.getItem('admin_unlocked')) {
-      window.location.replace('/admin-login.html');
-    }
+    // ── PIN guard: must arrive via login page with ?unlocked=1
+    (function() {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('unlocked') !== '1') {
+        window.location.replace('/admin-login.html');
+      } else {
+        // Remove token from URL so refreshing forces re-login
+        history.replaceState(null, '', '/admin.html');
+      }
+    })();
 
     // ── Date label
     const now = new Date();
