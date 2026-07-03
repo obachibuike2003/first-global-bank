@@ -361,122 +361,19 @@
     .prog-bar-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; margin-top: 6px; }
     .prog-bar { height: 100%; border-radius: 999px; }
 
-    /* ─── PIN LOCK SCREEN ─── */
-    #pin-lock {
-      position: fixed; inset: 0; z-index: 99999;
-      background: var(--ink);
-      background-image: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(239,68,68,0.12) 0%, transparent 70%);
-      display: flex; align-items: center; justify-content: center;
-      padding: 24px 20px;
-    }
-    .pin-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(239,68,68,0.18);
-      border-radius: 24px;
-      padding: 40px 32px 32px;
-      width: 100%; max-width: 340px;
-      display: flex; flex-direction: column; align-items: center;
-      box-shadow: 0 0 60px rgba(239,68,68,0.08), 0 24px 60px rgba(0,0,0,0.4);
-      backdrop-filter: blur(20px);
-    }
-    .pin-logo-wrap {
-      width: 86px; height: 86px; border-radius: 50%;
-      background: rgba(239,68,68,0.08);
-      border: 2px solid rgba(239,68,68,0.35);
-      box-shadow: 0 0 40px rgba(239,68,68,0.2), 0 0 0 8px rgba(239,68,68,0.05);
-      display: grid; place-items: center;
-      margin-bottom: 22px; overflow: hidden; flex-shrink: 0;
-    }
-    .pin-logo-wrap img { width: 70px; height: 70px; object-fit: contain; border-radius: 50%; }
-    .pin-title {
-      font-family: 'Syne', sans-serif; font-size: 1.35rem; font-weight: 700;
-      color: var(--white); margin-bottom: 6px;
-    }
-    .pin-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 30px; text-align: center; }
-    .pin-dots { display: flex; gap: 18px; margin-bottom: 36px; }
-    .pin-dot {
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.2); background: transparent;
-      transition: all 0.15s;
-    }
-    .pin-dot.filled { background: #ef4444; border-color: #ef4444; box-shadow: 0 0 10px rgba(239,68,68,0.6); }
-    .pin-dot.error  { background: #fca5a5; border-color: #fca5a5; }
-    .pin-pad {
-      display: grid; grid-template-columns: repeat(3, 76px);
-      gap: 14px; justify-content: center;
-    }
-    .pin-key {
-      width: 76px; height: 76px; border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif; font-size: 1.5rem; font-weight: 500;
-      cursor: pointer; display: grid; place-items: center;
-      transition: transform 0.1s, background 0.12s, border-color 0.12s;
-      -webkit-tap-highlight-color: transparent; user-select: none;
-    }
-    .pin-key:active, .pin-key.pressed {
-      transform: scale(0.88);
-      background: rgba(239,68,68,0.2);
-      border-color: rgba(239,68,68,0.4);
-    }
-    .pin-key.pin-clear, .pin-key.pin-back {
-      background: transparent; border-color: transparent;
-      color: var(--muted); font-size: 0.82rem;
-    }
-    .pin-key.pin-clear:active, .pin-key.pin-back:active {
-      background: var(--surface); color: var(--text);
-    }
-    .pin-footer { margin-top: 24px; font-size: 0.7rem; color: var(--muted); letter-spacing: 0.05em; }
-    @keyframes pin-shake {
-      0%,100%{transform:translateX(0)} 20%{transform:translateX(-9px)}
-      40%{transform:translateX(9px)}  60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
-    }
-    .pin-dots.shake { animation: pin-shake 0.36s ease; }
   </style>
 </head>
 <body>
 
-  <!-- ═══ PIN LOCK SCREEN ═══ -->
-  <div id="pin-lock">
-    <div class="pin-card">
-      <div class="pin-logo-wrap">
-        <img src="/icons/logo.jpeg" alt="FGSB">
-      </div>
-      <div class="pin-title">Welcome back</div>
-      <div class="pin-sub">Enter your 4-digit PIN to continue</div>
-      <div class="pin-dots" id="pin-dots">
-        <div class="pin-dot" id="pd0"></div>
-        <div class="pin-dot" id="pd1"></div>
-        <div class="pin-dot" id="pd2"></div>
-        <div class="pin-dot" id="pd3"></div>
-      </div>
-      <div class="pin-pad">
-        <button class="pin-key" data-digit="1">1</button>
-        <button class="pin-key" data-digit="2">2</button>
-        <button class="pin-key" data-digit="3">3</button>
-        <button class="pin-key" data-digit="4">4</button>
-        <button class="pin-key" data-digit="5">5</button>
-        <button class="pin-key" data-digit="6">6</button>
-        <button class="pin-key" data-digit="7">7</button>
-        <button class="pin-key" data-digit="8">8</button>
-        <button class="pin-key" data-digit="9">9</button>
-        <button class="pin-key pin-clear" id="pin-clear-btn">Clear</button>
-        <button class="pin-key" data-digit="0">0</button>
-        <button class="pin-key pin-back" id="pin-back-btn">&#x232B;</button>
-      </div>
-      <div class="pin-footer">FGSB Admin Panel &middot; Secured Access</div>
-    </div>
-  </div>
 
-  <div class="bg-orbs" id="admin-orbs" style="display:none">
+  <div class="bg-orbs">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
   </div>
-  <div class="grid-bg" id="admin-grid" style="display:none"></div>
+  <div class="grid-bg"></div>
 
-  <div class="app" id="admin-app" style="display:none">
+  <div class="app">
     <!-- ═══ SIDEBAR ═══ -->
     <aside class="side">
       <a class="brand" href="index.html">
@@ -1806,79 +1703,6 @@
       searchAccount();
       document.getElementById('account-query').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-
-    /* ─── PIN LOCK ─── */
-    (function() {
-      const CORRECT = '9050';
-      let entered = '';
-      const lock   = document.getElementById('pin-lock');
-      const dots   = document.getElementById('pin-dots');
-
-      function renderDots() {
-        for (let i = 0; i < 4; i++) {
-          document.getElementById('pd' + i).classList.toggle('filled', i < entered.length);
-        }
-      }
-
-      function flash(type) {
-        for (let i = 0; i < 4; i++) {
-          const d = document.getElementById('pd' + i);
-          d.classList.add(type); d.classList.remove('filled');
-        }
-        dots.classList.add('shake');
-        setTimeout(() => {
-          dots.classList.remove('shake');
-          for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.remove(type);
-          entered = ''; renderDots();
-        }, 420);
-      }
-
-      function unlock() {
-        lock.style.transition = 'opacity 0.35s ease';
-        lock.style.opacity = '0';
-        setTimeout(() => {
-          lock.style.display = 'none';
-          document.getElementById('admin-orbs').style.display = '';
-          document.getElementById('admin-grid').style.display = '';
-          document.getElementById('admin-app').style.display = '';
-        }, 360);
-      }
-
-      function pressKey(digit) {
-        if (entered.length >= 4) return;
-        entered += digit;
-        renderDots();
-        if (entered.length === 4) {
-          if (entered === CORRECT) {
-            setTimeout(unlock, 200);
-          } else {
-            setTimeout(() => flash('error'), 120);
-          }
-        }
-      }
-
-      document.querySelectorAll('.pin-key[data-digit]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          btn.classList.add('pressed');
-          setTimeout(() => btn.classList.remove('pressed'), 120);
-          pressKey(btn.dataset.digit);
-        });
-      });
-
-      document.getElementById('pin-back-btn').addEventListener('click', () => {
-        entered = entered.slice(0, -1); renderDots();
-      });
-      document.getElementById('pin-clear-btn').addEventListener('click', () => {
-        entered = ''; renderDots();
-      });
-
-      document.addEventListener('keydown', e => {
-        if (lock.classList.contains('unlocked')) return;
-        if (e.key >= '0' && e.key <= '9') pressKey(e.key);
-        else if (e.key === 'Backspace') { entered = entered.slice(0, -1); renderDots(); }
-        else if (e.key === 'Escape') { entered = ''; renderDots(); }
-      });
-    })();
 
     window.addEventListener('DOMContentLoaded', () => {
       if (adminKey) document.getElementById('admin-key').value = adminKey;
