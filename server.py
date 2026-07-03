@@ -1,6 +1,6 @@
 # server.py
 import os
-import psycopg2, psycopg2.extras, secrets, json, re
+import pg8000.dbapi as pgdb, urllib.parse as _urlparse, secrets, json, re
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, g, send_from_directory, abort
 from flask_cors import CORS
@@ -576,9 +576,45 @@ def send_email(to_addr, subject, html_body):
         print(f"[email] FAILED to {to_addr}: {exc}")
 
 # ───────────────────────── DB helpers ─────────────────────────
+def _pg_connect(autocommit=False):
+    url = _urlparse.urlparse(DATABASE_URL)
+    import ssl
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    conn = pgdb.connect(
+        host=url.hostname,
+        port=url.port or 5432,
+        database=url.path.lstrip('/'),
+        user=url.username,
+        password=url.password,
+        ssl_context=ctx,
+    )
+    if autocommit:
+        conn.autocommit = True
+    return conn
+
+class _DictCursor:
+    def __init__(self, cur):
+        self._cur = cur
+    def fetchone(self):
+        if not self._cur.description:
+            return None
+        r = self._cur.fetchone()
+        if r is None:
+            return None
+        cols = [d[0] for d in self._cur.description]
+        return dict(zip(cols, r))
+    def fetchall(self):
+        if not self._cur.description:
+            return []
+        rows = self._cur.fetchall()
+        cols = [d[0] for d in self._cur.description]
+        return [dict(zip(cols, r)) for r in rows]
+
 def db():
     if "db" not in g:
-        g.db = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+        g.db = _pg_connect()
     return g.db
 
 @app.teardown_appcontext
@@ -596,7 +632,7 @@ def q(sql, args=(), commit=False):
     cur.execute(sql, args if args else None)
     if commit:
         conn.commit()
-    return cur
+    return _DictCursor(cur)
 
 def row(r):
     if r is None:
@@ -711,8 +747,7 @@ _SCHEMA_STMTS = [
 def bootstrap():
     print("[db] bootstrap: connecting to PostgreSQL")
     try:
-        conn = psycopg2.connect(DATABASE_URL)
-        conn.autocommit = True
+        conn = _pg_connect(autocommit=True)
         cur = conn.cursor()
         for stmt in _SCHEMA_STMTS:
             cur.execute(stmt)
