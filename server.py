@@ -1,6 +1,6 @@
 # server.py
 import os
-import sqlite3, secrets, json, re
+import psycopg2, psycopg2.extras, secrets, json, re
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, g, send_from_directory, abort
 from flask_cors import CORS
@@ -546,8 +546,8 @@ def current_user_id():
     return u["id"] if u else None
 
 
-DB_PATH   = "bank.db"
-ADMIN_KEY = "CHANGE_ME_ADMIN"
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+ADMIN_KEY    = "CHANGE_ME_ADMIN"
 
 app = Flask(__name__, static_url_path='', static_folder='.')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -576,147 +576,153 @@ def send_email(to_addr, subject, html_body):
         print(f"[email] FAILED to {to_addr}: {exc}")
 
 # ───────────────────────── DB helpers ─────────────────────────
-_DB_ABS = os.path.abspath(os.path.join(os.path.dirname(__file__), "bank.db"))
-
 def db():
     if "db" not in g:
-        g.db = sqlite3.connect(_DB_ABS, check_same_thread=False)
-        g.db.row_factory = sqlite3.Row
+        g.db = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
     return g.db
 
 @app.teardown_appcontext
 def close_conn(_exc):
-    if (conn := g.pop("db", None)) is not None:
-        conn.close()
+    conn = g.pop("db", None)
+    if conn is not None:
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 def q(sql, args=(), commit=False):
-    cur = db().execute(sql, args)
+    conn = db()
+    cur = conn.cursor()
+    cur.execute(sql, args if args else None)
     if commit:
-        db().commit()
+        conn.commit()
     return cur
 
-def row(r): return {k: r[k] for k in r.keys()}
+def row(r):
+    if r is None:
+        return None
+    return dict(r)
 
 # ───────────────────────── bootstrap ─────────────────────────
-_SCHEMA = """
-CREATE TABLE IF NOT EXISTS users (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    full_name     TEXT NOT NULL,
-    email         TEXT NOT NULL UNIQUE,
-    phone         TEXT,
-    password_hash TEXT NOT NULL,
-    role          TEXT NOT NULL DEFAULT 'user',
-    handle        TEXT,
-    created_at    TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS accounts (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id    INTEGER NOT NULL REFERENCES users(id),
-    account_no TEXT NOT NULL UNIQUE,
-    currency   TEXT NOT NULL DEFAULT 'USD',
-    balance    REAL NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS sessions (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id    INTEGER NOT NULL REFERENCES users(id),
-    token      TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL,
-    expires_at TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS transactions (
-    id                   INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id              INTEGER NOT NULL REFERENCES users(id),
-    type                 TEXT NOT NULL,
-    direction            TEXT NOT NULL,
-    counterparty_user_id INTEGER,
-    counterparty_info    TEXT,
-    amount               REAL NOT NULL,
-    currency             TEXT NOT NULL DEFAULT 'USD',
-    note                 TEXT,
-    status               TEXT NOT NULL DEFAULT 'Pending',
-    requested_at         TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS cards (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id     INTEGER NOT NULL REFERENCES users(id),
-    spend_limit REAL NOT NULL DEFAULT 5000,
-    online      INTEGER NOT NULL DEFAULT 1,
-    frozen      INTEGER NOT NULL DEFAULT 0,
-    last4       TEXT
-);
-CREATE TABLE IF NOT EXISTS loans (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id        INTEGER NOT NULL REFERENCES users(id),
-    principal      REAL NOT NULL,
-    rate           REAL NOT NULL DEFAULT 0,
-    tenure_months  INTEGER NOT NULL,
-    note           TEXT,
-    status         TEXT NOT NULL DEFAULT 'Pending',
-    created_at     TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS beneficiaries (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id    INTEGER NOT NULL REFERENCES users(id),
-    name       TEXT NOT NULL,
-    dest       TEXT NOT NULL,
-    type       TEXT NOT NULL,
-    created_at TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS support (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id    INTEGER NOT NULL REFERENCES users(id),
-    subject    TEXT NOT NULL,
-    message    TEXT NOT NULL,
-    status     TEXT NOT NULL DEFAULT 'Open',
-    created_at TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS card_requests (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id         INTEGER NOT NULL REFERENCES users(id),
-    card_type       TEXT NOT NULL DEFAULT 'Virtual',
-    passport_ref    TEXT NOT NULL,
-    payment_ref     TEXT NOT NULL,
-    fee_amount      REAL NOT NULL DEFAULT 25.0,
-    status          TEXT NOT NULL DEFAULT 'Pending',
-    admin_note      TEXT,
-    created_at      TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS settings (
-    key   TEXT NOT NULL UNIQUE,
-    value TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS password_resets (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id    INTEGER NOT NULL REFERENCES users(id),
-    token      TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL,
-    expires_at TEXT NOT NULL,
-    used       INTEGER NOT NULL DEFAULT 0
-);
-"""
+_SCHEMA_STMTS = [
+    """CREATE TABLE IF NOT EXISTS users (
+        id            SERIAL PRIMARY KEY,
+        full_name     TEXT NOT NULL,
+        email         TEXT NOT NULL UNIQUE,
+        phone         TEXT,
+        password_hash TEXT NOT NULL,
+        role          TEXT NOT NULL DEFAULT 'user',
+        handle        TEXT,
+        created_at    TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS accounts (
+        id         SERIAL PRIMARY KEY,
+        user_id    INTEGER NOT NULL REFERENCES users(id),
+        account_no TEXT NOT NULL UNIQUE,
+        currency   TEXT NOT NULL DEFAULT 'USD',
+        balance    NUMERIC(15,2) NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS sessions (
+        id         SERIAL PRIMARY KEY,
+        user_id    INTEGER NOT NULL REFERENCES users(id),
+        token      TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS transactions (
+        id                   SERIAL PRIMARY KEY,
+        user_id              INTEGER NOT NULL REFERENCES users(id),
+        type                 TEXT NOT NULL,
+        direction            TEXT NOT NULL,
+        counterparty_user_id INTEGER,
+        counterparty_info    TEXT,
+        amount               NUMERIC(15,2) NOT NULL,
+        currency             TEXT NOT NULL DEFAULT 'USD',
+        note                 TEXT,
+        status               TEXT NOT NULL DEFAULT 'Pending',
+        requested_at         TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS cards (
+        id          SERIAL PRIMARY KEY,
+        user_id     INTEGER NOT NULL REFERENCES users(id),
+        spend_limit NUMERIC(15,2) NOT NULL DEFAULT 5000,
+        online      INTEGER NOT NULL DEFAULT 1,
+        frozen      INTEGER NOT NULL DEFAULT 0,
+        last4       TEXT
+    )""",
+    """CREATE TABLE IF NOT EXISTS loans (
+        id             SERIAL PRIMARY KEY,
+        user_id        INTEGER NOT NULL REFERENCES users(id),
+        principal      NUMERIC(15,2) NOT NULL,
+        rate           NUMERIC(6,2) NOT NULL DEFAULT 0,
+        tenure_months  INTEGER NOT NULL,
+        note           TEXT,
+        status         TEXT NOT NULL DEFAULT 'Pending',
+        created_at     TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS beneficiaries (
+        id         SERIAL PRIMARY KEY,
+        user_id    INTEGER NOT NULL REFERENCES users(id),
+        name       TEXT NOT NULL,
+        dest       TEXT NOT NULL,
+        type       TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS support (
+        id         SERIAL PRIMARY KEY,
+        user_id    INTEGER NOT NULL REFERENCES users(id),
+        subject    TEXT NOT NULL,
+        message    TEXT NOT NULL,
+        status     TEXT NOT NULL DEFAULT 'Open',
+        created_at TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS card_requests (
+        id           SERIAL PRIMARY KEY,
+        user_id      INTEGER NOT NULL REFERENCES users(id),
+        card_type    TEXT NOT NULL DEFAULT 'Virtual',
+        passport_ref TEXT NOT NULL,
+        payment_ref  TEXT NOT NULL,
+        fee_amount   NUMERIC(15,2) NOT NULL DEFAULT 25.0,
+        status       TEXT NOT NULL DEFAULT 'Pending',
+        admin_note   TEXT,
+        created_at   TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS settings (
+        key   TEXT NOT NULL UNIQUE,
+        value TEXT NOT NULL
+    )""",
+    """CREATE TABLE IF NOT EXISTS password_resets (
+        id         SERIAL PRIMARY KEY,
+        user_id    INTEGER NOT NULL REFERENCES users(id),
+        token      TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        used       INTEGER NOT NULL DEFAULT 0
+    )""",
+    """CREATE TABLE IF NOT EXISTS branches (
+        id      SERIAL PRIMARY KEY,
+        city    TEXT NOT NULL,
+        address TEXT,
+        phone   TEXT
+    )""",
+]
 
 def bootstrap():
-    db_abs = _DB_ABS
-    print(f"[db] bootstrap: {db_abs}")
+    print("[db] bootstrap: connecting to PostgreSQL")
     try:
-        conn = sqlite3.connect(db_abs, check_same_thread=False)
-        try:
-            conn.executescript(_SCHEMA)
-            conn.commit()
-            if os.path.exists("schema.sql"):
-                with open("schema.sql", "r", encoding="utf-8") as f:
-                    conn.executescript(f.read())
-                conn.commit()
-            tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
-            print(f"[db] tables: {tables}")
-        finally:
-            conn.close()
+        conn = psycopg2.connect(DATABASE_URL)
+        conn.autocommit = True
+        cur = conn.cursor()
+        for stmt in _SCHEMA_STMTS:
+            cur.execute(stmt)
+        cur.close()
+        conn.close()
+        print("[db] bootstrap: complete")
     except Exception as exc:
         print(f"[db] bootstrap FAILED: {exc}")
         raise
 
-# Call it safely at import time
 bootstrap()
 
 
@@ -748,7 +754,7 @@ def current_user():
     tok = request.headers.get("X-Auth-Token") or ""
     if not tok: return None
     r = q("""select u.* from sessions s join users u on u.id=s.user_id
-             where s.token=? and s.expires_at > ?""", (tok, datetime.utcnow().isoformat())).fetchone()
+             where s.token=%s and s.expires_at > %s""", (tok, datetime.utcnow().isoformat())).fetchone()
     return r
 
 def require_auth():
@@ -772,23 +778,22 @@ def register():
         return jsonify({"error":"Missing fields"}), 400
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return jsonify({"error":"Invalid email"}), 400
-    if q("select 1 from users where email=?", (email,)).fetchone():
+    if q("select 1 from users where email=%s", (email,)).fetchone():
         return jsonify({"error":"Email already used"}), 409
 
     try:
         pwd_hash = generate_password_hash(pwd)
-        q("insert into users(full_name,email,phone,password_hash,role,created_at) values(?,?,?,?,?,?)",
-          (full_name, email, phone, pwd_hash, "user", datetime.utcnow().isoformat()), commit=True)
-        uid = q("select last_insert_rowid() id").fetchone()["id"]
+        uid = q("insert into users(full_name,email,phone,password_hash,role,created_at) values(%s,%s,%s,%s,%s,%s) RETURNING id",
+                (full_name, email, phone, pwd_hash, "user", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
 
         acct_no = "22" + str(uid).zfill(8)
         q("""insert into accounts(user_id,account_no,currency,balance,created_at)
-             values(?,?,?,?,?)""", (uid, acct_no, "USD", 0, datetime.utcnow().isoformat()), commit=True)
+             values(%s,%s,%s,%s,%s)""", (uid, acct_no, "USD", 0, datetime.utcnow().isoformat()), commit=True)
 
         token = new_token()
         q("""insert into sessions(user_id, token, created_at, expires_at)
-             values(?,?,?,?)""", (uid, token, datetime.utcnow().isoformat(),
-                                  (datetime.utcnow()+timedelta(days=14)).isoformat()), commit=True)
+             values(%s,%s,%s,%s)""", (uid, token, datetime.utcnow().isoformat(),
+                                      (datetime.utcnow()+timedelta(days=14)).isoformat()), commit=True)
     except Exception as exc:
         print(f"[register] DB error: {exc}")
         return jsonify({"error": "Registration failed. Please try again."}), 500
@@ -801,14 +806,14 @@ def login():
     b = request.get_json(force=True)
     email = (b.get("email") or "").strip().lower()
     pwd   = b.get("password") or ""
-    u = q("select * from users where email=?", (email,)).fetchone()
+    u = q("select * from users where email=%s", (email,)).fetchone()
     if not u or not check_password_hash(u["password_hash"], pwd):
         return jsonify({"error":"Invalid credentials"}), 401
     token = new_token()
     q("""insert into sessions(user_id, token, created_at, expires_at)
-         values(?,?,?,?)""", (u["id"], token, datetime.utcnow().isoformat(),
-                              (datetime.utcnow()+timedelta(days=14)).isoformat()), commit=True)
-    acct = q("select account_no,currency,balance from accounts where user_id=?", (u["id"],)).fetchone()
+         values(%s,%s,%s,%s)""", (u["id"], token, datetime.utcnow().isoformat(),
+                                  (datetime.utcnow()+timedelta(days=14)).isoformat()), commit=True)
+    acct = q("select account_no,currency,balance from accounts where user_id=%s", (u["id"],)).fetchone()
     return jsonify({"ok": True, "token": token, "user":{
         "id":u["id"], "full_name":u["full_name"], "email":u["email"], "role":u["role"]
     }, "account": row(acct)})
@@ -817,9 +822,9 @@ def login():
 def me():
     u, err = require_auth()
     if err: return err
-    acct = q("select * from accounts where user_id=?", (u["id"],)).fetchone()
-    has_active_card  = bool(q("select 1 from cards where user_id=?", (u["id"],)).fetchone())
-    has_pending_card = bool(q("select 1 from card_requests where user_id=? and status='Pending'", (u["id"],)).fetchone())
+    acct = q("select * from accounts where user_id=%s", (u["id"],)).fetchone()
+    has_active_card  = bool(q("select 1 from cards where user_id=%s", (u["id"],)).fetchone())
+    has_pending_card = bool(q("select 1 from card_requests where user_id=%s and status='Pending'", (u["id"],)).fetchone())
     return jsonify({"user": row(u), "account": row(acct),
                     "has_active_card": has_active_card, "has_pending_card": has_pending_card})
 
@@ -834,22 +839,19 @@ def list_transactions():
     rows = q("""
         SELECT
             requested_at AS date,
-            -- Build a friendly description
             CASE
               WHEN type='Transfer' AND direction='OUT' THEN COALESCE(counterparty_info, 'Transfer Out')
               WHEN type='Transfer' AND direction='IN'  THEN COALESCE(counterparty_info, 'Transfer In')
               WHEN type='Bill' THEN COALESCE(counterparty_info, 'Bill Payment')
               ELSE COALESCE(type, 'Txn')
             END AS description,
-            -- Use type as a simple category for the UI
             type AS category,
-            -- Make OUT negative for UI charts/tables
             CASE WHEN direction='OUT' THEN -ABS(amount) ELSE ABS(amount) END AS amount,
             status
         FROM transactions
-        WHERE user_id=?
+        WHERE user_id=%s
         ORDER BY requested_at DESC
-        LIMIT ?
+        LIMIT %s
     """, [uid, limit]).fetchall()
 
     return jsonify([dict(r) for r in rows])
@@ -867,7 +869,7 @@ def summary():
             CASE WHEN direction='OUT' THEN -ABS(amount) ELSE ABS(amount) END
         ), 0) AS s
         FROM transactions
-        WHERE user_id=?
+        WHERE user_id=%s
     """, [uid]).fetchone()
     bal = rbal["s"]
 
@@ -876,7 +878,7 @@ def summary():
           CASE WHEN direction='OUT' THEN -ABS(amount) ELSE ABS(amount) END AS signed_amount,
           requested_at
         FROM transactions
-        WHERE user_id=? AND requested_at >= datetime('now','-7 day')
+        WHERE user_id=%s AND requested_at::timestamp >= NOW() - INTERVAL '7 days'
     """, [uid]).fetchall()
 
     income7d  = sum(r["signed_amount"] for r in rows if r["signed_amount"] > 0)
@@ -890,13 +892,12 @@ def summary():
 def forgot_password():
     b = request.get_json(force=True)
     email = (b.get("email") or "").strip().lower()
-    user = q("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+    user = q("SELECT * FROM users WHERE email=%s", (email,)).fetchone()
     if user:
-        # Invalidate any existing unused tokens for this user
-        q("UPDATE password_resets SET used=1 WHERE user_id=? AND used=0", (user["id"],), commit=True)
+        q("UPDATE password_resets SET used=1 WHERE user_id=%s AND used=0", (user["id"],), commit=True)
         token = secrets.token_hex(32)
         q("""INSERT INTO password_resets(user_id, token, created_at, expires_at, used)
-             VALUES(?,?,?,?,?)""",
+             VALUES(%s,%s,%s,%s,%s)""",
           (user["id"], token, datetime.utcnow().isoformat(),
            (datetime.utcnow()+timedelta(hours=1)).isoformat(), 0), commit=True)
         base = request.host_url.rstrip("/")
@@ -913,15 +914,14 @@ def reset_password_endpoint():
     if not token or len(new_pwd) < 8:
         return jsonify({"error": "Password must be at least 8 characters"}), 400
     reset = q("""SELECT * FROM password_resets
-                 WHERE token=? AND used=0 AND expires_at > ?""",
+                 WHERE token=%s AND used=0 AND expires_at > %s""",
               (token, datetime.utcnow().isoformat())).fetchone()
     if not reset:
         return jsonify({"error": "This reset link is invalid or has expired"}), 400
     pwd_hash = generate_password_hash(new_pwd)
-    q("UPDATE users SET password_hash=? WHERE id=?", (pwd_hash, reset["user_id"]), commit=True)
-    q("UPDATE password_resets SET used=1 WHERE id=?", (reset["id"],), commit=True)
-    # Invalidate all sessions so old password can't be reused
-    q("DELETE FROM sessions WHERE user_id=?", (reset["user_id"],), commit=True)
+    q("UPDATE users SET password_hash=%s WHERE id=%s", (pwd_hash, reset["user_id"]), commit=True)
+    q("UPDATE password_resets SET used=1 WHERE id=%s", (reset["id"],), commit=True)
+    q("DELETE FROM sessions WHERE user_id=%s", (reset["user_id"],), commit=True)
     return jsonify({"ok": True})
 
 @app.post("/api/transfers")
@@ -941,7 +941,7 @@ def create_transfer():
     counterparty_user_id = None
     counterparty_info    = ""
     if typ == "intra" and dest.startswith("@"):
-        cp = q("select id, full_name from users where handle=?", (dest[1:],)).fetchone()
+        cp = q("select id, full_name from users where handle=%s", (dest[1:],)).fetchone()
         if not cp: return jsonify({"error":"Recipient not found"}), 404
         counterparty_user_id = cp["id"]
         counterparty_info = f"To {dest}"
@@ -951,12 +951,11 @@ def create_transfer():
         counterparty_info = dest
 
     # Create pending transaction (admin must approve)
-    q("""insert into transactions(user_id, type, direction, counterparty_user_id, counterparty_info,
+    tx_id = q("""insert into transactions(user_id, type, direction, counterparty_user_id, counterparty_info,
           amount, currency, note, status, requested_at)
-          values(?,?,?,?,?,?,?,?,?,?)""",
+          values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
       (u["id"], "Transfer", "OUT", counterparty_user_id, counterparty_info,
-       amount, "USD", note, "Pending", datetime.utcnow().isoformat()), commit=True)
-    tx_id = q("select last_insert_rowid() id").fetchone()["id"]
+       amount, "USD", note, "Pending", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
     send_pending_transfer_email(u["email"], u["full_name"], amount, "USD",
                                 counterparty_info or dest, tx_id)
     return jsonify({"ok": True, "status": "Pending", "ref_id": tx_id})
@@ -974,7 +973,7 @@ def create_withdrawal():
     counterparty_info = f"{method} • {details}"
     q("""insert into transactions(user_id, type, direction, counterparty_user_id, counterparty_info,
           amount, currency, note, status, requested_at)
-          values(?,?,?,?,?,?,?,?,?,?)""",
+          values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
       (u["id"], "Withdrawal", "OUT", None, counterparty_info,
        amount, "USD", "", "Pending", datetime.utcnow().isoformat()), commit=True)
     return jsonify({"ok": True, "status": "Pending"})
@@ -992,7 +991,7 @@ def create_bill():
     details = f"{bill_type} • {account}"
     q("""insert into transactions(user_id, type, direction, counterparty_info,
           amount, currency, note, status, requested_at)
-          values(?,?,?,?,?,?,?,?,?)""",
+          values(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
       (u["id"], "Bill", "OUT", details, amount, "USD", bill_type, "Pending", datetime.utcnow().isoformat()),
       commit=True)
     return jsonify({"ok": True, "status":"Pending"})
@@ -1010,11 +1009,10 @@ def request_card():
         return jsonify({"error": "Passport / ID reference is required"}), 400
     if not payment_ref:
         return jsonify({"error": "Payment reference is required"}), 400
-    q("""insert into card_requests(user_id,card_type,passport_ref,payment_ref,fee_amount,status,created_at)
-         values(?,?,?,?,?,?,?)""",
+    req_id = q("""insert into card_requests(user_id,card_type,passport_ref,payment_ref,fee_amount,status,created_at)
+         values(%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
       (u["id"], card_type, passport_ref, payment_ref, fee_amount, "Pending",
-       datetime.utcnow().isoformat()), commit=True)
-    req_id = q("select last_insert_rowid() id").fetchone()["id"]
+       datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
     return jsonify({"ok": True, "status": "Pending", "req_id": req_id})
 
 
@@ -1022,7 +1020,7 @@ def request_card():
 def list_card_requests():
     u, err = require_auth()
     if err: return err
-    rows = q("select * from card_requests where user_id=? order by id desc", (u["id"],)).fetchall()
+    rows = q("select * from card_requests where user_id=%s order by id desc", (u["id"],)).fetchall()
     return jsonify([row(r) for r in rows])
 
 
@@ -1031,7 +1029,7 @@ def get_card():
     uid = current_user_id()
     if not uid:
         return jsonify({"error":"Unauthorized"}), 401
-    card = q("SELECT * FROM cards WHERE user_id=?", [uid]).fetchone()
+    card = q("SELECT * FROM cards WHERE user_id=%s", [uid]).fetchone()
     if not card:
         return jsonify({"limit": 50000, "online": True, "frozen": False, "activity": []})
     return jsonify({
@@ -1048,7 +1046,7 @@ def update_card_settings():
     if not uid:
         return jsonify({"error":"Unauthorized"}), 401
     data = request.get_json(force=True)
-    q("UPDATE cards SET spend_limit=?, online=? WHERE user_id=?", [int(data["limit"]), bool(data["online"]), uid], commit=True)
+    q("UPDATE cards SET spend_limit=%s, online=%s WHERE user_id=%s", [int(data["limit"]), int(data["online"]), uid], commit=True)
     return jsonify({"message": "Settings updated."})
 
 @app.route("/api/cards/freeze", methods=["POST"])
@@ -1056,14 +1054,13 @@ def freeze_card_v2():
     uid = current_user_id()
     if not uid:
         return jsonify({"error":"Unauthorized"}), 401
-    card = q("SELECT frozen FROM cards WHERE user_id=?", [uid]).fetchone()
+    card = q("SELECT frozen FROM cards WHERE user_id=%s", [uid]).fetchone()
     new_state = (not card["frozen"]) if card else True
     if card:
-        q("UPDATE cards SET frozen=? WHERE user_id=?", [int(new_state), uid], commit=True)
+        q("UPDATE cards SET frozen=%s WHERE user_id=%s", [int(new_state), uid], commit=True)
     else:
-        # if no card row yet, create one
-        q("INSERT INTO cards (user_id, spend_limit, online, frozen, last4) VALUES (?,?,?,?,?)",
-          [uid, 50000, True, new_state, random.randint(1000,9999)], commit=True)
+        q("INSERT INTO cards (user_id, spend_limit, online, frozen, last4) VALUES (%s,%s,%s,%s,%s)",
+          [uid, 50000, 1, int(new_state), random.randint(1000,9999)], commit=True)
     return jsonify({"frozen": new_state, "message": "Card frozen." if new_state else "Card unfrozen."})
 
 @app.route("/api/cards/create", methods=["POST"])
@@ -1072,8 +1069,8 @@ def create_virtual_card():
     if not uid:
         return jsonify({"error":"Unauthorized"}), 401
     last4 = random.randint(1000, 9999)
-    q("INSERT INTO cards (user_id, spend_limit, online, frozen, last4) VALUES (?,?,?,?,?)",
-      [uid, 50000, True, False, last4], commit=True)
+    q("INSERT INTO cards (user_id, spend_limit, online, frozen, last4) VALUES (%s,%s,%s,%s,%s)",
+      [uid, 50000, 1, 0, last4], commit=True)
     return jsonify({"message": "Virtual card created.", "last4": last4})
 
 
@@ -1081,7 +1078,7 @@ def create_virtual_card():
 def get_bens():
     u, err = require_auth()
     if err: return err
-    rows = q("select * from beneficiaries where user_id=? order by id desc", (u["id"],)).fetchall()
+    rows = q("select * from beneficiaries where user_id=%s order by id desc", (u["id"],)).fetchall()
     return jsonify([row(r) for r in rows])
 
 # GET /api/transactions?limit=50
@@ -1101,7 +1098,7 @@ def add_ben():
     dest = (b.get("dest") or "").strip()
     typ  = b.get("type","bank")
     if not (name and dest): return jsonify({"error":"Missing"}), 400
-    q("insert into beneficiaries(user_id,name,dest,type,created_at) values(?,?,?,?,?)",
+    q("insert into beneficiaries(user_id,name,dest,type,created_at) values(%s,%s,%s,%s,%s)",
       (u["id"], name, dest, typ, datetime.utcnow().isoformat()), commit=True)
     return jsonify({"ok": True})
 
@@ -1112,7 +1109,7 @@ def support_msg():
     b = request.get_json(force=True)
     subject = (b.get("subject") or "").strip()
     message = (b.get("message") or "").strip()
-    q("insert into support(user_id,subject,message,status,created_at) values(?,?,?,?,?)",
+    q("insert into support(user_id,subject,message,status,created_at) values(%s,%s,%s,%s,%s)",
       (u["id"], subject, message, "Open", datetime.utcnow().isoformat()), commit=True)
     return jsonify({"ok": True})
 
@@ -1133,13 +1130,13 @@ def find_user_by_query(query):
     if not query:
         return None
     if query.isdigit():
-        return q("select * from users where id=?", (int(query),)).fetchone()
+        return q("select * from users where id=%s", (int(query),)).fetchone()
     if "@" in query:
-        return q("select * from users where lower(email)=?", (query.lower(),)).fetchone()
+        return q("select * from users where lower(email)=%s", (query.lower(),)).fetchone()
     qlow = query.lower()
     return q("""
-        select * from users where lower(email)=? or lower(full_name)=?
-        or lower(email) like ? or lower(full_name) like ? limit 1
+        select * from users where lower(email)=%s or lower(full_name)=%s
+        or lower(email) like %s or lower(full_name) like %s limit 1
     """, (qlow, qlow, f"%{qlow}%", f"%{qlow}%")).fetchone()
 
 @app.get("/api/admin/queue")
@@ -1160,23 +1157,23 @@ def admin_decide(tid, action):
     if err: return err
     if action not in ("approve","decline"):
         return jsonify({"error":"Invalid action"}), 400
-    tx = q("select * from transactions where id=?", (tid,)).fetchone()
+    tx = q("select * from transactions where id=%s", (tid,)).fetchone()
     if not tx: return jsonify({"error":"Not found"}), 404
     new_status = "Approved" if action=="approve" else "Declined"
-    q("update transactions set status=? where id=?", (new_status, tid), commit=True)
+    q("update transactions set status=%s where id=%s", (new_status, tid), commit=True)
 
     # On approval: move money for OUT flows; credit IN if intra
     if new_status == "Approved" and tx["direction"] == "OUT":
-        acct = q("select * from accounts where user_id=?", (tx["user_id"],)).fetchone()
+        acct = q("select * from accounts where user_id=%s", (tx["user_id"],)).fetchone()
         if not acct:
             return jsonify({"error":"Account not found"}), 404
         if acct["balance"] < tx["amount"]:
-            q("update transactions set status='Declined' where id=?", (tid,), commit=True)
+            q("update transactions set status='Declined' where id=%s", (tid,), commit=True)
             return jsonify({"error":"Insufficient balance"}), 400
-        q("update accounts set balance=balance-? where id=?", (tx["amount"], acct["id"]), commit=True)
+        q("update accounts set balance=balance-%s where id=%s", (tx["amount"], acct["id"]), commit=True)
         new_sender_balance = acct["balance"] - tx["amount"]
 
-        sender_info = q("select full_name, email from users where id=?", (tx["user_id"],)).fetchone()
+        sender_info = q("select full_name, email from users where id=%s", (tx["user_id"],)).fetchone()
         if sender_info:
             send_debit_alert(
                 sender_info["email"], sender_info["full_name"],
@@ -1185,17 +1182,17 @@ def admin_decide(tid, action):
             )
 
         if tx["type"] == "Transfer" and tx["counterparty_user_id"]:
-            cp_acct = q("select id from accounts where user_id=?", (tx["counterparty_user_id"],)).fetchone()
+            cp_acct = q("select id from accounts where user_id=%s", (tx["counterparty_user_id"],)).fetchone()
             if cp_acct:
-                q("update accounts set balance=balance+? where id=?", (tx["amount"], cp_acct["id"]), commit=True)
+                q("update accounts set balance=balance+%s where id=%s", (tx["amount"], cp_acct["id"]), commit=True)
                 q("""insert into transactions(user_id,type,direction,counterparty_user_id,counterparty_info,
                       amount,currency,note,status,requested_at)
-                      values(?,?,?,?,?,?,?,?,?,?)""",
+                      values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
                   (tx["counterparty_user_id"], "Transfer", "IN", tx["user_id"],
                    f"From user {tx['user_id']}", tx["amount"], tx["currency"],
                    tx["note"], "Approved", datetime.utcnow().isoformat()), commit=True)
-                cp_info = q("select full_name, email from users where id=?", (tx["counterparty_user_id"],)).fetchone()
-                cp_new_bal = q("select balance from accounts where id=?", (cp_acct["id"],)).fetchone()
+                cp_info = q("select full_name, email from users where id=%s", (tx["counterparty_user_id"],)).fetchone()
+                cp_new_bal = q("select balance from accounts where id=%s", (cp_acct["id"],)).fetchone()
                 if cp_info and cp_new_bal:
                     from_name = sender_info["full_name"] if sender_info else f"User {tx['user_id']}"
                     send_credit_alert(
@@ -1215,7 +1212,7 @@ def admin_users():
         user = find_user_by_query(query)
         if not user:
             return jsonify({"error": "User not found"}), 404
-        acct = q("select * from accounts where user_id=?", (user["id"],)).fetchone()
+        acct = q("select * from accounts where user_id=%s", (user["id"],)).fetchone()
         return jsonify({"user": row(user), "account": row(acct) if acct else None})
     rows = q("""select u.id as user_id, u.full_name, u.email, u.phone, u.role, u.created_at,
                      a.account_no, a.currency, a.balance
@@ -1233,15 +1230,14 @@ def admin_users_balance(uid):
     note = (b.get("note") or "Admin adjustment").strip()
     if amount <= 0:
         return jsonify({"error": "Amount must be greater than zero"}), 400
-    acct = q("select * from accounts where user_id=?", (uid,)).fetchone()
+    acct = q("select * from accounts where user_id=%s", (uid,)).fetchone()
     if not acct:
         return jsonify({"error": "Account not found"}), 404
-    q("update accounts set balance=balance+? where id=?", (amount, acct["id"]), commit=True)
-    q("""insert into transactions(user_id,type,direction,counterparty_info,amount,currency,note,status,requested_at)
-          values(?,?,?,?,?,?,?,?,?)""",
-      (uid, "Admin Credit", "IN", "Admin adjustment", abs(amount), acct["currency"], note, "Approved", datetime.utcnow().isoformat()), commit=True)
-    tx_id = q("select last_insert_rowid() id").fetchone()["id"]
-    target_user = q("select full_name, email from users where id=?", (uid,)).fetchone()
+    q("update accounts set balance=balance+%s where id=%s", (amount, acct["id"]), commit=True)
+    tx_id = q("""insert into transactions(user_id,type,direction,counterparty_info,amount,currency,note,status,requested_at)
+          values(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+      (uid, "Admin Credit", "IN", "Admin adjustment", abs(amount), acct["currency"], note, "Approved", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
+    target_user = q("select full_name, email from users where id=%s", (uid,)).fetchone()
     if target_user:
         send_credit_alert(
             target_user["email"], target_user["full_name"],
@@ -1254,14 +1250,14 @@ def admin_users_balance(uid):
 def admin_users_delete(uid):
     u, err = require_admin_guard()
     if err: return err
-    q("delete from sessions where user_id=?", (uid,), commit=True)
-    q("delete from transactions where user_id=?", (uid,), commit=True)
-    q("delete from beneficiaries where user_id=?", (uid,), commit=True)
-    q("delete from cards where user_id=?", (uid,), commit=True)
-    q("delete from loans where user_id=?", (uid,), commit=True)
-    q("delete from support where user_id=?", (uid,), commit=True)
-    q("delete from accounts where user_id=?", (uid,), commit=True)
-    q("delete from users where id=?", (uid,), commit=True)
+    q("delete from sessions where user_id=%s", (uid,), commit=True)
+    q("delete from transactions where user_id=%s", (uid,), commit=True)
+    q("delete from beneficiaries where user_id=%s", (uid,), commit=True)
+    q("delete from cards where user_id=%s", (uid,), commit=True)
+    q("delete from loans where user_id=%s", (uid,), commit=True)
+    q("delete from support where user_id=%s", (uid,), commit=True)
+    q("delete from accounts where user_id=%s", (uid,), commit=True)
+    q("delete from users where id=%s", (uid,), commit=True)
     return jsonify({"ok": True})
 
 @app.post("/api/admin/bills")
@@ -1278,14 +1274,13 @@ def admin_create_bill():
     user = find_user_by_query(user_query)
     if not user:
         return jsonify({"error": "User not found"}), 404
-    acct = q("select * from accounts where user_id=?", (user["id"],)).fetchone()
+    acct = q("select * from accounts where user_id=%s", (user["id"],)).fetchone()
     if not acct:
         return jsonify({"error": "Account not found"}), 404
     details = f"{bill_type} • {acct_ref}"
-    q("insert into transactions(user_id, type, direction, counterparty_info, amount, currency, note, status, requested_at) values(?,?,?,?,?,?,?,?,?)",
-      (user["id"], "Bill", "OUT", details, amount, acct["currency"], bill_type, "Approved", datetime.utcnow().isoformat()), commit=True)
-    tx_id = q("select last_insert_rowid() id").fetchone()["id"]
-    q("update accounts set balance=balance-? where id=?", (amount, acct["id"]), commit=True)
+    tx_id = q("insert into transactions(user_id, type, direction, counterparty_info, amount, currency, note, status, requested_at) values(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+      (user["id"], "Bill", "OUT", details, amount, acct["currency"], bill_type, "Approved", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
+    q("update accounts set balance=balance-%s where id=%s", (amount, acct["id"]), commit=True)
     new_balance = acct["balance"] - amount
     send_bill_email(user["email"], user["full_name"], amount, acct["currency"], bill_type, details, new_balance, tx_id)
     return jsonify({"ok": True, "balance": new_balance})
@@ -1308,7 +1303,7 @@ def admin_set_interest():
         "topup": bool(b.get("topup", False)),
         "effective_from": b.get("effective_from")
     }
-    q("insert or replace into settings(key,value) values('interest',?)", (json.dumps(policy),), commit=True)
+    q("insert into settings(key,value) values(%s,%s) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value", ('interest', json.dumps(policy)), commit=True)
     return jsonify({"ok": True, "policy": policy})
 
 @app.get("/api/admin/loans")
@@ -1328,9 +1323,8 @@ def admin_create_loan():
     u, err = require_admin_guard()
     if err: return err
     b = request.get_json(force=True)
-    q("""insert into loans(user_id, principal, rate, tenure_months, note, status, created_at) values(?,?,?,?,?,?,?)""",
-      (int(b["user_id"]), int(b["principal"]), float(b["rate"]), int(b["tenure_months"]), b.get("note",""), "Pending", datetime.utcnow().isoformat()), commit=True)
-    lid = q("select last_insert_rowid() id").fetchone()["id"]
+    lid = q("""insert into loans(user_id, principal, rate, tenure_months, note, status, created_at) values(%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+      (int(b["user_id"]), int(b["principal"]), float(b["rate"]), int(b["tenure_months"]), b.get("note",""), "Pending", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
     return jsonify({"ok": True, "id": lid})
 
 @app.post("/api/admin/loans/<int:lid>/<action>")
@@ -1340,10 +1334,10 @@ def admin_loan_action(lid, action):
     if action not in ("approve","decline"):
         return jsonify({"error": "Invalid action"}), 400
     new_status = "Approved" if action == "approve" else "Declined"
-    q("update loans set status=? where id=?", (new_status, lid), commit=True)
-    loan = q("select * from loans where id=?", (lid,)).fetchone()
+    q("update loans set status=%s where id=%s", (new_status, lid), commit=True)
+    loan = q("select * from loans where id=%s", (lid,)).fetchone()
     if loan:
-        lu = q("select full_name, email from users where id=?", (loan["user_id"],)).fetchone()
+        lu = q("select full_name, email from users where id=%s", (loan["user_id"],)).fetchone()
         if lu:
             send_loan_status_email(lu["email"], lu["full_name"], loan["principal"], "USD", new_status, lid)
     return jsonify({"ok": True})
@@ -1374,18 +1368,18 @@ def admin_card_decision(req_id, action):
     if err: return err
     if action not in ("approve", "decline"):
         return jsonify({"error": "Invalid action"}), 400
-    cr = q("select * from card_requests where id=?", (req_id,)).fetchone()
+    cr = q("select * from card_requests where id=%s", (req_id,)).fetchone()
     if not cr:
         return jsonify({"error": "Not found"}), 404
     new_status = "Approved" if action == "approve" else "Declined"
     admin_note = (request.get_json(force=True) or {}).get("note", "")
-    q("update card_requests set status=?, admin_note=? where id=?",
+    q("update card_requests set status=%s, admin_note=%s where id=%s",
       (new_status, admin_note, req_id), commit=True)
     if new_status == "Approved":
         last4 = random.randint(1000, 9999)
-        q("INSERT INTO cards (user_id, spend_limit, online, frozen, last4) VALUES (?,?,?,?,?)",
-          [cr["user_id"], 50000, True, False, last4], commit=True)
-    target = q("select full_name, email from users where id=?", (cr["user_id"],)).fetchone()
+        q("INSERT INTO cards (user_id, spend_limit, online, frozen, last4) VALUES (%s,%s,%s,%s,%s)",
+          (cr["user_id"], 50000, True, False, last4), commit=True)
+    target = q("select full_name, email from users where id=%s", (cr["user_id"],)).fetchone()
     if target:
         send_card_status_email(target["email"], target["full_name"], new_status, req_id, cr["card_type"])
     return jsonify({"ok": True, "status": new_status})
@@ -1394,14 +1388,14 @@ def admin_card_decision(req_id, action):
 def get_support():
     u, err = require_auth()
     if err: return err
-    rows = q("select * from support where user_id=? order by id desc", (u["id"],)).fetchall()
+    rows = q("select * from support where user_id=%s order by id desc", (u["id"],)).fetchall()
     return jsonify([row(r) for r in rows])
 
 @app.get("/api/loans")
 def get_loans():
     u, err = require_auth()
     if err: return err
-    rows = q("select * from loans where user_id=? order by id desc", (u["id"],)).fetchall()
+    rows = q("select * from loans where user_id=%s order by id desc", (u["id"],)).fetchall()
     return jsonify([row(r) for r in rows])
 
 @app.post("/api/loans")
@@ -1415,9 +1409,8 @@ def create_loan_application():
     note = (b.get("note") or "").strip()
     if principal <= 0 or tenure_months <= 0:
         return jsonify({"error": "Invalid loan parameters"}), 400
-    q("""insert into loans(user_id, principal, rate, tenure_months, note, status, created_at) values(?,?,?,?,?,?,?)""",
-      (u["id"], principal, rate, tenure_months, note, "Pending", datetime.utcnow().isoformat()), commit=True)
-    lid = q("select last_insert_rowid() id").fetchone()["id"]
+    lid = q("""insert into loans(user_id, principal, rate, tenure_months, note, status, created_at) values(%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+      (u["id"], principal, rate, tenure_months, note, "Pending", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
     return jsonify({"ok": True, "id": lid, "status": "Pending"})
 
 
@@ -1441,8 +1434,8 @@ def set_payment_settings():
     _, err = require_admin_guard()
     if err: return err
     b = request.get_json(force=True)
-    q("insert or replace into settings(key,value) values('payment',?)",
-      (json.dumps(b),), commit=True)
+    q("insert into settings(key,value) values(%s,%s) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value",
+      ('payment', json.dumps(b)), commit=True)
     return jsonify({"ok": True})
 
 # ───────────────────────── misc ─────────────────────────
