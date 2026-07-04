@@ -821,7 +821,10 @@ def register():
         uid = q("insert into users(full_name,email,phone,password_hash,role,created_at) values(%s,%s,%s,%s,%s,%s) RETURNING id",
                 (full_name, email, phone, pwd_hash, "user", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
 
-        acct_no = "22" + str(uid).zfill(8)
+        while True:
+            acct_no = str(random.randint(1000000000, 9999999999))
+            if not q("select id from accounts where account_no=%s", (acct_no,)).fetchone():
+                break
         q("""insert into accounts(user_id,account_no,currency,balance,created_at)
              values(%s,%s,%s,%s,%s)""", (uid, acct_no, "USD", 0, datetime.utcnow().isoformat()), commit=True)
 
