@@ -2,16 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <script>
-    (function(){
-      var p = new URLSearchParams(window.location.search);
-      if(p.get('unlocked') !== '1'){
-        window.location.replace('/admin-login.html');
-      } else {
-        history.replaceState(null,'','/admin.html');
-      }
-    })();
-  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover"/>
   <meta name="theme-color" content="#ef4444"/>
   <link rel="manifest" href="/admin-manifest.json">
@@ -371,10 +361,115 @@
     .prog-bar-bg { height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; margin-top: 6px; }
     .prog-bar { height: 100%; border-radius: 999px; }
 
+    /* ─── PIN LOCK OVERLAY ─── */
+    #pin-overlay {
+      position: fixed; inset: 0; z-index: 99999;
+      background: linear-gradient(160deg, #ffffff 0%, #FEF2F2 55%, #ffffff 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.25rem;
+      font-family: 'Inter', 'DM Sans', system-ui, sans-serif;
+    }
+    #pin-overlay.hidden { display: none; }
+    .pin-card {
+      width: 100%; max-width: 340px;
+      background: #fff; border-radius: 22px;
+      padding: 2rem 1.6rem 1.6rem;
+      border: 1px solid #FECACA;
+      box-shadow: 0 20px 50px rgba(220,38,38,.15);
+      text-align: center;
+    }
+    .pin-avatar {
+      width: 88px; height: 88px; border-radius: 50%;
+      margin: 0 auto .9rem; background: #fff;
+      border: 3px solid #DC2626;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 16px rgba(220,38,38,.3);
+      overflow: hidden;
+    }
+    .pin-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .pin-greeting { font-size: 1.05rem; font-weight: 800; color: #111827; }
+    .pin-sub { font-size: .74rem; color: #6B7280; margin-top: .25rem; margin-bottom: 1.4rem; }
+    .pin-dots { display: flex; justify-content: center; gap: .8rem; margin-bottom: .5rem; }
+    .pin-dots.shake { animation: pinShake .42s; }
+    @keyframes pinShake {
+      10%,90%  { transform: translateX(-2px); }
+      20%,80%  { transform: translateX(4px); }
+      30%,50%,70% { transform: translateX(-8px); }
+      40%,60%  { transform: translateX(8px); }
+    }
+    .pin-dot {
+      width: 15px; height: 15px; border-radius: 50%;
+      border: 2px solid #D1D5DB; background: transparent;
+      transition: background .15s, border-color .15s, transform .15s;
+    }
+    .pin-dot.filled { background: #DC2626; border-color: #DC2626; transform: scale(1.1); }
+    .pin-dot.error  { background: #FCA5A5; border-color: #FCA5A5; }
+    .pin-err-msg {
+      min-height: 1.1rem; font-size: .68rem; font-weight: 700;
+      color: #DC2626; opacity: 0; margin-bottom: .4rem;
+      transition: opacity .15s;
+    }
+    .pin-err-msg.show { opacity: 1; }
+    .pin-keypad {
+      margin-top: 1rem;
+      display: grid; grid-template-columns: repeat(3,1fr); gap: .65rem;
+    }
+    .pkey {
+      font-family: inherit; font-size: 1.15rem; font-weight: 700;
+      color: #111827; background: #F9FAFB; border: 1px solid #F3F4F6;
+      border-radius: 50%; aspect-ratio: 1; width: 100%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background .12s, transform .1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pkey:active { transform: scale(.92); background: #FEF2F2; }
+    .pkey-ghost { font-size: .68rem; font-weight: 700; color: #6B7280; background: transparent; border-color: transparent; }
+    .pkey-ghost:active { background: #F3F4F6; }
+    .pin-foot { margin-top: 1.2rem; font-size: .64rem; color: #9CA3AF; }
+
   </style>
 </head>
 <body>
 
+  <!-- ═══════════════ PIN LOCK SCREEN ═══════════════ -->
+  <div id="pin-overlay">
+    <div class="pin-card">
+      <div class="pin-avatar">
+        <img src="/icons/logo.jpeg" alt="FGSB">
+      </div>
+      <div class="pin-greeting">Welcome back</div>
+      <div class="pin-sub">Enter your 4-digit PIN to continue</div>
+      <div class="pin-dots" id="pinDots">
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+      </div>
+      <div class="pin-err-msg" id="pinErrMsg">Incorrect PIN. Try again.</div>
+      <div class="pin-keypad">
+        <button class="pkey" onclick="pinPress('1')">1</button>
+        <button class="pkey" onclick="pinPress('2')">2</button>
+        <button class="pkey" onclick="pinPress('3')">3</button>
+        <button class="pkey" onclick="pinPress('4')">4</button>
+        <button class="pkey" onclick="pinPress('5')">5</button>
+        <button class="pkey" onclick="pinPress('6')">6</button>
+        <button class="pkey" onclick="pinPress('7')">7</button>
+        <button class="pkey" onclick="pinPress('8')">8</button>
+        <button class="pkey" onclick="pinPress('9')">9</button>
+        <button class="pkey pkey-ghost" onclick="pinClear()">Clear</button>
+        <button class="pkey" onclick="pinPress('0')">0</button>
+        <button class="pkey pkey-ghost" onclick="pinBackspace()" aria-label="Delete">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+            <line x1="18" y1="9" x2="12" y2="15"/>
+            <line x1="12" y1="9" x2="18" y2="15"/>
+          </svg>
+        </button>
+      </div>
+      <div class="pin-foot">FGSB Admin Panel &middot; Secured Access</div>
+    </div>
+  </div>
+  <!-- ═══════════════ END PIN LOCK ═══════════════ -->
 
   <div class="bg-orbs">
     <div class="orb orb-1"></div>
@@ -1737,6 +1832,58 @@
     window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;fab.style.display='flex';});
     fab.addEventListener('click',async()=>{if(!_deferredPrompt)return;_deferredPrompt.prompt();const{outcome}=await _deferredPrompt.userChoice;if(outcome==='accepted')fab.style.display='none';_deferredPrompt=null;});
     window.addEventListener('appinstalled',()=>fab.style.display='none');
+  </script>
+
+  <!-- ═══════════════ PIN LOCK JS ═══════════════ -->
+  <script>
+    (function() {
+      var CORRECT = '9050';
+      var val = '';
+      var overlay = document.getElementById('pin-overlay');
+      var dots    = document.getElementById('pinDots');
+      var errMsg  = document.getElementById('pinErrMsg');
+
+      function renderDots() {
+        dots.querySelectorAll('.pin-dot').forEach(function(d, i) {
+          d.classList.toggle('filled', i < val.length);
+          d.classList.remove('error');
+        });
+      }
+
+      function showError() {
+        dots.querySelectorAll('.pin-dot').forEach(function(d) {
+          d.classList.remove('filled'); d.classList.add('error');
+        });
+        dots.classList.add('shake');
+        errMsg.classList.add('show');
+        setTimeout(function() {
+          dots.classList.remove('shake');
+          errMsg.classList.remove('show');
+          dots.querySelectorAll('.pin-dot').forEach(function(d) { d.classList.remove('error'); });
+          val = ''; renderDots();
+        }, 900);
+      }
+
+      window.pinPress = function(n) {
+        if (val.length >= 4) return;
+        val += n; renderDots();
+        if (val.length === 4) {
+          if (val === CORRECT) {
+            setTimeout(function() { overlay.classList.add('hidden'); }, 200);
+          } else {
+            setTimeout(showError, 120);
+          }
+        }
+      };
+      window.pinClear     = function() { val = ''; renderDots(); };
+      window.pinBackspace = function() { val = val.slice(0, -1); renderDots(); };
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key >= '0' && e.key <= '9') pinPress(e.key);
+        else if (e.key === 'Backspace') pinBackspace();
+        else if (e.key === 'Escape')    pinClear();
+      });
+    })();
   </script>
 </body>
 </html>
