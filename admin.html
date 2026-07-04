@@ -362,14 +362,17 @@
     .prog-bar { height: 100%; border-radius: 999px; }
 
     /* ─── PIN LOCK OVERLAY ─── */
+    /* Lock body — hide everything except the PIN overlay */
+    body.locked > *:not(#pin-overlay) { display: none !important; }
+
     #pin-overlay {
-      position: fixed; inset: 0; z-index: 99999;
+      position: fixed; inset: 0; z-index: 9999999;
       background: linear-gradient(160deg, #ffffff 0%, #FEF2F2 55%, #ffffff 100%);
       display: flex; align-items: center; justify-content: center;
       padding: 1.25rem;
       font-family: 'Inter', 'DM Sans', system-ui, sans-serif;
     }
-    #pin-overlay.hidden { display: none; }
+    #pin-overlay.hidden { display: none !important; }
     .pin-card {
       width: 100%; max-width: 340px;
       background: #fff; border-radius: 22px;
@@ -429,7 +432,7 @@
 
   </style>
 </head>
-<body>
+<body class="locked">
 
   <!-- ═══════════════ PIN LOCK SCREEN ═══════════════ -->
   <div id="pin-overlay">
@@ -1869,7 +1872,10 @@
         val += n; renderDots();
         if (val.length === 4) {
           if (val === CORRECT) {
-            setTimeout(function() { overlay.classList.add('hidden'); }, 200);
+            setTimeout(function() {
+              overlay.classList.add('hidden');
+              document.body.classList.remove('locked');
+            }, 200);
           } else {
             setTimeout(showError, 120);
           }
