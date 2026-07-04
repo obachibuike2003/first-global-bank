@@ -1,4 +1,4 @@
-const CACHE = 'fgsb-v1';
+const CACHE = 'fgsb-v2';
 const STATIC = [
   '/',
   '/index.html',
@@ -32,6 +32,12 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
+
+  // Always fetch admin pages fresh — never cache them
+  if (url.pathname.startsWith('/admin')) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
 
   // Always go network-first for API calls
   if (url.pathname.startsWith('/api/')) {
