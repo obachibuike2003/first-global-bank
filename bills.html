@@ -628,7 +628,7 @@ body.nav-open .drawer-overlay{display:block}
             <div class="success-icon">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
             </div>
-            <div class="success-title">Booking Confirmed!</div>
+            <div class="success-title" id="successTitle">Booking Confirmed!</div>
             <div class="success-ref">Booking Ref: <strong id="refCode">—</strong></div>
             <div class="ticket-strip" id="ticketStrip">
               <div class="ts-row"><span class="lbl">Route</span><span class="val" id="tsRoute">—</span></div>
@@ -638,7 +638,7 @@ body.nav-open .drawer-overlay{display:block}
               <hr class="ts-divider">
               <div class="ts-row"><span class="lbl">Total Paid</span><span class="val" id="tsTotal" style="color:var(--teal-bright);font-size:1rem">—</span></div>
             </div>
-            <p style="font-size:.85rem;color:var(--muted);max-width:38ch;line-height:1.6">Your e-ticket will be sent to your registered email. Check booking history below.</p>
+            <p style="font-size:.85rem;color:var(--muted);max-width:38ch;line-height:1.6" id="successMsg">Your e-ticket will be sent to your registered email. Check booking history below.</p>
             <button class="btn-primary" style="max-width:240px" onclick="newBooking()">
               <span>Book Another Flight</span>
             </button>
@@ -897,7 +897,7 @@ function searchFlights() {
   `).join('');
 
   document.getElementById('searchSection').style.display = 'none';
-  document.getElementById('flightResults').style.display = '';
+  document.getElementById('flightResults').style.display = 'block';
   document.getElementById('continueToPassengers').style.display = 'none';
   selectedFlight = null;
   window._flights = flights;
@@ -986,14 +986,14 @@ function showPassengerSection() {
 
   document.getElementById('passengerForms').innerHTML = forms;
   document.getElementById('flightResults').style.display = 'none';
-  document.getElementById('passengerSection').style.display = '';
+  document.getElementById('passengerSection').style.display = 'block';
   setStep(3);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function backToFlights() {
   document.getElementById('passengerSection').style.display = 'none';
-  document.getElementById('flightResults').style.display = '';
+  document.getElementById('flightResults').style.display = 'block';
   setStep(2);
 }
 
@@ -1030,7 +1030,7 @@ function showAddons() {
   document.querySelectorAll('.addon-item').forEach(a => a.classList.remove('selected'));
 
   document.getElementById('passengerSection').style.display = 'none';
-  document.getElementById('addonsSection').style.display = '';
+  document.getElementById('addonsSection').style.display = 'block';
   setStep(4);
   updateSummary();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1038,7 +1038,7 @@ function showAddons() {
 
 function backToPassengers() {
   document.getElementById('addonsSection').style.display = 'none';
-  document.getElementById('passengerSection').style.display = '';
+  document.getElementById('passengerSection').style.display = 'block';
   setStep(3);
 }
 
@@ -1090,11 +1090,11 @@ async function confirmBooking() {
     amount: total
   };
 
-  let status = 'Confirmed';
+  let status = 'Pending';
   try {
     const res = await apiCall('/bills', { method: 'POST', body: JSON.stringify(payload) });
-    status = res.status === 'Pending' ? 'Confirmed' : (res.status || 'Confirmed');
-  } catch { /* use local fallback */ }
+    status = res.status || 'Pending';
+  } catch { /* backend unreachable — leave as Pending until it can be verified */ }
 
   const ref = 'FLT-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2,5).toUpperCase();
   const booking = {
@@ -1109,6 +1109,11 @@ async function confirmBooking() {
   btn.classList.remove('loading');
   document.getElementById('addonsSection').style.display = 'none';
 
+  const isPending = status === 'Pending';
+  document.getElementById('successTitle').textContent = isPending ? 'Booking Submitted' : 'Booking Confirmed!';
+  document.getElementById('successMsg').innerHTML = isPending
+    ? 'Your booking is <strong style="color:#f5c842">pending admin review</strong>. You\'ll receive an e-ticket by email once it\'s approved and processed.'
+    : 'Your e-ticket will be sent to your registered email. Check booking history below.';
   document.getElementById('refCode').textContent = ref;
   document.getElementById('tsRoute').textContent = route + ' (' + selectedFlight.airline + ')';
   document.getElementById('tsDate').textContent = new Date(depart).toDateString().slice(4);

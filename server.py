@@ -1275,14 +1275,15 @@ def admin_users_balance(uid):
     tx_id = q("""insert into transactions(user_id,type,direction,counterparty_info,amount,currency,note,status,requested_at)
           values(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
       (uid, "Admin Credit", "IN", "Admin adjustment", abs(amount), acct["currency"], note, "Approved", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
+    new_balance = float(acct["balance"]) + amount
     target_user = q("select full_name, email from users where id=%s", (uid,)).fetchone()
     if target_user:
         send_credit_alert(
             target_user["email"], target_user["full_name"],
             amount, acct["currency"], "Admin Credit",
-            "Bank Administration", acct["balance"] + amount, tx_id
+            "Bank Administration", new_balance, tx_id
         )
-    return jsonify({"ok": True, "balance": acct["balance"] + amount})
+    return jsonify({"ok": True, "balance": new_balance})
 
 @app.delete("/api/admin/users/<int:uid>")
 def admin_users_delete(uid):
