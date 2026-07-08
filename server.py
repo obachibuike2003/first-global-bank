@@ -762,6 +762,10 @@ bootstrap()
 
 
 # ───────────────────────── static pages ─────────────────────────
+@app.get("/ping")
+def ping():
+    return "OK"
+
 @app.get("/")
 def serve_index():
     return app.send_static_file("index.html")
