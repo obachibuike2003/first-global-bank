@@ -179,6 +179,8 @@
     .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(14,165,183,0.45); }
     .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; box-shadow: 0 0 20px rgba(239,68,68,0.25); }
     .btn-danger:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(239,68,68,0.4); }
+    .btn-warn { background: rgba(245,200,66,0.12); border: 1px solid rgba(245,200,66,0.35); color: #f5c842; }
+    .btn-warn:hover { background: rgba(245,200,66,0.22); }
     .btn-sm { padding: 6px 14px; font-size: 0.78rem; min-height: 32px; }
 
     /* ─── KPI ─── */
@@ -697,11 +699,12 @@
                     <th>Phone</th>
                     <th>Joined</th>
                     <th>Role</th>
+                    <th>Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody id="users-tbody">
-                  <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);font-size:0.83rem">Loading users…</td></tr>
+                  <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);font-size:0.83rem">Loading users…</td></tr>
                 </tbody>
               </table>
             </div>
@@ -934,7 +937,7 @@
                 <div class="card-header">
                   <div>
                     <div class="card-title">Account Operations</div>
-                    <div class="card-sub">Lookup users, add balance, or delete accounts</div>
+                    <div class="card-sub">Lookup users, add or deduct balance, or delete accounts</div>
                   </div>
                   <span class="badge info" id="account-status-badge">Ready</span>
                 </div>
@@ -945,20 +948,21 @@
                       <input id="account-query" class="form-input" placeholder="jane@example.com or 14" />
                     </div>
                     <div class="form-group">
-                      <label class="form-label">Credit amount ($)</label>
+                      <label class="form-label">Amount ($)</label>
                       <input id="account-amt" class="form-input" type="number" min="1" placeholder="5000" />
                     </div>
                   </div>
                   <div class="form-row">
                     <div class="form-group">
-                      <label class="form-label">Note</label>
-                      <input id="account-note" class="form-input" placeholder="Reason for top-up" />
+                      <label class="form-label">Note / Reason</label>
+                      <input id="account-note" class="form-input" placeholder="Reason for top-up or deduction — included in the user's email" />
                     </div>
                     <div class="form-group">
                       <label class="form-label">Actions</label>
                       <div style="display:flex;flex-wrap:wrap;gap:8px;">
                         <button class="btn btn-ghost" type="button" onclick="searchAccount()">Lookup</button>
                         <button class="btn btn-primary" type="button" onclick="creditAccount()">Add Balance</button>
+                        <button class="btn btn-warn" type="button" onclick="debitAccount()">Deduct Balance</button>
                         <button class="btn btn-danger btn-sm" type="button" onclick="deleteAccount()">Delete Account</button>
                       </div>
                     </div>
@@ -1342,6 +1346,38 @@
       }
     }
 
+    async function debitAccount() {
+      if (!selectedUser) {
+        showAccountMessage('Lookup a user before deducting balance.', true);
+        return;
+      }
+      const amount = Number(document.getElementById('account-amt').value);
+      const reason = document.getElementById('account-note').value.trim();
+      if (!amount || amount <= 0) {
+        showAccountMessage('Enter a valid amount to deduct.', true);
+        return;
+      }
+      if (!reason) {
+        showAccountMessage('Enter a reason for this deduction — it will be included in the email sent to the user.', true);
+        return;
+      }
+      if (!confirm(`Deduct ${fmt(amount)} from ${selectedUser.full_name || selectedUser.email}? They will be emailed with this reason: "${reason}"`)) {
+        return;
+      }
+      try {
+        await adminRequest(`/api/admin/users/${selectedUser.id}/debit`, {
+          method: 'POST',
+          body: { amount, reason }
+        });
+        selectedUser.account.balance = Number(selectedUser.account.balance || 0) - amount;
+        updateSelectedUserDisplay();
+        showAccountMessage(`Balance updated: ${fmt(selectedUser.account.balance)}`);
+        logAction(`Deducted ${fmt(amount)} from ${selectedUser.email || selectedUser.full_name} — ${reason}`);
+      } catch (err) {
+        showAccountMessage(err.message, true);
+      }
+    }
+
     async function deleteAccount() {
       if (!selectedUser) {
         showAccountMessage('Lookup a user before deleting.', true);
@@ -1372,7 +1408,8 @@
       const map = {
         Transfer:   {bg:'rgba(14,165,183,0.12)', color:'#22d4e8'},
         Withdrawal: {bg:'rgba(245,200,66,0.12)', color:'#f5c842'},
-        Loan:       {bg:'rgba(139,92,246,0.12)', color:'#a78bfa'}
+        Loan:       {bg:'rgba(139,92,246,0.12)', color:'#a78bfa'},
+        Deposit:    {bg:'rgba(34,197,94,0.12)',  color:'#4ade80'}
       };
       const c = map[t] || {bg:'rgba(255,255,255,0.06)',color:'#94a3b8'};
       return `<span class="tx-type" style="background:${c.bg};color:${c.color}">${t}</span>`;
@@ -1772,7 +1809,7 @@
         badge.textContent = count + ' user' + (count !== 1 ? 's' : '');
         document.getElementById('kpi-users').textContent = count;
         if (!count) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--muted);font-size:0.83rem">No users registered yet.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--muted);font-size:0.83rem">No users registered yet.</td></tr>';
           return;
         }
         tbody.innerHTML = users.map(u => {
@@ -1782,6 +1819,10 @@
           const role = u.role === 'admin'
             ? '<span class="badge failed">Admin</span>'
             : '<span class="badge info">User</span>';
+          const frozen = !!Number(u.frozen);
+          const status = frozen
+            ? '<span class="badge failed">Frozen</span>'
+            : '<span class="badge success">Active</span>';
           const lookup = (u.email || u.user_id || '').toString().replace(/'/g, '');
           return `<tr class="data-row">
             <td>
@@ -1798,12 +1839,116 @@
             <td style="font-size:0.82rem;color:#94a3b8">${u.phone || '—'}</td>
             <td style="font-size:0.78rem;color:var(--muted)">${joined}</td>
             <td>${role}</td>
-            <td><button class="action-btn view" onclick="quickLookup('${lookup}')">Manage</button></td>
+            <td>${status}</td>
+            <td>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:170px">
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                  <button class="action-btn view" style="padding:5px 10px;font-size:0.72rem" onclick="toggleAddBalance(${u.user_id})">Add</button>
+                  <input type="number" min="1" id="amt-${u.user_id}" class="form-input" placeholder="Amount"
+                         style="display:none;width:90px;padding:5px 8px;font-size:0.75rem"
+                         onkeydown="if(event.key==='Enter'){event.preventDefault();submitAddBalance(${u.user_id});}">
+                  <button class="action-btn ${frozen ? 'approve' : 'decline'}" style="padding:5px 10px;font-size:0.72rem" onclick="toggleFreezeUser(${u.user_id}, ${frozen})">${frozen ? 'Unfreeze' : 'Freeze'}</button>
+                </div>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                  <button class="action-btn decline" style="padding:5px 10px;font-size:0.72rem" onclick="toggleDebitBalance(${u.user_id})">Deduct</button>
+                  <input type="number" min="1" id="deb-amt-${u.user_id}" class="form-input" placeholder="Amount"
+                         style="display:none;width:80px;padding:5px 8px;font-size:0.75rem">
+                  <input type="text" id="deb-reason-${u.user_id}" class="form-input" placeholder="Reason (for email)"
+                         style="display:none;width:130px;padding:5px 8px;font-size:0.75rem"
+                         onkeydown="if(event.key==='Enter'){event.preventDefault();submitDebitBalance(${u.user_id});}">
+                </div>
+                <button class="action-btn view" style="padding:4px 8px;font-size:0.7rem;align-self:flex-start" onclick="quickLookup('${lookup}')">Manage</button>
+              </div>
+            </td>
           </tr>`;
         }).join('');
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--bad);padding:16px;font-size:0.82rem">${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--bad);padding:16px;font-size:0.82rem">${err.message}</td></tr>`;
         badge.textContent = 'error';
+      }
+    }
+
+    function toggleAddBalance(uid) {
+      const input = document.getElementById(`amt-${uid}`);
+      if (!input) return;
+      if (input.style.display === 'none' || !input.style.display) {
+        input.style.display = 'inline-block';
+        input.value = '';
+        input.focus();
+      } else {
+        submitAddBalance(uid);
+      }
+    }
+
+    async function submitAddBalance(uid) {
+      const input = document.getElementById(`amt-${uid}`);
+      const amount = Number(input.value);
+      if (!amount || amount <= 0) {
+        alert('Enter a valid amount to add.');
+        return;
+      }
+      try {
+        await adminRequest(`/api/admin/users/${uid}/balance`, { method: 'POST', body: { amount, note: 'Admin top-up' } });
+        logAction(`Credited ${fmt(amount)} to user #${uid}`);
+        input.style.display = 'none';
+        loadAllUsers();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function toggleDebitBalance(uid) {
+      const amtInput = document.getElementById(`deb-amt-${uid}`);
+      const reasonInput = document.getElementById(`deb-reason-${uid}`);
+      if (!amtInput || !reasonInput) return;
+      const hidden = amtInput.style.display === 'none' || !amtInput.style.display;
+      if (hidden) {
+        amtInput.style.display = 'inline-block';
+        reasonInput.style.display = 'inline-block';
+        amtInput.value = '';
+        reasonInput.value = '';
+        amtInput.focus();
+      } else {
+        submitDebitBalance(uid);
+      }
+    }
+
+    async function submitDebitBalance(uid) {
+      const amtInput = document.getElementById(`deb-amt-${uid}`);
+      const reasonInput = document.getElementById(`deb-reason-${uid}`);
+      const amount = Number(amtInput.value);
+      const reason = reasonInput.value.trim();
+      if (!amount || amount <= 0) {
+        alert('Enter a valid amount to deduct.');
+        return;
+      }
+      if (!reason) {
+        alert('Enter a reason for this deduction — it will be included in the email sent to the user.');
+        return;
+      }
+      if (!confirm(`Deduct ${fmt(amount)} from this user's balance? They will be notified by email with the reason: "${reason}"`)) return;
+      try {
+        await adminRequest(`/api/admin/users/${uid}/debit`, { method: 'POST', body: { amount, reason } });
+        logAction(`Deducted ${fmt(amount)} from user #${uid} — ${reason}`);
+        amtInput.style.display = 'none';
+        reasonInput.style.display = 'none';
+        loadAllUsers();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function toggleFreezeUser(uid, frozen) {
+      const confirmMsg = frozen
+        ? 'Unfreeze this account? The user will regain full access and be notified by email.'
+        : 'Freeze this account? The user will be blocked from transfers, withdrawals and bill payments, and will be notified by email.';
+      if (!confirm(confirmMsg)) return;
+      try {
+        await adminRequest(`/api/admin/users/${uid}/freeze`, { method: 'POST', body: { freeze: !frozen } });
+        logAction(`${frozen ? 'Unfroze' : 'Froze'} account for user #${uid}`);
+        loadAllUsers();
+      } catch (err) {
+        alert(err.message);
       }
     }
 

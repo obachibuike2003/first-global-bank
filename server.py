@@ -449,6 +449,54 @@ def send_pending_transfer_email(to_email, full_name, amount, currency, counterpa
     )
 
 
+def send_pending_deposit_email(to_email, full_name, amount, currency, method_info, ref_id):
+    body = f"""
+    <p style="margin:0 0 6px;color:#94a3b8;font-size:0.9rem">
+      Hi <strong style="color:#e2e8f0">{full_name}</strong>, we've received your deposit request and it is pending review.
+    </p>
+
+    <!-- Amount hero -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:linear-gradient(135deg,rgba(245,200,66,0.08),rgba(245,200,66,0.03));border:1px solid rgba(245,200,66,0.2);border-radius:14px;margin:20px 0;text-align:center">
+      <tr><td style="padding:22px 20px">
+        <div style="font-size:0.7rem;color:#64748b;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Deposit Amount</div>
+        <div style="font-family:'Syne','Segoe UI',Arial,sans-serif;font-size:2.1rem;font-weight:800;color:#f5c842;letter-spacing:-0.02em">{fmt_amount(amount, currency)}</div>
+        <div style="margin-top:10px">{_pill("Pending Review", "gold")}</div>
+      </td></tr>
+    </table>
+
+    <!-- Details -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin:0 0 20px;overflow:hidden">
+      <tr><td style="padding:6px 20px">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          {_data_rows(
+              ("Payment Method", method_info),
+              ("Amount",         f'<span style="color:#f5c842">{fmt_amount(amount, currency)}</span>'),
+              ("Status",         _pill("Pending Admin Review", "gold")),
+              ("Reference",      f'<code style="font-family:monospace;color:#22d4e8;font-size:0.82rem">DEP-{ref_id:06d}</code>'),
+              ("Submitted",      datetime.utcnow().strftime('%d %b %Y, %H:%M UTC')),
+          )}
+        </table>
+      </td></tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:rgba(14,165,183,0.05);border:1px solid rgba(14,165,183,0.12);border-radius:11px">
+      <tr><td style="padding:13px 16px">
+        <span style="color:#22d4e8;font-size:0.78rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase">What Happens Next</span><br>
+        <span style="color:#475569;font-size:0.8rem;line-height:1.6">Our team will verify your payment on-chain and credit your account. You'll receive a credit alert once approved.</span>
+      </td></tr>
+    </table>
+    """
+    send_email(
+        to_email,
+        f"Deposit Pending Review: {fmt_amount(amount, currency)} — First Global Standard Bank",
+        _email_shell("Deposit Submitted — Pending Review",
+                     f"Ref DEP-{ref_id:06d} · {datetime.utcnow().strftime('%d %b %Y, %H:%M')} UTC", body, accent_color="#f5c842")
+    )
+
+
 def send_password_reset_email(to_email, full_name, reset_url):
     body = f"""
     <p style="margin:0 0 18px;color:#94a3b8;font-size:0.9rem;line-height:1.65">
@@ -538,6 +586,50 @@ def send_card_status_email(to_email, full_name, status, card_req_id, card_type="
         f"Card Request {status}",
         f"CARD-{card_req_id:05d} · {datetime.utcnow().strftime('%d %b %Y')}",
         body
+    ))
+
+
+def send_account_freeze_email(to_email, full_name, frozen):
+    accent   = "#f87171" if frozen else "#4ade80"
+    bg_grad  = "rgba(248,113,113,0.08),rgba(239,68,68,0.04)" if frozen else "rgba(74,222,128,0.08),rgba(34,197,94,0.04)"
+    bd_color = "rgba(239,68,68,0.18)" if frozen else "rgba(74,222,128,0.18)"
+    icon     = "&#128274;" if frozen else "&#128275;"
+    status_label = "Frozen" if frozen else "Reactivated"
+    status_msg = (
+        "Your account has been <strong style='color:#f87171'>temporarily frozen</strong> by our security team. "
+        "All outgoing transfers, withdrawals and bill payments are suspended until the freeze is lifted. "
+        "If you believe this is a mistake, please contact our support team immediately."
+        if frozen else
+        "Good news — your account has been <strong style='color:#4ade80'>reactivated</strong> and is fully "
+        "functional again. You can resume transfers, withdrawals and payments as normal."
+    )
+    body = f"""
+    <p style="margin:0 0 6px;color:#94a3b8;font-size:0.9rem">
+      Hi <strong style="color:#e2e8f0">{full_name}</strong>,
+    </p>
+    <p style="margin:0 0 20px;color:#94a3b8;font-size:0.9rem;line-height:1.65">{status_msg}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:linear-gradient(135deg,{bg_grad});border:1px solid {bd_color};border-radius:14px;margin:0 0 20px;text-align:center">
+      <tr><td style="padding:22px 20px">
+        <div style="font-family:'Syne','Segoe UI',Arial,sans-serif;font-size:2.4rem;font-weight:800;color:{accent}">{icon}</div>
+        <div style="font-family:'Syne','Segoe UI',Arial,sans-serif;font-size:1.1rem;font-weight:700;color:{accent};margin:4px 0">Account {status_label}</div>
+        <div style="font-size:0.78rem;color:#475569">{datetime.utcnow().strftime('%d %b %Y, %H:%M UTC')}</div>
+      </td></tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:11px">
+      <tr><td style="padding:13px 16px">
+        <span style="color:#f87171;font-size:0.78rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase">Need Help?</span><br>
+        <span style="color:#475569;font-size:0.8rem;line-height:1.6">Contact our support team via the app if you have any questions about this change.</span>
+      </td></tr>
+    </table>
+    """
+    subject = "Account Frozen — Action Required" if frozen else "Account Reactivated — First Global Standard Bank"
+    send_email(to_email, subject, _email_shell(
+        f"Account {status_label}",
+        datetime.utcnow().strftime('%d %b %Y, %H:%M UTC'),
+        body,
+        accent_color=accent
     ))
 
 
@@ -657,8 +749,10 @@ _SCHEMA_STMTS = [
         account_no TEXT NOT NULL UNIQUE,
         currency   TEXT NOT NULL DEFAULT 'USD',
         balance    NUMERIC(15,2) NOT NULL DEFAULT 0,
+        frozen     INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL
     )""",
+    """ALTER TABLE accounts ADD COLUMN IF NOT EXISTS frozen INTEGER NOT NULL DEFAULT 0""",
     """CREATE TABLE IF NOT EXISTS sessions (
         id         SERIAL PRIMARY KEY,
         user_id    INTEGER NOT NULL REFERENCES users(id),
@@ -966,10 +1060,16 @@ def reset_password_endpoint():
     q("DELETE FROM sessions WHERE user_id=%s", (reset["user_id"],), commit=True)
     return jsonify({"ok": True})
 
+def account_is_frozen(user_id):
+    acct = q("select frozen from accounts where user_id=%s", (user_id,)).fetchone()
+    return bool(acct and acct["frozen"])
+
 @app.post("/api/transfers")
 def create_transfer():
     u, err = require_auth()
     if err: return err
+    if account_is_frozen(u["id"]):
+        return jsonify({"error": "Your account is frozen. Please contact support."}), 403
     b = request.get_json(force=True)
     typ = b.get("type", "intra")  # 'intra' (Trivexa→Trivexa) or 'bank'
     amount = int(b.get("amount", 0))
@@ -987,10 +1087,21 @@ def create_transfer():
         if not cp: return jsonify({"error":"Recipient not found"}), 404
         counterparty_user_id = cp["id"]
         counterparty_info = f"To {dest}"
-    elif typ == "bank":
-        counterparty_info = f"Bank:{bank} • {dest}"
     else:
-        counterparty_info = dest
+        # Any destination matching one of our own account numbers is an
+        # internal (same-bank) transfer, regardless of the declared type —
+        # this lets a user send money to another user just by account number.
+        cp_acct = q("select user_id from accounts where account_no=%s", (dest,)).fetchone()
+        if cp_acct:
+            if cp_acct["user_id"] == u["id"]:
+                return jsonify({"error": "You can't transfer to your own account"}), 400
+            cp_user = q("select full_name from users where id=%s", (cp_acct["user_id"],)).fetchone()
+            counterparty_user_id = cp_acct["user_id"]
+            counterparty_info = f"To {cp_user['full_name'] if cp_user else 'User'} • Acct {dest}"
+        elif typ == "bank":
+            counterparty_info = f"Bank:{bank} • {dest}"
+        else:
+            counterparty_info = dest
 
     # Create pending transaction (admin must approve)
     tx_id = q("""insert into transactions(user_id, type, direction, counterparty_user_id, counterparty_info,
@@ -1006,6 +1117,8 @@ def create_transfer():
 def create_withdrawal():
     u, err = require_auth()
     if err: return err
+    if account_is_frozen(u["id"]):
+        return jsonify({"error": "Your account is frozen. Please contact support."}), 403
     b = request.get_json(force=True)
     amount  = int(b.get("amount", 0))
     method  = (b.get("method") or "").strip()   # e.g. "Bank Transfer", "Crypto"
@@ -1020,10 +1133,35 @@ def create_withdrawal():
        amount, "USD", "", "Pending", datetime.utcnow().isoformat()), commit=True)
     return jsonify({"ok": True, "status": "Pending"})
 
+@app.post("/api/deposits")
+def create_deposit():
+    u, err = require_auth()
+    if err: return err
+    if account_is_frozen(u["id"]):
+        return jsonify({"error": "Your account is frozen. Please contact support."}), 403
+    b = request.get_json(force=True)
+    amount = float(b.get("amount", 0))
+    coin   = (b.get("coin") or "").strip().upper()
+    ref    = (b.get("ref") or "").strip()
+    if amount <= 0:
+        return jsonify({"error": "Enter a valid amount"}), 400
+    if not coin:
+        return jsonify({"error": "Select a payment method"}), 400
+    method_info = f"{coin} Deposit" + (f" • {ref}" if ref else "")
+    tx_id = q("""insert into transactions(user_id, type, direction, counterparty_info,
+          amount, currency, note, status, requested_at)
+          values(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+      (u["id"], "Deposit", "IN", method_info, amount, "USD", "Crypto deposit", "Pending", datetime.utcnow().isoformat()),
+      commit=True).fetchone()["id"]
+    send_pending_deposit_email(u["email"], u["full_name"], amount, "USD", method_info, tx_id)
+    return jsonify({"ok": True, "status": "Pending", "ref_id": tx_id})
+
 @app.post("/api/bills")
 def create_bill():
     u, err = require_auth()
     if err: return err
+    if account_is_frozen(u["id"]):
+        return jsonify({"error": "Your account is frozen. Please contact support."}), 403
     b = request.get_json(force=True)
     bill_type = b.get("type","Utility")
     account   = b.get("account","")
@@ -1243,6 +1381,20 @@ def admin_decide(tid, action):
                         from_name, cp_new_bal["balance"], tid
                     )
 
+    if new_status == "Approved" and tx["direction"] == "IN" and tx["type"] == "Deposit":
+        acct = q("select * from accounts where user_id=%s", (tx["user_id"],)).fetchone()
+        if not acct:
+            return jsonify({"error":"Account not found"}), 404
+        q("update accounts set balance=balance+%s where id=%s", (tx["amount"], acct["id"]), commit=True)
+        new_balance = acct["balance"] + tx["amount"]
+        depositor = q("select full_name, email from users where id=%s", (tx["user_id"],)).fetchone()
+        if depositor:
+            send_credit_alert(
+                depositor["email"], depositor["full_name"],
+                tx["amount"], tx["currency"], "Deposit",
+                tx["counterparty_info"] or "Crypto Deposit", new_balance, tid
+            )
+
     return jsonify({"ok": True, "status": new_status})
 
 @app.get("/api/admin/users")
@@ -1257,11 +1409,26 @@ def admin_users():
         acct = q("select * from accounts where user_id=%s", (user["id"],)).fetchone()
         return jsonify({"user": row(user), "account": row(acct) if acct else None})
     rows = q("""select u.id as user_id, u.full_name, u.email, u.phone, u.role, u.created_at,
-                     a.account_no, a.currency, a.balance
+                     a.account_no, a.currency, a.balance, a.frozen
               from users u
               left join accounts a on u.id=a.user_id
               order by u.created_at desc limit 200""").fetchall()
     return jsonify([row(r) for r in rows])
+
+@app.post("/api/admin/users/<int:uid>/freeze")
+def admin_users_freeze(uid):
+    u, err = require_admin_guard()
+    if err: return err
+    b = request.get_json(force=True)
+    freeze = bool(b.get("freeze", True))
+    acct = q("select * from accounts where user_id=%s", (uid,)).fetchone()
+    if not acct:
+        return jsonify({"error": "Account not found"}), 404
+    q("update accounts set frozen=%s where id=%s", (int(freeze), acct["id"]), commit=True)
+    target = q("select full_name, email from users where id=%s", (uid,)).fetchone()
+    if target:
+        send_account_freeze_email(target["email"], target["full_name"], freeze)
+    return jsonify({"ok": True, "frozen": freeze})
 
 @app.post("/api/admin/users/<int:uid>/balance")
 def admin_users_balance(uid):
@@ -1286,6 +1453,36 @@ def admin_users_balance(uid):
             target_user["email"], target_user["full_name"],
             amount, acct["currency"], "Admin Credit",
             "Bank Administration", new_balance, tx_id
+        )
+    return jsonify({"ok": True, "balance": new_balance})
+
+@app.post("/api/admin/users/<int:uid>/debit")
+def admin_users_debit(uid):
+    u, err = require_admin_guard()
+    if err: return err
+    b = request.get_json(force=True)
+    amount = float(b.get("amount", 0))
+    reason = (b.get("reason") or "").strip()
+    if amount <= 0:
+        return jsonify({"error": "Amount must be greater than zero"}), 400
+    if not reason:
+        return jsonify({"error": "A reason is required for this deduction"}), 400
+    acct = q("select * from accounts where user_id=%s", (uid,)).fetchone()
+    if not acct:
+        return jsonify({"error": "Account not found"}), 404
+    if acct["balance"] < amount:
+        return jsonify({"error": "Insufficient balance"}), 400
+    q("update accounts set balance=balance-%s where id=%s", (amount, acct["id"]), commit=True)
+    tx_id = q("""insert into transactions(user_id,type,direction,counterparty_info,amount,currency,note,status,requested_at)
+          values(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+      (uid, "Admin Debit", "OUT", reason, amount, acct["currency"], reason, "Approved", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
+    new_balance = float(acct["balance"]) - amount
+    target_user = q("select full_name, email from users where id=%s", (uid,)).fetchone()
+    if target_user:
+        send_debit_alert(
+            target_user["email"], target_user["full_name"],
+            amount, acct["currency"], "Admin Debit",
+            reason, new_balance, tx_id
         )
     return jsonify({"ok": True, "balance": new_balance})
 

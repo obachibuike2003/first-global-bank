@@ -224,6 +224,97 @@
       color: #64748b; transition: all 0.2s; flex-shrink: 0;
     }
     .balance-eye:hover { color: var(--teal-bright); border-color: rgba(14,165,183,0.3); }
+    .balance-top-actions { display: flex; align-items: center; gap: 8px; }
+    .add-funds-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(14,165,183,0.15); border: 1px solid rgba(14,165,183,0.35);
+      display: grid; place-items: center; cursor: pointer;
+      color: var(--teal-bright); transition: all 0.2s; flex-shrink: 0;
+    }
+    .add-funds-btn:hover { background: rgba(14,165,183,0.28); transform: scale(1.05); }
+
+    /* ─── ADD FUNDS MODAL (mirrors card-request modal) ─── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(10px); z-index: 1000;
+      display: none; place-items: center; padding: 12px;
+    }
+    .overlay.show { display: grid; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .req-modal {
+      background: rgba(6,11,24,0.98); border: 1px solid rgba(14,165,183,0.22);
+      border-radius: 24px; padding: 0; max-width: 480px; width: 100%;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+      animation: pop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      max-height: 92vh; overflow-y: auto;
+    }
+    @keyframes pop { from{transform:scale(0.88);opacity:0} to{transform:scale(1);opacity:1} }
+    .req-modal-head { padding: 28px 28px 20px; border-bottom: 1px solid var(--border); }
+    .req-modal-head h3 { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; color:var(--white); margin-bottom:4px; }
+    .req-modal-head p  { font-size:0.82rem; color:var(--muted); line-height:1.55; }
+    .req-modal-body { padding: 22px 28px 28px; }
+    .coin-tabs { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
+    .coin-tab {
+      display:flex; align-items:center; gap:6px;
+      padding:7px 14px; border-radius:10px; font-size:0.8rem; font-weight:600;
+      cursor:pointer; border:1px solid var(--border); color:var(--muted);
+      background:transparent; transition:all .2s; white-space:nowrap;
+    }
+    .coin-tab.active { border-color:rgba(14,165,183,0.45); background:rgba(14,165,183,0.1); color:var(--teal-bright); }
+    .coin-tab .coin-dot { width:8px; height:8px; border-radius:50%; }
+    .wallet-box {
+      background:rgba(14,165,183,0.05); border:1px solid rgba(14,165,183,0.2);
+      border-radius:14px; padding:16px; margin-bottom:16px;
+    }
+    .wallet-network { font-size:0.7rem; color:var(--teal); text-transform:uppercase; letter-spacing:.07em; font-weight:600; margin-bottom:8px; }
+    .wallet-addr-row { display:flex; align-items:center; gap:8px; }
+    .wallet-addr {
+      flex:1; font-family:'Syne',monospace; font-size:0.78rem; color:#cbd5e1;
+      word-break:break-all; line-height:1.5; background:rgba(0,0,0,0.3);
+      border:1px solid var(--border); border-radius:9px; padding:8px 10px;
+    }
+    .copy-btn {
+      flex-shrink:0; padding:7px 12px; border-radius:9px; font-size:0.75rem; font-weight:600;
+      border:1px solid rgba(14,165,183,0.3); background:rgba(14,165,183,0.08);
+      color:var(--teal-bright); cursor:pointer; transition:all .2s; white-space:nowrap;
+    }
+    .copy-btn:hover { background:rgba(14,165,183,0.18); }
+    .copy-btn.copied { background:rgba(34,197,94,0.1); border-color:rgba(34,197,94,.3); color:var(--good); }
+    .req-field { margin-bottom:14px; }
+    .req-label { display:block; font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-weight:600; margin-bottom:6px; }
+    .req-input, .req-select {
+      width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border);
+      border-radius:10px; padding:10px 13px; color:var(--white);
+      font-family:'DM Sans',sans-serif; font-size:0.9rem; outline:none; transition:all .2s;
+      box-sizing: border-box;
+    }
+    .req-input:focus, .req-select:focus { border-color:rgba(14,165,183,.45); background:rgba(14,165,183,.04); box-shadow:0 0 0 3px rgba(14,165,183,.08); }
+    .req-select option { background:#0a1020; }
+    .req-fee-box {
+      display:flex; align-items:center; gap:10px; padding:11px 14px;
+      background:rgba(245,200,66,.06); border:1px solid rgba(245,200,66,.2);
+      border-radius:11px; margin-bottom:14px;
+    }
+    .req-fee-box svg { color:var(--gold); flex-shrink:0; }
+    .req-fee-box p { font-size:0.81rem; color:#d4a017; margin:0; line-height:1.5; }
+    .req-actions { display:flex; gap:8px; margin-top:20px; }
+    .req-actions .btn { flex:1; justify-content:center; }
+    .req-msg { display:none; padding:9px 13px; border-radius:9px; font-size:0.82rem; margin-top:10px; }
+    .req-msg.success { background:rgba(34,197,94,.1); border:1px solid rgba(34,197,94,.2); color:var(--good); display:block; }
+    .req-msg.error   { background:rgba(239,68,68,.1); border:1px solid rgba(239,68,68,.2); color:var(--bad); display:block; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 18px; border-radius: 10px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; border: none; line-height: 1;
+    }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: #cbd5e1; }
+    .btn-ghost:hover { border-color: var(--border2); background: var(--surface); color: var(--white); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal) 0%, #0c8a9a 100%);
+      color: var(--white); box-shadow: 0 0 20px rgba(14,165,183,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(14,165,183,0.45); }
     .balance-amount {
       font-family: 'Syne', sans-serif;
       font-size: 2.5rem; font-weight: 800;
@@ -246,6 +337,14 @@
       content: ''; width: 5px; height: 5px; border-radius: 50%;
       background: var(--good); box-shadow: 0 0 5px var(--good);
     }
+    .acct-copy-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.68rem; font-weight: 600; color: var(--teal-bright);
+      background: rgba(14,165,183,0.1); border: 1px solid rgba(14,165,183,0.25);
+      padding: 3px 9px; border-radius: 999px; cursor: pointer; transition: all 0.2s;
+    }
+    .acct-copy-btn:hover { background: rgba(14,165,183,0.2); }
+    .acct-copy-btn.copied { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--good); }
 
     .balance-stats {
       display: grid; grid-template-columns: 1fr 1fr;
@@ -576,15 +675,26 @@
       <div class="balance-card">
         <div class="balance-card-top">
           <span class="balance-label">Total Balance</span>
-          <div class="balance-eye" id="eyeBtn" onclick="toggleBalance()" title="Show/hide balance">
-            <svg id="eyeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-            </svg>
+          <div class="balance-top-actions">
+            <div class="add-funds-btn" id="addFundsBtn" onclick="openDepositModal()" title="Add Funds">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+            </div>
+            <div class="balance-eye" id="eyeBtn" onclick="toggleBalance()" title="Show/hide balance">
+              <svg id="eyeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </div>
           </div>
         </div>
         <div class="balance-amount" id="heroBalance">$0.00</div>
         <div class="balance-acct">
           <span class="balance-acct-num" id="heroAcctNo">Acct ···· ····</span>
+          <button class="acct-copy-btn" id="acctCopyBtn" onclick="copyAccountNumber()" title="Copy account number">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
           <span class="live-pill">Active</span>
         </div>
         <div class="balance-stats">
@@ -612,12 +722,12 @@
       <!-- ② Quick Actions -->
       <div class="quick-actions">
         <div class="qa-scroll">
-          <a href="transfers.html" class="qa-item">
+          <div class="qa-item" onclick="openSendModal()">
             <div class="qa-circle">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
             <span class="qa-text">Send</span>
-          </a>
+          </div>
           <div class="qa-item" onclick="">
             <div class="qa-circle">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -684,6 +794,102 @@
           </div>
           <div id="wd-msg" style="font-size:0.8rem;margin-bottom:12px;display:none"></div>
           <button onclick="submitWithdrawal()" style="width:100%;background:linear-gradient(135deg,#0ea5b7,#0891a0);border:none;border-radius:8px;padding:12px;color:#fff;font-size:0.95rem;font-weight:600;cursor:pointer">Submit Request</button>
+        </div>
+      </div>
+
+      <!-- Add Funds Modal -->
+      <div class="overlay" id="depositOverlay">
+        <div class="req-modal">
+          <div class="req-modal-head">
+            <h3>Add Funds</h3>
+            <p>Choose an amount, send crypto to the address shown, then click Done. Your deposit is credited once admin approves it.</p>
+          </div>
+          <div class="req-modal-body">
+
+            <!-- Step 1: Amount -->
+            <div class="req-field">
+              <label class="req-label">1. Amount to Add (USD) <span style="color:var(--bad)">*</span></label>
+              <input class="req-input" id="depAmount" type="number" min="1" placeholder="e.g. 500">
+            </div>
+
+            <!-- Step 2: Choose coin & pay -->
+            <div class="req-label" style="margin-bottom:10px">2. Send Payment To</div>
+            <div class="coin-tabs">
+              <button class="coin-tab active" onclick="selectDepositCoin('usdt',this)">
+                <span class="coin-dot" style="background:#26a17b"></span> USDT
+              </button>
+              <button class="coin-tab" onclick="selectDepositCoin('btc',this)">
+                <span class="coin-dot" style="background:#f7931a"></span> BTC
+              </button>
+              <button class="coin-tab" onclick="selectDepositCoin('tron',this)">
+                <span class="coin-dot" style="background:#ef0027"></span> TRON
+              </button>
+              <button class="coin-tab" onclick="selectDepositCoin('eth',this)">
+                <span class="coin-dot" style="background:#627eea"></span> ETH
+              </button>
+            </div>
+
+            <div class="wallet-box" id="depWalletBox">
+              <div class="wallet-network" id="depWalletNetwork">Loading wallet details…</div>
+              <div class="wallet-addr-row">
+                <div class="wallet-addr" id="depWalletAddr">—</div>
+                <button class="copy-btn" id="depCopyBtn" onclick="copyDepositWallet()">Copy</button>
+              </div>
+            </div>
+
+            <!-- Step 3: optional reference -->
+            <div class="req-field">
+              <label class="req-label">3. Transaction Reference (optional)</label>
+              <input class="req-input" id="depRef" type="text" placeholder="Paste your transaction hash, if you have it">
+            </div>
+
+            <div class="req-msg" id="depMsg"></div>
+
+            <div class="req-actions">
+              <button class="btn btn-ghost" onclick="closeDepositModal()">Cancel</button>
+              <button class="btn btn-primary" id="depSubmitBtn" onclick="submitDeposit()">
+                <span id="depBtnText">Done</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Send to User Modal -->
+      <div class="overlay" id="sendOverlay">
+        <div class="req-modal">
+          <div class="req-modal-head">
+            <h3>Send Money</h3>
+            <p>Send instantly to another First Global Standard Bank user using their account number. Your request is reviewed before funds move.</p>
+          </div>
+          <div class="req-modal-body">
+
+            <div class="req-field">
+              <label class="req-label">Recipient's Account Number <span style="color:var(--bad)">*</span></label>
+              <input class="req-input" id="sendAcctNo" type="text" inputmode="numeric" placeholder="e.g. 0123456789">
+            </div>
+
+            <div class="req-field">
+              <label class="req-label">Amount (USD) <span style="color:var(--bad)">*</span></label>
+              <input class="req-input" id="sendAmount" type="number" min="1" placeholder="e.g. 100">
+            </div>
+
+            <div class="req-field">
+              <label class="req-label">Note (optional)</label>
+              <input class="req-input" id="sendNote" type="text" placeholder="What's this for?">
+            </div>
+
+            <div class="req-msg" id="sendMsg"></div>
+
+            <div class="req-actions">
+              <button class="btn btn-ghost" onclick="closeSendModal()">Cancel</button>
+              <button class="btn btn-primary" id="sendSubmitBtn" onclick="submitSend()">
+                <span id="sendBtnText">Send</span>
+              </button>
+            </div>
+
+          </div>
         </div>
       </div>
 
@@ -769,6 +975,7 @@
   let balanceHidden   = false;
   let rawBalance      = 0;
   let rawCurrency     = 'USD';
+  let rawAccountNo    = '';
 
   function apiHeaders() {
     const h = { 'Content-Type': 'application/json' };
@@ -821,10 +1028,23 @@
     document.getElementById('sideUserRole').textContent = 'Checking Account';
 
     if (account) {
-      rawBalance  = account.balance || 0;
+      rawBalance   = account.balance || 0;
+      rawAccountNo = account.account_no || '';
       document.getElementById('heroBalance').textContent = fmt(rawBalance);
       document.getElementById('heroAcctNo').textContent  = 'Acct ' + (account.account_no || '—');
     }
+  }
+
+  /* ── copy account number ── */
+  function copyAccountNumber() {
+    if (!rawAccountNo) return;
+    navigator.clipboard.writeText(rawAccountNo).then(() => {
+      const btn = document.getElementById('acctCopyBtn');
+      const original = btn.innerHTML;
+      btn.classList.add('copied');
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Copied!';
+      setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = original; }, 2000);
+    }).catch(() => {});
   }
 
   /* ── summary stats ── */
@@ -944,7 +1164,7 @@
     }
 
     try {
-      await api('/api/withdrawals', {
+      await api('/withdrawals', {
         method: 'POST',
         body: JSON.stringify({ amount, method, details })
       });
@@ -954,6 +1174,154 @@
     } catch (e) {
       msg.textContent = e.message;
       msg.style.cssText = 'display:block;color:#f87171';
+    }
+  }
+
+  /* ─── ADD FUNDS (crypto deposit) FLOW ─── */
+  let _depPaymentSettings = null;
+  let _depSelectedCoin = 'usdt';
+
+  async function loadDepositPaymentSettings() {
+    try {
+      _depPaymentSettings = await fetch('/api/settings/payment').then(r => r.json());
+    } catch { _depPaymentSettings = {}; }
+  }
+
+  function selectDepositCoin(coin, btn) {
+    _depSelectedCoin = coin;
+    document.querySelectorAll('#depositOverlay .coin-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderDepositWalletBox();
+  }
+
+  function renderDepositWalletBox() {
+    const s = (_depPaymentSettings || {})[_depSelectedCoin] || {};
+    const addr = (s.address || '').trim();
+    const network = s.network || _depSelectedCoin.toUpperCase();
+    document.getElementById('depWalletNetwork').textContent = network + ' network';
+    if (addr) {
+      document.getElementById('depWalletAddr').textContent = addr;
+      document.getElementById('depCopyBtn').style.display = '';
+    } else {
+      document.getElementById('depWalletAddr').innerHTML = '<em style="color:var(--muted)">Wallet address not configured yet — contact support.</em>';
+      document.getElementById('depCopyBtn').style.display = 'none';
+    }
+    document.getElementById('depCopyBtn').className = 'copy-btn';
+    document.getElementById('depCopyBtn').textContent = 'Copy';
+  }
+
+  function copyDepositWallet() {
+    const addr = (_depPaymentSettings || {})[_depSelectedCoin]?.address || '';
+    if (!addr) return;
+    navigator.clipboard.writeText(addr).then(() => {
+      const btn = document.getElementById('depCopyBtn');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => {});
+  }
+
+  async function openDepositModal() {
+    document.getElementById('depAmount').value = '';
+    document.getElementById('depRef').value = '';
+    document.getElementById('depMsg').className = 'req-msg';
+    document.getElementById('depMsg').textContent = '';
+    _depSelectedCoin = 'usdt';
+    document.querySelectorAll('#depositOverlay .coin-tab').forEach((b, i) => b.classList.toggle('active', i === 0));
+    if (!_depPaymentSettings) await loadDepositPaymentSettings();
+    renderDepositWalletBox();
+    document.getElementById('depositOverlay').classList.add('show');
+  }
+
+  function closeDepositModal() {
+    document.getElementById('depositOverlay').classList.remove('show');
+  }
+
+  async function submitDeposit() {
+    const amount = Number(document.getElementById('depAmount').value);
+    const ref    = document.getElementById('depRef').value.trim();
+    const msgEl  = document.getElementById('depMsg');
+    const btn    = document.getElementById('depSubmitBtn');
+
+    msgEl.className = 'req-msg';
+    if (!amount || amount <= 0) {
+      msgEl.textContent = 'Please enter a valid amount.';
+      msgEl.classList.add('error');
+      return;
+    }
+
+    btn.disabled = true;
+    document.getElementById('depBtnText').textContent = 'Submitting…';
+
+    try {
+      const res = await api('/deposits', {
+        method: 'POST',
+        body: JSON.stringify({ amount, coin: _depSelectedCoin, ref })
+      });
+      msgEl.textContent = `Deposit request submitted! Ref: DEP-${String(res.ref_id).padStart(6, '0')}. Admin will review and credit your account shortly.`;
+      msgEl.classList.add('success');
+      btn.disabled = false;
+      document.getElementById('depBtnText').textContent = 'Done';
+      setTimeout(closeDepositModal, 3500);
+    } catch (err) {
+      msgEl.textContent = 'Submission failed: ' + err.message;
+      msgEl.classList.add('error');
+      btn.disabled = false;
+      document.getElementById('depBtnText').textContent = 'Done';
+    }
+  }
+
+  /* ─── SEND TO USER (internal transfer by account number) ─── */
+  function openSendModal() {
+    document.getElementById('sendAcctNo').value = '';
+    document.getElementById('sendAmount').value = '';
+    document.getElementById('sendNote').value = '';
+    document.getElementById('sendMsg').className = 'req-msg';
+    document.getElementById('sendMsg').textContent = '';
+    document.getElementById('sendOverlay').classList.add('show');
+  }
+
+  function closeSendModal() {
+    document.getElementById('sendOverlay').classList.remove('show');
+  }
+
+  async function submitSend() {
+    const dest   = document.getElementById('sendAcctNo').value.trim();
+    const amount = Number(document.getElementById('sendAmount').value);
+    const note   = document.getElementById('sendNote').value.trim();
+    const msgEl  = document.getElementById('sendMsg');
+    const btn    = document.getElementById('sendSubmitBtn');
+
+    msgEl.className = 'req-msg';
+    if (!dest) {
+      msgEl.textContent = "Please enter the recipient's account number.";
+      msgEl.classList.add('error');
+      return;
+    }
+    if (!amount || amount <= 0) {
+      msgEl.textContent = 'Please enter a valid amount.';
+      msgEl.classList.add('error');
+      return;
+    }
+
+    btn.disabled = true;
+    document.getElementById('sendBtnText').textContent = 'Sending…';
+
+    try {
+      const res = await api('/transfers', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'intra', dest, amount, note })
+      });
+      msgEl.textContent = `Transfer submitted! Ref: TXN-${String(res.ref_id).padStart(6, '0')}. Pending admin approval.`;
+      msgEl.classList.add('success');
+      btn.disabled = false;
+      document.getElementById('sendBtnText').textContent = 'Send';
+      setTimeout(closeSendModal, 3500);
+    } catch (err) {
+      msgEl.textContent = 'Transfer failed: ' + err.message;
+      msgEl.classList.add('error');
+      btn.disabled = false;
+      document.getElementById('sendBtnText').textContent = 'Send';
     }
   }
 </script>
