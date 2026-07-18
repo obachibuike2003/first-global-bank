@@ -315,6 +315,16 @@
       color: var(--white); box-shadow: 0 0 20px rgba(14,165,183,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
     }
     .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 28px rgba(14,165,183,0.45); }
+    #receiptModal .btn-ghost:hover { background: #f3f4f6; color: #0a1628; border-color: #ccc; }
+
+    @media print {
+      body { background: #fff !important; }
+      body * { visibility: hidden; }
+      #receiptModal, #receiptModal * { visibility: visible; }
+      #receiptOverlay { position: fixed; inset: 0; background: #fff !important; backdrop-filter: none !important; padding: 0; }
+      #receiptModal { position: absolute; top: 0; left: 0; width: 100%; max-width: 100%; max-height: none; box-shadow: none; border: none; }
+      #receiptActions { display: none !important; }
+    }
     .balance-amount {
       font-family: 'Syne', sans-serif;
       font-size: 2.5rem; font-weight: 800;
@@ -893,6 +903,22 @@
         </div>
       </div>
 
+      <!-- Receipt Modal -->
+      <div class="overlay" id="receiptOverlay">
+        <div class="req-modal" id="receiptModal" style="max-width:420px;background:#fdfdfd;color:#1a1a1a;">
+          <div style="padding:26px 26px 16px;text-align:center;border-bottom:2px dashed #ddd;">
+            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;color:#0a1628;letter-spacing:0.02em">FIRST GLOBAL STANDARD BANK</div>
+            <div style="font-size:0.7rem;color:#888;margin-top:4px;text-transform:uppercase;letter-spacing:0.08em">Official Transaction Receipt</div>
+          </div>
+          <div style="padding:18px 26px 6px" id="receiptBody"></div>
+          <div class="req-actions" id="receiptActions" style="padding:6px 26px 26px;margin-top:6px">
+            <button class="btn btn-ghost" onclick="closeReceiptModal()" style="color:#1a1a1a;border-color:#ddd">Close</button>
+            <button class="btn btn-ghost" onclick="downloadReceipt()" style="color:#1a1a1a;border-color:#ddd">Download</button>
+            <button class="btn btn-primary" onclick="printReceipt()">Print</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ③ Stats Row -->
       <div class="stats-row">
         <div class="stat-card">
@@ -976,6 +1002,7 @@
   let rawBalance      = 0;
   let rawCurrency     = 'USD';
   let rawAccountNo    = '';
+  let currentTxList   = [];
 
   function apiHeaders() {
     const h = { 'Content-Type': 'application/json' };
@@ -1080,7 +1107,8 @@
       </div>`;
       return;
     }
-    el.innerHTML = list.map(t => {
+    currentTxList = list;
+    el.innerHTML = list.map((t, idx) => {
       const n      = Number(t.amount);
       const isDebit = n < 0;
       const abs    = Math.abs(n);
@@ -1089,7 +1117,7 @@
       const statusMap = { Approved: 'success', Declined: 'failed', Pending: 'pending' };
       const statusCls  = statusMap[t.status] || 'pending';
       return `
-        <div class="tx-item">
+        <div class="tx-item" onclick="openReceipt(${idx})">
           <div class="tx-ico" style="background:rgba(255,255,255,0.04)">${txIcon(t.category, isDebit)}</div>
           <div class="tx-info">
             <div class="tx-name">${t.description || 'Transaction'}</div>
@@ -1323,6 +1351,92 @@
       btn.disabled = false;
       document.getElementById('sendBtnText').textContent = 'Send';
     }
+  }
+
+  /* ─── RECEIPT (view / print / download) ─── */
+  let currentReceiptRef = 'transaction';
+
+  function openReceipt(idx) {
+    const t = currentTxList[idx];
+    if (!t) return;
+
+    const n       = Number(t.amount);
+    const isDebit = n < 0;
+    const abs     = Math.abs(n);
+    const amtStr  = (isDebit ? '− ' : '+ ') + fmt(abs);
+    const dateStr = new Date(t.date).toLocaleString('en-GB', {
+      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    const ref = 'TXN-' + String(t.id || 0).padStart(6, '0');
+    currentReceiptRef = ref;
+
+    const statusColors = { Approved: '#16a34a', Pending: '#ca8a04', Declined: '#dc2626' };
+    const statusColor  = statusColors[t.status] || '#666';
+
+    const rows = [
+      ['Reference', `<span style="font-family:monospace">${ref}</span>`],
+      ['Date', dateStr],
+      ['Type', t.category || 'Transaction'],
+      ['Details', t.description || '—'],
+    ];
+    if (t.note) rows.push(['Note', t.note]);
+
+    const rowsHtml = rows.map(([label, val]) => `
+      <tr>
+        <td style="padding:7px 0;color:#888;vertical-align:top">${label}</td>
+        <td style="padding:7px 0;text-align:right;font-weight:500">${val}</td>
+      </tr>`).join('');
+
+    document.getElementById('receiptBody').innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+        ${rowsHtml}
+        <tr>
+          <td style="padding:12px 0;color:#888;border-top:1px dashed #ddd">Amount</td>
+          <td style="padding:12px 0;text-align:right;border-top:1px dashed #ddd;font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;color:${isDebit ? '#1a1a1a' : '#16a34a'}">${amtStr}</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 0;color:#888">Status</td>
+          <td style="padding:7px 0;text-align:right;font-weight:700;color:${statusColor}">${t.status || 'Pending'}</td>
+        </tr>
+      </table>
+    `;
+    document.getElementById('receiptOverlay').classList.add('show');
+  }
+
+  function closeReceiptModal() {
+    document.getElementById('receiptOverlay').classList.remove('show');
+  }
+
+  function printReceipt() {
+    window.print();
+  }
+
+  function downloadReceipt() {
+    const bodyHtml = document.getElementById('receiptBody').innerHTML;
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>${currentReceiptRef}</title>
+<style>
+  body { font-family: 'DM Sans', Arial, sans-serif; background: #fff; color: #1a1a1a; padding: 32px; max-width: 480px; margin: 0 auto; }
+  h1 { font-size: 1.05rem; font-family: 'Syne', Arial, sans-serif; margin: 0 0 4px; letter-spacing: 0.02em; }
+  .sub { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px; border-bottom: 2px dashed #ddd; padding-bottom: 16px; }
+  .foot { margin-top: 24px; padding-top: 14px; border-top: 1px dashed #ddd; font-size: 0.72rem; color: #aaa; text-align: center; }
+</style></head>
+<body>
+  <h1>FIRST GLOBAL STANDARD BANK</h1>
+  <div class="sub">Official Transaction Receipt</div>
+  ${bodyHtml}
+  <div class="foot">Generated ${new Date().toLocaleString('en-GB')} &middot; This is a system-generated receipt</div>
+</body></html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `Receipt-${currentReceiptRef}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 </script>
   <style>#pwa-fab{position:fixed;bottom:88px;right:20px;z-index:9999;display:none;align-items:center;gap:8px;padding:11px 18px;background:linear-gradient(135deg,#0ea5b7,#0c8a9a);color:#fff;border:none;border-radius:999px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;box-shadow:0 4px 24px rgba(14,165,183,0.45);transition:transform .2s,box-shadow .2s;}#pwa-fab:hover{transform:translateY(-2px);}#pwa-fab svg{width:18px;height:18px;flex-shrink:0;}@media(min-width:769px){#pwa-fab{bottom:24px;}}</style>

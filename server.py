@@ -985,6 +985,7 @@ def list_transactions():
 
     rows = q("""
         SELECT
+            id,
             requested_at AS date,
             CASE
               WHEN type='Transfer' AND direction='OUT' THEN COALESCE(counterparty_info, 'Transfer Out')
@@ -994,6 +995,8 @@ def list_transactions():
             END AS description,
             type AS category,
             CASE WHEN direction='OUT' THEN -ABS(amount) ELSE ABS(amount) END AS amount,
+            currency,
+            note,
             status
         FROM transactions
         WHERE user_id=%s
