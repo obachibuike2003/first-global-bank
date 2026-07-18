@@ -643,27 +643,38 @@ ADMIN_KEY    = "CHANGE_ME_ADMIN"
 
 app = Flask(__name__, static_url_path='', static_folder='.')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-BREVO_API_KEY    = os.environ.get("BREVO_API_KEY", "")
-MAIL_FROM_EMAIL  = os.environ.get("MAIL_FROM", "firstglobalstandardbank@gmail.com")
+EMAILJS_SERVICE_ID  = os.environ.get("EMAILJS_SERVICE_ID", "")
+EMAILJS_TEMPLATE_ID = os.environ.get("EMAILJS_TEMPLATE_ID", "")
+EMAILJS_PUBLIC_KEY  = os.environ.get("EMAILJS_PUBLIC_KEY", "")
+EMAILJS_PRIVATE_KEY = os.environ.get("EMAILJS_PRIVATE_KEY", "")
 CORS(app, supports_credentials=True)
 
 def send_email(to_addr, subject, html_body):
+    # Requires an EmailJS template whose body is just the single
+    # variable {{{html_body}}} (triple braces = unescaped HTML), with
+    # "To Email" bound to {{to_email}} and "Subject" bound to {{subject}}.
     try:
         resp = http.post(
-            "https://api.brevo.com/v3/smtp/email",
-            headers={"api-key": BREVO_API_KEY, "Content-Type": "application/json"},
+            "https://api.emailjs.com/api/v1.0/email/send",
+            headers={"Content-Type": "application/json"},
             json={
-                "sender": {"name": FROM_NAME, "email": MAIL_FROM_EMAIL},
-                "to": [{"email": to_addr}],
-                "subject": subject,
-                "htmlContent": html_body,
+                "service_id": EMAILJS_SERVICE_ID,
+                "template_id": EMAILJS_TEMPLATE_ID,
+                "user_id": EMAILJS_PUBLIC_KEY,
+                "accessToken": EMAILJS_PRIVATE_KEY,
+                "template_params": {
+                    "to_email": to_addr,
+                    "subject": subject,
+                    "html_body": html_body,
+                    "from_name": FROM_NAME,
+                },
             },
             timeout=10,
         )
-        if resp.status_code in (200, 201):
+        if resp.status_code == 200:
             print(f"[email] sent OK to {to_addr}")
         else:
-            print(f"[email] Brevo error {resp.status_code}: {resp.text}")
+            print(f"[email] EmailJS error {resp.status_code}: {resp.text}")
     except Exception as exc:
         print(f"[email] FAILED to {to_addr}: {exc}")
 
