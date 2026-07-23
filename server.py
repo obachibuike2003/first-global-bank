@@ -37,21 +37,16 @@ def _pill(text, color="teal"):
             f'font-size:0.75rem;font-weight:600;background:{bg};color:{fg};border:1px solid {bd}">{text}</span>')
 
 def _email_shell(title, subtitle, body_html, accent_color="#0ea5b7"):
+    # NOTE: this returns a standalone HTML *fragment*, not a full document.
+    # It gets substituted into an EmailJS template that already supplies its
+    # own <html>/<head>/<body>. A full nested document here (this used to
+    # emit its own <!DOCTYPE html><html>...<body>) breaks in Gmail — the
+    # mail client's parser treats the second <html> as malformed and drops
+    # the whole thing, rendering a blank email body.
     year = datetime.utcnow().year
-    return f"""<!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="dark">
-<!--[if !mso]><!-->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-<!--<![endif]-->
-<title>{title}</title>
-<style>
+    return f"""<style>
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
   body,table,td,a{{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}}
-  body{{margin:0;padding:0;background:#030712;font-family:'DM Sans','Segoe UI',Arial,sans-serif;-webkit-font-smoothing:antialiased}}
   img{{border:0;height:auto;line-height:100%;outline:none;text-decoration:none}}
   table{{border-collapse:collapse !important}}
   p{{margin:0 0 14px;color:#94a3b8;font-size:0.9rem;line-height:1.65}}
@@ -61,9 +56,7 @@ def _email_shell(title, subtitle, body_html, accent_color="#0ea5b7"):
     .email-header{{padding:20px 18px !important}}
   }}
 </style>
-</head>
-<body style="margin:0;padding:0;background:#030712">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#030712;min-height:100vh">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#030712;min-height:100vh;font-family:'DM Sans','Segoe UI',Arial,sans-serif">
   <tr><td align="center" style="padding:28px 12px 36px">
 
     <!-- ── Outer card ── -->
@@ -138,8 +131,7 @@ def _email_shell(title, subtitle, body_html, accent_color="#0ea5b7"):
 
     </table><!-- /outer card -->
   </td></tr>
-</table><!-- /full-width -->
-</body></html>"""
+</table><!-- /full-width -->"""
 
 
 def send_welcome_email(to_email, full_name, account_no):
@@ -494,6 +486,55 @@ def send_pending_deposit_email(to_email, full_name, amount, currency, method_inf
         f"Deposit Pending Review: {fmt_amount(amount, currency)} — First Global Standard Bank",
         _email_shell("Deposit Submitted — Pending Review",
                      f"Ref DEP-{ref_id:06d} · {datetime.utcnow().strftime('%d %b %Y, %H:%M')} UTC", body, accent_color="#f5c842")
+    )
+
+
+def send_pending_bill_email(to_email, full_name, amount, currency, bill_type, details, ref_id):
+    body = f"""
+    <p style="margin:0 0 6px;color:#94a3b8;font-size:0.9rem">
+      Hi <strong style="color:#e2e8f0">{full_name}</strong>, we've received your {bill_type.lower()} payment request and it is pending review.
+    </p>
+
+    <!-- Amount hero -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:linear-gradient(135deg,rgba(245,200,66,0.08),rgba(245,200,66,0.03));border:1px solid rgba(245,200,66,0.2);border-radius:14px;margin:20px 0;text-align:center">
+      <tr><td style="padding:22px 20px">
+        <div style="font-size:0.7rem;color:#64748b;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">{bill_type} Payment</div>
+        <div style="font-family:'Syne','Segoe UI',Arial,sans-serif;font-size:2.1rem;font-weight:800;color:#f5c842;letter-spacing:-0.02em">{fmt_amount(amount, currency)}</div>
+        <div style="margin-top:10px">{_pill("Pending Review", "gold")}</div>
+      </td></tr>
+    </table>
+
+    <!-- Details -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin:0 0 20px;overflow:hidden">
+      <tr><td style="padding:6px 20px">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          {_data_rows(
+              ("Service",   bill_type),
+              ("Details",   details),
+              ("Amount",    f'<span style="color:#f5c842">{fmt_amount(amount, currency)}</span>'),
+              ("Status",    _pill("Pending Admin Review", "gold")),
+              ("Reference", f'<code style="font-family:monospace;color:#22d4e8;font-size:0.82rem">BILL-{ref_id:06d}</code>'),
+              ("Submitted", datetime.utcnow().strftime('%d %b %Y, %H:%M UTC')),
+          )}
+        </table>
+      </td></tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+           style="background:rgba(14,165,183,0.05);border:1px solid rgba(14,165,183,0.12);border-radius:11px">
+      <tr><td style="padding:13px 16px">
+        <span style="color:#22d4e8;font-size:0.78rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase">What Happens Next</span><br>
+        <span style="color:#475569;font-size:0.8rem;line-height:1.6">Our team will review and process your payment. You'll receive a confirmation once it's approved.</span>
+      </td></tr>
+    </table>
+    """
+    send_email(
+        to_email,
+        f"{bill_type} Payment Pending Review: {fmt_amount(amount, currency)} — First Global Standard Bank",
+        _email_shell(f"{bill_type} Payment Submitted — Pending Review",
+                     f"Ref BILL-{ref_id:06d} · {datetime.utcnow().strftime('%d %b %Y, %H:%M')} UTC", body, accent_color="#f5c842")
     )
 
 
@@ -1183,12 +1224,13 @@ def create_bill():
     if amount <= 0:
         return jsonify({"error":"Invalid amount"}), 400
     details = f"{bill_type} • {account}"
-    q("""insert into transactions(user_id, type, direction, counterparty_info,
+    tx_id = q("""insert into transactions(user_id, type, direction, counterparty_info,
           amount, currency, note, status, requested_at)
-          values(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+          values(%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
       (u["id"], "Bill", "OUT", details, amount, "USD", bill_type, "Pending", datetime.utcnow().isoformat()),
-      commit=True)
-    return jsonify({"ok": True, "status":"Pending"})
+      commit=True).fetchone()["id"]
+    send_pending_bill_email(u["email"], u["full_name"], amount, "USD", bill_type, details, tx_id)
+    return jsonify({"ok": True, "status": "Pending", "ref_id": tx_id})
 
 @app.post("/api/cards/request")
 def request_card():
