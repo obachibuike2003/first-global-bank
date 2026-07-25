@@ -477,20 +477,6 @@
   </div>
   <!-- ═══════════════ END PIN LOCK ═══════════════ -->
 
-  <!-- ═══════════════ ADMIN LOGIN GATE ═══════════════ -->
-  <div id="admin-login-overlay" style="display:none;position:fixed;inset:0;z-index:9998;background:#05070ab3;backdrop-filter:blur(6px);align-items:center;justify-content:center;">
-    <form id="admin-login-form" class="pin-card" style="width:320px;display:flex;flex-direction:column;gap:14px;">
-      <div class="pin-avatar"><img src="/icons/logo.jpeg" alt="FGSB"></div>
-      <div class="pin-greeting">Admin sign in</div>
-      <div class="pin-sub">Sign in with your admin account</div>
-      <input id="admin-login-email" class="form-input" type="email" placeholder="Email" autocomplete="username" required>
-      <input id="admin-login-password" class="form-input" type="password" placeholder="Password" autocomplete="current-password" required>
-      <div id="admin-login-err" style="color:#f87171;font-size:0.82rem;display:none;">Invalid credentials or not an admin account.</div>
-      <button type="submit" class="pkey" style="width:100%;height:44px;">Sign in</button>
-    </form>
-  </div>
-  <!-- ═══════════════ END ADMIN LOGIN GATE ═══════════════ -->
-
   <div class="bg-orbs">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
@@ -586,8 +572,7 @@
           <input placeholder="Search users, queues, transactions…">
         </div>
         <div class="admin-key-group">
-          <span id="admin-auth-status" class="admin-key-status">Checking session…</span>
-          <button id="admin-signout-btn" class="form-input admin-key-input" style="display:none;cursor:pointer" type="button">Sign out</button>
+          <span class="admin-key-status">Unlocked with PIN</span>
         </div>
         <div class="topbar-actions">
           <div class="icon-btn">
@@ -1198,8 +1183,7 @@
       + ' · Manage approvals, loans, interest & operations';
 
     // ── Data
-    let authToken = localStorage.getItem('token') || '';
-    let authUser  = JSON.parse(localStorage.getItem('user') || 'null');
+    const ADMIN_KEY = "wgs4cgkSz6IxrHUKkx4L6vLd2KKR8J13NPpteHk932M";
     let selectedUser = null;
     const queue = [];
     const loans = [];
@@ -1208,30 +1192,8 @@
 
     const fmt = n => '$' + Intl.NumberFormat().format(+n);
 
-    function setAdminAuthStatus() {
-      const status = document.getElementById('admin-auth-status');
-      const signOutBtn = document.getElementById('admin-signout-btn');
-      const isAdmin = authToken && authUser && authUser.role === 'admin';
-      status.textContent = isAdmin ? ('Signed in as ' + authUser.full_name) : 'Not signed in';
-      status.style.color = isAdmin ? 'var(--teal-bright)' : 'var(--muted)';
-      signOutBtn.style.display = isAdmin ? 'inline-block' : 'none';
-    }
-
-    function isAdminSession() {
-      return !!(authToken && authUser && authUser.role === 'admin');
-    }
-
-    function showAdminLoginGate() {
-      document.getElementById('admin-login-overlay').style.display = 'flex';
-    }
-    function hideAdminLoginGate() {
-      document.getElementById('admin-login-overlay').style.display = 'none';
-    }
-
     function getAdminHeaders(body) {
-      const headers = {'Content-Type': 'application/json'};
-      if (authToken) headers['X-Auth-Token'] = authToken;
-      return headers;
+      return {'Content-Type': 'application/json', 'X-Admin-Key': ADMIN_KEY};
     }
 
     async function adminRequest(path, opts = {}) {
@@ -1243,12 +1205,6 @@
         request.body = JSON.stringify(request.body);
       }
       const res = await fetch('https://dhiobank.13-48-31-7.sslip.io' + path, request);
-      if (res.status === 401) {
-        authToken = ''; authUser = null;
-        localStorage.removeItem('token'); localStorage.removeItem('user');
-        setAdminAuthStatus();
-        showAdminLoginGate();
-      }
       const payload = await res.json().catch(() => null);
       if (!res.ok) {
         const message = payload?.error || payload?.message || 'Admin request failed';
@@ -1735,41 +1691,6 @@
       document.getElementById('total-prog').style.width = Math.min(total * 5, 100) + '%';
     });
 
-    // ── Init
-    document.getElementById('admin-signout-btn').addEventListener('click', () => {
-      authToken = ''; authUser = null;
-      localStorage.removeItem('token'); localStorage.removeItem('user');
-      setAdminAuthStatus();
-      showAdminLoginGate();
-    });
-
-    document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const errBox = document.getElementById('admin-login-err');
-      errBox.style.display = 'none';
-      const email = document.getElementById('admin-login-email').value.trim();
-      const password = document.getElementById('admin-login-password').value;
-      try {
-        const res = await fetch('https://dhiobank.13-48-31-7.sslip.io/api/auth/login', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({email, password})
-        });
-        const data = await res.json().catch(() => null);
-        if (!res.ok || !data?.token || data.user?.role !== 'admin') {
-          throw new Error('not admin or bad credentials');
-        }
-        authToken = data.token; authUser = data.user;
-        localStorage.setItem('token', authToken);
-        localStorage.setItem('user', JSON.stringify(authUser));
-        setAdminAuthStatus();
-        hideAdminLoginGate();
-        initAdminData();
-      } catch (err) {
-        errBox.style.display = 'block';
-      }
-    });
-
     /* ─── CARD REQUESTS ─── */
     async function loadCardRequests() {
       const tbody = document.getElementById('card-req-tbody');
@@ -2019,22 +1940,13 @@
       document.getElementById('account-query').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    function initAdminData() {
+    window.addEventListener('DOMContentLoaded', () => {
       refreshAdminQueue();
       loadInterestPolicy();
       loadAllUsers();
       loadLoans();
       loadCardRequests();
       loadPaySettings();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      setAdminAuthStatus();
-      if (isAdminSession()) {
-        initAdminData();
-      } else {
-        showAdminLoginGate();
-      }
     });
   </script>
   <style>#pwa-fab{position:fixed;bottom:24px;right:20px;z-index:9999;display:none;align-items:center;gap:8px;padding:11px 18px;background:linear-gradient(135deg,#ef4444,#c0392b);color:#fff;border:none;border-radius:999px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;box-shadow:0 4px 24px rgba(239,68,68,0.45);transition:transform .2s;}#pwa-fab:hover{transform:translateY(-2px);}#pwa-fab svg{width:18px;height:18px;flex-shrink:0;}</style>
