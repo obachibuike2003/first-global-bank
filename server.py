@@ -680,7 +680,6 @@ def current_user_id():
 
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
-ADMIN_KEY    = os.environ.get("ADMIN_KEY", "CHANGE_ME_ADMIN")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "").rstrip("/")
 
 app = Flask(__name__, static_url_path='', static_folder='.')
@@ -952,7 +951,7 @@ def require_auth():
     return u, None
 
 def is_admin(u):
-    return (u and u["role"] == "admin") or (request.headers.get("X-Admin-Key") == ADMIN_KEY)
+    return bool(u and u["role"] == "admin")
 
 # ───────────────────────── public/auth ─────────────────────────
 @app.post("/api/auth/register")
