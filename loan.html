@@ -970,7 +970,7 @@
     document.getElementById('app-tenure').addEventListener('change', updateEMIPreview);
 
     // ── API helpers
-    const API = '/api';
+    const API = 'https://dhiobank.13-48-31-7.sslip.io/api';
     const auth = { token: localStorage.getItem('token') || '' };
     function apiHeaders(extra = {}) {
       const h = { 'Content-Type': 'application/json' };

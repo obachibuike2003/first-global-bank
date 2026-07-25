@@ -680,7 +680,8 @@ def current_user_id():
 
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
-ADMIN_KEY    = "CHANGE_ME_ADMIN"
+ADMIN_KEY    = os.environ.get("ADMIN_KEY", "CHANGE_ME_ADMIN")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "").rstrip("/")
 
 app = Flask(__name__, static_url_path='', static_folder='.')
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
@@ -688,7 +689,9 @@ EMAILJS_SERVICE_ID  = os.environ.get("EMAILJS_SERVICE_ID", "")
 EMAILJS_TEMPLATE_ID = os.environ.get("EMAILJS_TEMPLATE_ID", "")
 EMAILJS_PUBLIC_KEY  = os.environ.get("EMAILJS_PUBLIC_KEY", "")
 EMAILJS_PRIVATE_KEY = os.environ.get("EMAILJS_PRIVATE_KEY", "")
-CORS(app, supports_credentials=True)
+
+_cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip()]
+CORS(app, supports_credentials=True, origins=_cors_origins or "*")
 
 def send_email(to_addr, subject, html_body):
     # Requires an EmailJS template whose body is just the single
@@ -1091,7 +1094,7 @@ def forgot_password():
              VALUES(%s,%s,%s,%s,%s)""",
           (user["id"], token, datetime.utcnow().isoformat(),
            (datetime.utcnow()+timedelta(hours=1)).isoformat(), 0), commit=True)
-        base = request.host_url.rstrip("/")
+        base = FRONTEND_URL or request.host_url.rstrip("/")
         reset_url = f"{base}/reset-password.html?token={token}"
         send_password_reset_email(email, user["full_name"], reset_url)
     # Always return ok to avoid revealing whether email exists

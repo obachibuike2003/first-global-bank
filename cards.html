@@ -994,7 +994,7 @@
   </div>
 
   <script>
-    const API = '/api';
+    const API = 'https://dhiobank.13-48-31-7.sslip.io/api';
     const auth = { token: localStorage.getItem('token') || '' };
     function apiHeaders(extra = {}) {
       const h = {'Content-Type': 'application/json'};
@@ -1188,7 +1188,7 @@
 
     async function loadPaymentSettings() {
       try {
-        _paymentSettings = await fetch('/api/settings/payment').then(r => r.json());
+        _paymentSettings = await fetch('https://dhiobank.13-48-31-7.sslip.io/api/settings/payment').then(r => r.json());
       } catch { _paymentSettings = {}; }
     }
 

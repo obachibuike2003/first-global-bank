@@ -1215,7 +1215,7 @@
       if (request.body && typeof request.body !== 'string') {
         request.body = JSON.stringify(request.body);
       }
-      const res = await fetch(path, request);
+      const res = await fetch('https://dhiobank.13-48-31-7.sslip.io' + path, request);
       const payload = await res.json().catch(() => null);
       if (!res.ok) {
         const message = payload?.error || payload?.message || 'Admin request failed';
@@ -1762,7 +1762,7 @@
 
     async function loadPaySettings() {
       try {
-        const s = await fetch('/api/settings/payment').then(r => r.json());
+        const s = await fetch('https://dhiobank.13-48-31-7.sslip.io/api/settings/payment').then(r => r.json());
         ['usdt','btc','tron','eth'].forEach(coin => {
           const c = s[coin] || {};
           const netEl = document.getElementById('pay-' + coin + '-network');

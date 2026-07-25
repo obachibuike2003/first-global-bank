@@ -995,7 +995,7 @@
 </nav>
 
 <script>
-  const API   = '/api';
+  const API   = 'https://dhiobank.13-48-31-7.sslip.io/api';
   const auth  = { token: localStorage.getItem('token') || '' };
   let allTransactions = [];
   let balanceHidden   = false;
@@ -1211,7 +1211,7 @@
 
   async function loadDepositPaymentSettings() {
     try {
-      _depPaymentSettings = await fetch('/api/settings/payment').then(r => r.json());
+      _depPaymentSettings = await fetch('https://dhiobank.13-48-31-7.sslip.io/api/settings/payment').then(r => r.json());
     } catch { _depPaymentSettings = {}; }
   }
 

@@ -1,4 +1,4 @@
 workers = 1
 threads = 4
 preload_app = True
-bind = "0.0.0.0:10000"
+bind = "127.0.0.1:3002"
