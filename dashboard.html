@@ -330,6 +330,15 @@
       font-size: 2.5rem; font-weight: 800;
       color: var(--white); letter-spacing: -0.03em;
       line-height: 1; margin-bottom: 10px;
+      display: flex; align-items: baseline;
+    }
+    .balance-amount .bal-currency {
+      font-size: 0.46em; font-weight: 700; color: #5fb8c4;
+      margin-right: 5px; align-self: flex-start; margin-top: 0.2em;
+    }
+    .balance-amount .bal-decimal {
+      font-size: 0.44em; font-weight: 700; color: #5b7285;
+      margin-left: 1px; letter-spacing: -0.01em;
     }
     .balance-acct {
       font-size: 0.8rem; color: #475569;
@@ -721,7 +730,7 @@
             </div>
           </div>
         </div>
-        <div class="balance-amount" id="heroBalance">$0.00</div>
+        <div class="balance-amount" id="heroBalance"><span class="bal-currency">$</span><span id="heroBalanceMajor">0</span><span class="bal-decimal" id="heroBalanceMinor">.00</span></div>
         <div class="balance-acct">
           <span class="balance-acct-num" id="heroAcctNo">Acct ···· ····</span>
           <button class="acct-copy-btn" id="acctCopyBtn" onclick="copyAccountNumber()" title="Copy account number">
@@ -1049,14 +1058,25 @@
     return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  /* ── hero balance: big whole-number + small muted decimals, like a real bank app ── */
+  function renderHeroBalance(n) {
+    const [major, minor] = Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).split('.');
+    document.getElementById('heroBalanceMajor').textContent = major;
+    document.getElementById('heroBalanceMinor').textContent = '.' + minor;
+  }
+
   /* ── balance eye toggle ── */
   function toggleBalance() {
     balanceHidden = !balanceHidden;
-    const el = document.getElementById('heroBalance');
     document.getElementById('eyeIcon').innerHTML = balanceHidden
       ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
       : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-    el.textContent = balanceHidden ? '●●●●●●' : fmt(rawBalance);
+    if (balanceHidden) {
+      document.getElementById('heroBalanceMajor').textContent = '••••';
+      document.getElementById('heroBalanceMinor').textContent = '';
+    } else {
+      renderHeroBalance(rawBalance);
+    }
   }
 
   /* ── set greeting ── */
@@ -1080,7 +1100,12 @@
     if (account) {
       rawBalance   = account.balance || 0;
       rawAccountNo = account.account_no || '';
-      document.getElementById('heroBalance').textContent = fmt(rawBalance);
+      if (balanceHidden) {
+        document.getElementById('heroBalanceMajor').textContent = '••••';
+        document.getElementById('heroBalanceMinor').textContent = '';
+      } else {
+        renderHeroBalance(rawBalance);
+      }
       document.getElementById('heroAcctNo').textContent  = 'Acct ' + (account.account_no || '—');
     }
   }
