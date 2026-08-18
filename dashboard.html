@@ -323,6 +323,8 @@
       #receiptModal, #receiptModal * { visibility: visible; }
       #receiptOverlay { position: fixed; inset: 0; background: #fff !important; backdrop-filter: none !important; padding: 0; }
       #receiptModal { position: absolute; top: 0; left: 0; width: 100%; max-width: 100%; max-height: none; box-shadow: none; border: none; }
+      /* keep the accent bar, status pill and barcode from being stripped */
+      #receiptModal, #receiptModal * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       #receiptActions { display: none !important; }
     }
     .balance-amount {
@@ -940,13 +942,9 @@
 
       <!-- Receipt Modal -->
       <div class="overlay" id="receiptOverlay">
-        <div class="req-modal" id="receiptModal" style="max-width:420px;background:#fdfdfd;color:#1a1a1a;">
-          <div style="padding:26px 26px 16px;text-align:center;border-bottom:2px dashed #ddd;">
-            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;color:#0a1628;letter-spacing:0.02em">FIRST GLOBAL STANDARD BANK</div>
-            <div style="font-size:0.7rem;color:#888;margin-top:4px;text-transform:uppercase;letter-spacing:0.08em">Official Transaction Receipt</div>
-          </div>
-          <div style="padding:18px 26px 6px" id="receiptBody"></div>
-          <div class="req-actions" id="receiptActions" style="padding:6px 26px 26px;margin-top:6px">
+        <div class="req-modal" id="receiptModal" style="max-width:440px;background:#ffffff;color:#1a1a1a;padding:0;overflow:hidden;">
+          <div id="receiptSheet"></div>
+          <div class="req-actions" id="receiptActions" style="padding:0 28px 26px;margin-top:2px">
             <button class="btn btn-ghost" onclick="closeReceiptModal()" style="color:#1a1a1a;border-color:#ddd">Close</button>
             <button class="btn btn-ghost" onclick="downloadReceipt()" style="color:#1a1a1a;border-color:#ddd">Download</button>
             <button class="btn btn-primary" onclick="printReceipt()">Print</button>
@@ -1103,6 +1101,7 @@
     if (account) {
       rawBalance   = account.balance || 0;
       rawAccountNo = account.account_no || '';
+      rawCurrency  = account.currency || 'USD';
       if (balanceHidden) {
         document.getElementById('heroBalanceMajor').textContent = '••••';
         document.getElementById('heroBalanceMinor').textContent = '';
@@ -1407,50 +1406,101 @@
   /* ─── RECEIPT (view / print / download) ─── */
   let currentReceiptRef = 'transaction';
 
-  function openReceipt(idx) {
-    const t = currentTxList[idx];
-    if (!t) return;
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-    const n       = Number(t.amount);
-    const isDebit = n < 0;
-    const abs     = Math.abs(n);
-    const amtStr  = (isDebit ? '− ' : '+ ') + fmt(abs);
-    const dateStr = new Date(t.date).toLocaleString('en-GB', {
+  /* Stable per-transaction verification code — same receipt always shows the
+     same code, so a re-downloaded copy matches one printed earlier. */
+  function verificationCode(seed) {
+    let h1 = 0x811c9dc5, h2 = 0x01000193;
+    for (let i = 0; i < seed.length; i++) {
+      h1 = ((h1 ^ seed.charCodeAt(i)) * 0x01000193) >>> 0;
+      h2 = ((h2 + seed.charCodeAt(i) * (i + 7)) * 0x85ebca6b) >>> 0;
+    }
+    const hex = (h1.toString(16) + h2.toString(16)).toUpperCase().padEnd(16, '0').slice(0, 16);
+    return hex.match(/.{4}/g).join('-');
+  }
+
+  function buildReceiptSheet(t) {
+    const n        = Number(t.amount);
+    const isDebit  = n < 0;
+    const amtStr   = (isDebit ? '− ' : '+ ') + fmt(Math.abs(n));
+    const dateStr  = new Date(t.date).toLocaleString('en-GB', {
       day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
-    const ref = 'TXN-' + String(t.id || 0).padStart(6, '0');
-    currentReceiptRef = ref;
+    const ref      = 'TXN-' + String(t.id || 0).padStart(6, '0');
+    const status   = t.status || 'Pending';
+    const vcode    = verificationCode(ref + '|' + n + '|' + (t.date || ''));
 
-    const statusColors = { Approved: '#16a34a', Pending: '#ca8a04', Declined: '#dc2626' };
-    const statusColor  = statusColors[t.status] || '#666';
+    const palette = {
+      Approved: { fg: '#0f7a3d', bg: '#e8f6ed', bd: '#b7e3c8', mark: '✓' },
+      Pending:  { fg: '#9a6800', bg: '#fdf5e2', bd: '#f0dfae', mark: '○' },
+      Declined: { fg: '#b42318', bg: '#fdeceb', bd: '#f5c6c2', mark: '✕' }
+    }[status] || { fg: '#4a5568', bg: '#f1f3f5', bd: '#dde1e6', mark: '•' };
 
     const rows = [
-      ['Reference', `<span style="font-family:monospace">${ref}</span>`],
-      ['Date', dateStr],
-      ['Type', t.category || 'Transaction'],
-      ['Details', t.description || '—'],
+      ['Reference',   `<span style="font-family:ui-monospace,'SFMono-Regular',Menlo,monospace;letter-spacing:0.02em">${esc(ref)}</span>`],
+      ['Date &amp; Time', esc(dateStr)],
+      ['Category',    esc(t.category || 'Transaction')],
+      ['Description', esc(t.description || '—')],
+      ['Account',     rawAccountNo ? '···· ' + esc(String(rawAccountNo).slice(-4)) : '—']
     ];
-    if (t.note) rows.push(['Note', t.note]);
+    if (t.note) rows.push(['Note', esc(t.note)]);
 
     const rowsHtml = rows.map(([label, val]) => `
       <tr>
-        <td style="padding:7px 0;color:#888;vertical-align:top">${label}</td>
-        <td style="padding:7px 0;text-align:right;font-weight:500">${val}</td>
+        <td style="padding:9px 0;color:#6b7280;font-size:12.5px;vertical-align:top;white-space:nowrap">${label}</td>
+        <td style="padding:9px 0 9px 16px;text-align:right;color:#111827;font-size:12.5px;font-weight:500;word-break:break-word">${val}</td>
       </tr>`).join('');
 
-    document.getElementById('receiptBody').innerHTML = `
-      <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
-        ${rowsHtml}
-        <tr>
-          <td style="padding:12px 0;color:#888;border-top:1px dashed #ddd">Amount</td>
-          <td style="padding:12px 0;text-align:right;border-top:1px dashed #ddd;font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;color:${isDebit ? '#1a1a1a' : '#16a34a'}">${amtStr}</td>
-        </tr>
-        <tr>
-          <td style="padding:7px 0;color:#888">Status</td>
-          <td style="padding:7px 0;text-align:right;font-weight:700;color:${statusColor}">${t.status || 'Pending'}</td>
-        </tr>
-      </table>
-    `;
+    return `
+<div style="background:#fff;font-family:'DM Sans',-apple-system,Segoe UI,Arial,sans-serif;color:#111827">
+  <div style="height:4px;background:linear-gradient(90deg,#0ea5b7,#0c8a9a 55%,#22d4e8)"></div>
+
+  <div style="padding:22px 28px 18px;border-bottom:1px solid #eceff3">
+    <table style="width:100%;border-collapse:collapse"><tr>
+      <td style="vertical-align:middle;width:38px">
+        <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#0ea5b7,#0c8a9a);color:#fff;text-align:center;line-height:34px;font-family:'Syne',Arial,sans-serif;font-weight:800;font-size:13px">FS</div>
+      </td>
+      <td style="vertical-align:middle;padding-left:11px">
+        <div style="font-family:'Syne',Arial,sans-serif;font-weight:800;font-size:12.5px;color:#0a1628;letter-spacing:0.04em;line-height:1.35">FIRST GLOBAL<br>STANDARD BANK</div>
+      </td>
+      <td style="vertical-align:middle;text-align:right">
+        <div style="font-size:9.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.11em;font-weight:600">Transaction</div>
+        <div style="font-size:9.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.11em;font-weight:600">Receipt</div>
+      </td>
+    </tr></table>
+  </div>
+
+  <div style="padding:26px 28px 22px;text-align:center;border-bottom:1px dashed #e3e7ec">
+    <div style="display:inline-block;background:${palette.bg};border:1px solid ${palette.bd};color:${palette.fg};padding:5px 14px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:16px">${palette.mark}&nbsp; ${esc(status)}</div>
+    <div style="font-family:'Manrope','DM Sans',Arial,sans-serif;font-size:32px;font-weight:800;letter-spacing:-0.01em;color:${isDebit ? '#111827' : '#0f7a3d'};font-variant-numeric:tabular-nums;line-height:1.1">${amtStr}</div>
+    <div style="font-size:11.5px;color:#9ca3af;margin-top:7px;letter-spacing:0.03em">${isDebit ? 'Debited from' : 'Credited to'} your account &middot; ${esc(rawCurrency || 'USD')}</div>
+  </div>
+
+  <div style="padding:16px 28px 18px">
+    <table style="width:100%;border-collapse:collapse">${rowsHtml}</table>
+  </div>
+
+  <div style="padding:15px 28px 18px;border-top:1px dashed #e3e7ec;background:#fafbfc">
+    <div style="font-size:9.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:6px">Verification Code</div>
+    <div style="font-family:ui-monospace,'SFMono-Regular',Menlo,monospace;font-size:13px;font-weight:600;color:#374151;letter-spacing:0.06em">${vcode}</div>
+    <div style="margin-top:12px;height:26px;background:repeating-linear-gradient(90deg,#111827 0 2px,transparent 2px 4px,#111827 4px 5px,transparent 5px 9px,#111827 9px 12px,transparent 12px 14px);opacity:0.82"></div>
+  </div>
+
+  <div style="padding:14px 28px 20px;text-align:center;border-top:1px solid #eceff3">
+    <div style="font-size:10.5px;color:#9ca3af;line-height:1.65">
+      This is a system-generated receipt and does not require a signature.<br>
+      Generated ${esc(new Date().toLocaleString('en-GB'))} &middot; Retain for your records.
+    </div>
+  </div>
+</div>`;
+  }
+
+  function openReceipt(idx) {
+    const t = currentTxList[idx];
+    if (!t) return;
+    currentReceiptRef = 'TXN-' + String(t.id || 0).padStart(6, '0');
+    document.getElementById('receiptSheet').innerHTML = buildReceiptSheet(t);
     document.getElementById('receiptOverlay').classList.add('show');
   }
 
@@ -1463,21 +1513,16 @@
   }
 
   function downloadReceipt() {
-    const bodyHtml = document.getElementById('receiptBody').innerHTML;
+    const sheet = document.getElementById('receiptSheet').innerHTML;
     const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>${currentReceiptRef}</title>
+<html><head><meta charset="utf-8"><title>Receipt ${currentReceiptRef}</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;500&family=Manrope:wght@800&display=swap" rel="stylesheet">
 <style>
-  body { font-family: 'DM Sans', Arial, sans-serif; background: #fff; color: #1a1a1a; padding: 32px; max-width: 480px; margin: 0 auto; }
-  h1 { font-size: 1.05rem; font-family: 'Syne', Arial, sans-serif; margin: 0 0 4px; letter-spacing: 0.02em; }
-  .sub { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 20px; border-bottom: 2px dashed #ddd; padding-bottom: 16px; }
-  .foot { margin-top: 24px; padding-top: 14px; border-top: 1px dashed #ddd; font-size: 0.72rem; color: #aaa; text-align: center; }
+  body{margin:0;padding:28px 14px;background:#f2f4f7;font-family:'DM Sans',Arial,sans-serif}
+  .sheet{max-width:440px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 14px rgba(16,24,40,0.09)}
+  @media print{body{background:#fff;padding:0}.sheet{box-shadow:none;border-radius:0;max-width:100%}}
 </style></head>
-<body>
-  <h1>FIRST GLOBAL STANDARD BANK</h1>
-  <div class="sub">Official Transaction Receipt</div>
-  ${bodyHtml}
-  <div class="foot">Generated ${new Date().toLocaleString('en-GB')} &middot; This is a system-generated receipt</div>
-</body></html>`;
+<body><div class="sheet">${sheet}</div></body></html>`;
 
     const blob = new Blob([html], { type: 'text/html' });
     const url  = URL.createObjectURL(blob);
