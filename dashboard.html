@@ -12,7 +12,7 @@
   <title>Dashboard — First Global Standard Bank</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --teal: #0ea5b7;
@@ -326,19 +326,22 @@
       #receiptActions { display: none !important; }
     }
     .balance-amount {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Manrope', 'DM Sans', sans-serif;
       font-size: 2.5rem; font-weight: 800;
-      color: var(--white); letter-spacing: -0.03em;
+      color: var(--white); letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum" 1, "ss01" 1;
       line-height: 1; margin-bottom: 10px;
       display: flex; align-items: baseline;
     }
     .balance-amount .bal-currency {
-      font-size: 0.46em; font-weight: 700; color: #5fb8c4;
-      margin-right: 5px; align-self: flex-start; margin-top: 0.2em;
+      font-size: 0.44em; font-weight: 700; color: #5fb8c4;
+      margin-right: 6px; align-self: flex-start; margin-top: 0.22em;
+      letter-spacing: 0;
     }
     .balance-amount .bal-decimal {
-      font-size: 0.44em; font-weight: 700; color: #5b7285;
-      margin-left: 1px; letter-spacing: -0.01em;
+      font-size: 0.42em; font-weight: 700; color: #5b7285;
+      margin-left: 1px; letter-spacing: 0;
     }
     .balance-acct {
       font-size: 0.8rem; color: #475569;
