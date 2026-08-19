@@ -433,6 +433,41 @@
     /* ══════════════════════════════════════
        3. STATS ROW
     ══════════════════════════════════════ */
+    /* ─── Help / contact strip ─── */
+    .help-card {
+      background: rgba(8,14,30,0.7);
+      border: 1px solid var(--border);
+      border-radius: 18px; padding: 20px;
+      margin-top: 22px;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+    .help-title {
+      font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 800;
+      color: var(--white); margin-bottom: 3px;
+    }
+    .help-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 16px; }
+    .help-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .help-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; border-radius: 12px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      text-decoration: none; transition: all 0.2s; min-width: 0;
+    }
+    .help-link:hover { border-color: rgba(14,165,183,0.4); background: rgba(14,165,183,0.06); }
+    .help-ico {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      display: grid; place-items: center; background: rgba(14,165,183,0.1);
+    }
+    .help-lbl {
+      font-size: 0.65rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.08em; font-weight: 600; margin-bottom: 2px;
+    }
+    .help-val {
+      font-size: 0.8rem; color: #cbd5e1; font-weight: 500;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    @media (max-width: 560px) { .help-row { grid-template-columns: 1fr; } }
+
     .stats-row {
       display: grid; grid-template-columns: 1fr 1fr;
       gap: 12px; margin-bottom: 20px;
@@ -997,6 +1032,32 @@
         </div>
       </div>
 
+      <!-- ⑥ Need help -->
+      <div class="help-card">
+        <div class="help-title">Need help?</div>
+        <div class="help-sub">Our team is available to assist you with any account issue.</div>
+        <div class="help-row">
+          <a class="help-link" href="mailto:firstglobalstandardbank@gmail.com">
+            <div class="help-ico">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22d4e8" stroke-width="1.8"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <div style="min-width:0">
+              <div class="help-lbl">Email</div>
+              <div class="help-val">firstglobalstandardbank@gmail.com</div>
+            </div>
+          </a>
+          <a class="help-link" href="tel:+15755194807">
+            <div class="help-ico" style="background:rgba(34,197,94,0.1)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 016 1.18 2 2 0 018 3.19v3a2 2 0 01-1.44 1.93l-2.86.86a16 16 0 006.52 6.52l.86-2.86A2 2 0 0118 10.73v3a2 2 0 01-2.18 2z"/></svg>
+            </div>
+            <div style="min-width:0">
+              <div class="help-lbl">Phone</div>
+              <div class="help-val">+1 (575) 519-4807</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </section>
 </div><!-- /app -->
@@ -1488,7 +1549,11 @@
   </div>
 
   <div style="padding:14px 28px 20px;text-align:center;border-top:1px solid #eceff3">
-    <div style="font-size:10.5px;color:#9ca3af;line-height:1.65">
+    <div style="font-size:10.5px;color:#6b7280;line-height:1.7;margin-bottom:8px">
+      <strong style="color:#374151;font-weight:600">Questions about this transaction?</strong><br>
+      firstglobalstandardbank@gmail.com &middot; +1 (575) 519-4807
+    </div>
+    <div style="font-size:10px;color:#b0b6bf;line-height:1.65">
       This is a system-generated receipt and does not require a signature.<br>
       Generated ${esc(new Date().toLocaleString('en-GB'))} &middot; Retain for your records.
     </div>
