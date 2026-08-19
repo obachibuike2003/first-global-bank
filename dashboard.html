@@ -318,10 +318,10 @@
     #receiptModal .btn-ghost:hover { background: #f3f4f6; color: #0a1628; border-color: #ccc; }
 
     @media print {
-      body { background: #fff !important; }
+      body { background: #030712 !important; }
       body * { visibility: hidden; }
       #receiptModal, #receiptModal * { visibility: visible; }
-      #receiptOverlay { position: fixed; inset: 0; background: #fff !important; backdrop-filter: none !important; padding: 0; }
+      #receiptOverlay { position: fixed; inset: 0; background: #030712 !important; backdrop-filter: none !important; padding: 0; }
       #receiptModal { position: absolute; top: 0; left: 0; width: 100%; max-width: 100%; max-height: none; box-shadow: none; border: none; }
       /* keep the accent bar, status pill and barcode from being stripped */
       #receiptModal, #receiptModal * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -977,11 +977,11 @@
 
       <!-- Receipt Modal -->
       <div class="overlay" id="receiptOverlay">
-        <div class="req-modal" id="receiptModal" style="max-width:440px;background:#ffffff;color:#1a1a1a;padding:0;overflow:hidden;">
+        <div class="req-modal" id="receiptModal" style="max-width:440px;background:#080e1e;border:1px solid rgba(14,165,183,0.22);padding:0;overflow:hidden;">
           <div id="receiptSheet"></div>
-          <div class="req-actions" id="receiptActions" style="padding:0 28px 26px;margin-top:2px">
-            <button class="btn btn-ghost" onclick="closeReceiptModal()" style="color:#1a1a1a;border-color:#ddd">Close</button>
-            <button class="btn btn-ghost" onclick="downloadReceipt()" style="color:#1a1a1a;border-color:#ddd">Download</button>
+          <div class="req-actions" id="receiptActions" style="padding:0 26px 24px;margin-top:2px">
+            <button class="btn btn-ghost" onclick="closeReceiptModal()">Close</button>
+            <button class="btn btn-ghost" onclick="downloadReceipt()">Download</button>
             <button class="btn btn-primary" onclick="printReceipt()">Print</button>
           </div>
         </div>
@@ -1503,8 +1503,13 @@
     const ref      = 'TXN-' + String(t.id || 0).padStart(6, '0');
     const status   = t.status || 'Pending';
     const sid      = sessionId(ref + '|' + n, t.date);
-    const statusFg = { Approved: '#127a3b', Pending: '#9a6800', Declined: '#b42318' }[status] || '#4a5568';
     const holder   = rawUserName || 'Account Holder';
+
+    const palette = {
+      Approved: { fg: '#22c55e', bg: 'rgba(34,197,94,0.1)',  bd: 'rgba(34,197,94,0.28)',  mark: '✓' },
+      Pending:  { fg: '#f5c842', bg: 'rgba(245,200,66,0.1)', bd: 'rgba(245,200,66,0.28)', mark: '○' },
+      Declined: { fg: '#ef4444', bg: 'rgba(239,68,68,0.1)',  bd: 'rgba(239,68,68,0.28)',  mark: '✕' }
+    }[status] || { fg: '#94a3b8', bg: 'rgba(255,255,255,0.05)', bd: 'rgba(255,255,255,0.12)', mark: '•' };
 
     /* Grouped like a standard bank receipt: identifiers, then parties, then
        the money itself. */
@@ -1528,31 +1533,32 @@
         ['Bank',      'First Global Standard Bank'],
         ['Narration', esc(t.note || t.description || '—')],
         ['Amount',    esc(amtPlain)],
-        ['Status',    `<span style="color:${statusFg};font-weight:600">${esc(status)}</span>`]
+        ['Status',    `<span style="color:${palette.fg};font-weight:600">${esc(status)}</span>`]
       ]
     ];
 
     const groupsHtml = groups.map((g, gi) => `
-      <table style="width:100%;border-collapse:collapse;${gi ? 'border-top:1px solid #e8ebef;margin-top:2px;padding-top:2px' : ''}">
+      <table style="width:100%;border-collapse:collapse;${gi ? 'border-top:1px solid rgba(255,255,255,0.07);margin-top:2px;padding-top:2px' : ''}">
         ${g.map(([label, val]) => `
         <tr>
-          <td style="padding:7px 0;color:#6b7280;font-size:11.5px;vertical-align:top;white-space:nowrap;width:38%">${label}</td>
-          <td style="padding:7px 0 7px 10px;color:#1f2937;font-size:11.5px;font-weight:500;word-break:break-word">${val}</td>
+          <td style="padding:7px 0;color:#64748b;font-size:11.5px;vertical-align:top;white-space:nowrap;width:38%">${label}</td>
+          <td style="padding:7px 0 7px 10px;color:#e2e8f0;font-size:11.5px;font-weight:500;word-break:break-word">${val}</td>
         </tr>`).join('')}
       </table>`).join('');
 
     return `
-<div style="background:#fff;font-family:'DM Sans',-apple-system,Segoe UI,Arial,sans-serif;color:#111827">
+<div style="background:#080e1e;font-family:'DM Sans',-apple-system,Segoe UI,Arial,sans-serif;color:#e2e8f0">
 
   <!-- ── Brand band with the amount as the focal point ── -->
-  <div style="background:linear-gradient(135deg,#0a1628 0%,#0d3a4a 55%,#0ea5b7 160%);padding:24px 26px 22px;position:relative">
-    <table style="width:100%;border-collapse:collapse"><tr>
+  <div style="background:linear-gradient(145deg,#051022 0%,#071828 55%,rgba(14,165,183,0.14) 100%);border-bottom:1px solid rgba(14,165,183,0.25);padding:24px 26px 22px;position:relative">
+    <table style="width:100%;border-collapse:collapse;position:relative"><tr>
       <td style="vertical-align:top">
-        <div style="font-size:11px;color:rgba(255,255,255,0.72);text-transform:uppercase;letter-spacing:0.14em;font-weight:600;margin-bottom:7px">Transaction Receipt</div>
-        <div style="font-family:'Manrope','DM Sans',Arial,sans-serif;font-size:29px;font-weight:800;color:#fff;letter-spacing:-0.01em;font-variant-numeric:tabular-nums;line-height:1.05">${esc(cur === 'USD' ? '$' : cur + ' ')}${esc(amtPlain)}</div>
+        <div style="font-size:10.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.14em;font-weight:600;margin-bottom:9px">Transaction Receipt</div>
+        <div style="font-family:'Manrope','DM Sans',Arial,sans-serif;font-size:29px;font-weight:800;color:#ffffff;letter-spacing:-0.01em;font-variant-numeric:tabular-nums;line-height:1.05">${esc(cur === 'USD' ? '$' : cur + ' ')}${esc(amtPlain)}</div>
+        <div style="display:inline-block;background:${palette.bg};border:1px solid ${palette.bd};color:${palette.fg};padding:3px 11px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-top:12px">${palette.mark}&nbsp; ${esc(status)}</div>
       </td>
-      <td style="vertical-align:top;text-align:right;width:56px">
-        <div style="width:44px;height:44px;border-radius:11px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.22);color:#fff;text-align:center;line-height:44px;font-family:'Syne',Arial,sans-serif;font-weight:800;font-size:15px;display:inline-block">FS</div>
+      <td style="vertical-align:top;text-align:right;width:52px">
+        <div style="width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#0ea5b7,#0c8a9a);color:#ffffff;text-align:center;line-height:42px;font-family:'Syne',Arial,sans-serif;font-weight:800;font-size:14px;display:inline-block;box-shadow:0 0 18px rgba(14,165,183,0.35)">FS</div>
       </td>
     </tr></table>
   </div>
@@ -1564,20 +1570,20 @@
 
   <!-- ── CTA ── -->
   <div style="padding:4px 26px 18px;text-align:center">
-    <div style="font-size:12px;color:#4b5563;margin-bottom:8px">Open a First Global Standard Bank account, visit</div>
-    <div style="display:inline-block;background:#f2f5f7;border:1px solid #e3e7ec;border-radius:999px;padding:8px 18px;font-size:12px;font-weight:700;color:#0d6c7d;word-break:break-all">first-global-bank-1.onrender.com</div>
+    <div style="font-size:11.5px;color:#64748b;margin-bottom:9px">Open a First Global Standard Bank account, visit</div>
+    <div style="display:inline-block;background:rgba(14,165,183,0.1);border:1px solid rgba(14,165,183,0.3);border-radius:999px;padding:8px 18px;font-size:11.5px;font-weight:600;color:#22d4e8;word-break:break-all">first-global-bank-1.onrender.com</div>
   </div>
 
   <!-- ── Disclaimer ── -->
   <div style="padding:0 26px 22px">
-    <div style="border:1px solid #ebeef1;border-radius:8px;padding:13px 15px">
-      <div style="font-size:9px;color:#7b8794;line-height:1.75;text-align:justify">
-        <strong style="color:#4b5563">Disclaimer:</strong> Your transaction has been successfully processed. Note, however, that completion of any transfer may be affected by other factors including but not limited to transmission errors, incomplete information, fluctuations on the network/internet, interruptions, glitch, delayed information or other matters beyond the Bank's control which may impact on the transaction and for which the Bank will not be liable. All transactions are subject to First Global Standard Bank confirmation and fraud proof verification.
+    <div style="border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:13px 15px;background:rgba(255,255,255,0.02)">
+      <div style="font-size:9px;color:#5b6b7f;line-height:1.75;text-align:justify">
+        <strong style="color:#94a3b8">Disclaimer:</strong> Your transaction has been successfully processed. Note, however, that completion of any transfer may be affected by other factors including but not limited to transmission errors, incomplete information, fluctuations on the network/internet, interruptions, glitch, delayed information or other matters beyond the Bank's control which may impact on the transaction and for which the Bank will not be liable. All transactions are subject to First Global Standard Bank confirmation and fraud proof verification.
       </div>
-      <div style="font-size:9px;color:#7b8794;line-height:1.75;margin-top:9px;padding-top:9px;border-top:1px solid #f0f2f4">
+      <div style="font-size:9px;color:#5b6b7f;line-height:1.75;margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.06)">
         For any other assistance, kindly contact us on
-        <span style="color:#0d6c7d;font-weight:600">firstglobalstandardbank@gmail.com</span> and
-        <span style="color:#0d6c7d;font-weight:600">+1 (575) 519-4807</span>
+        <span style="color:#22d4e8;font-weight:600">firstglobalstandardbank@gmail.com</span> and
+        <span style="color:#22d4e8;font-weight:600">+1 (575) 519-4807</span>
       </div>
     </div>
   </div>
@@ -1606,9 +1612,10 @@
 <html><head><meta charset="utf-8"><title>Receipt ${currentReceiptRef}</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@800&family=DM+Sans:wght@400;500&family=Manrope:wght@800&display=swap" rel="stylesheet">
 <style>
-  body{margin:0;padding:28px 14px;background:#f2f4f7;font-family:'DM Sans',Arial,sans-serif}
-  .sheet{max-width:440px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 14px rgba(16,24,40,0.09)}
-  @media print{body{background:#fff;padding:0}.sheet{box-shadow:none;border-radius:0;max-width:100%}}
+  body{margin:0;padding:28px 14px;background:#030712;font-family:'DM Sans',Arial,sans-serif}
+  .sheet{max-width:440px;margin:0 auto;background:#080e1e;border:1px solid rgba(14,165,183,0.22);border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @media print{body{padding:0}.sheet{border-radius:0;max-width:100%;border:none;box-shadow:none}}
 </style></head>
 <body><div class="sheet">${sheet}</div></body></html>`;
 
