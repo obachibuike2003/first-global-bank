@@ -1095,6 +1095,7 @@
   let balanceHidden   = false;
   let rawBalance      = 0;
   let rawCurrency     = 'USD';
+  let rawUserName     = '';
   let rawAccountNo    = '';
   let currentTxList   = [];
 
@@ -1153,6 +1154,7 @@
   /* ── populate UI from user+account ── */
   function setUserInfo(user, account) {
     setGreeting(user.full_name);
+    rawUserName = user.full_name || '';
     const initials = (user.full_name || 'U').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
     document.getElementById('topAvatar').textContent   = initials;
     document.getElementById('sideAvatar').textContent  = initials;
@@ -1469,93 +1471,114 @@
 
   const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-  /* Stable per-transaction verification code — same receipt always shows the
-     same code, so a re-downloaded copy matches one printed earlier. */
-  function verificationCode(seed) {
-    let h1 = 0x811c9dc5, h2 = 0x01000193;
+  /* Stable per-transaction session id — same receipt always shows the same
+     value, so a re-downloaded copy matches one printed earlier. */
+  function sessionId(seed, when) {
+    let h = 0x811c9dc5;
     for (let i = 0; i < seed.length; i++) {
-      h1 = ((h1 ^ seed.charCodeAt(i)) * 0x01000193) >>> 0;
-      h2 = ((h2 + seed.charCodeAt(i) * (i + 7)) * 0x85ebca6b) >>> 0;
+      h = ((h ^ seed.charCodeAt(i)) * 0x01000193) >>> 0;
     }
-    const hex = (h1.toString(16) + h2.toString(16)).toUpperCase().padEnd(16, '0').slice(0, 16);
-    return hex.match(/.{4}/g).join('-');
+    const d = new Date(when);
+    const p = (v, n) => String(v).padStart(n, '0');
+    const stamp = d.getFullYear() + p(d.getMonth() + 1, 2) + p(d.getDate(), 2)
+                + p(d.getHours(), 2) + p(d.getMinutes(), 2) + p(d.getSeconds(), 2);
+    return (stamp + p(h, 10) + p((h * 7919) % 1e6, 6)).slice(0, 30);
   }
+
+  const maskAcct = a => {
+    const s = String(a || '');
+    return s.length >= 7 ? s.slice(0, 4) + '***' + s.slice(-3) : (s || '—');
+  };
 
   function buildReceiptSheet(t) {
     const n        = Number(t.amount);
     const isDebit  = n < 0;
-    const amtStr   = (isDebit ? '− ' : '+ ') + fmt(Math.abs(n));
-    const dateStr  = new Date(t.date).toLocaleString('en-GB', {
-      day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
+    const cur      = t.currency || rawCurrency || 'USD';
+    const amtPlain = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const d        = new Date(t.date);
+    const dateStr  = d.toLocaleString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+    }).replace(/ /, '-').replace(/ /, '-');
     const ref      = 'TXN-' + String(t.id || 0).padStart(6, '0');
     const status   = t.status || 'Pending';
-    const vcode    = verificationCode(ref + '|' + n + '|' + (t.date || ''));
+    const sid      = sessionId(ref + '|' + n, t.date);
+    const statusFg = { Approved: '#127a3b', Pending: '#9a6800', Declined: '#b42318' }[status] || '#4a5568';
+    const holder   = rawUserName || 'Account Holder';
 
-    const palette = {
-      Approved: { fg: '#0f7a3d', bg: '#e8f6ed', bd: '#b7e3c8', mark: '✓' },
-      Pending:  { fg: '#9a6800', bg: '#fdf5e2', bd: '#f0dfae', mark: '○' },
-      Declined: { fg: '#b42318', bg: '#fdeceb', bd: '#f5c6c2', mark: '✕' }
-    }[status] || { fg: '#4a5568', bg: '#f1f3f5', bd: '#dde1e6', mark: '•' };
-
-    const rows = [
-      ['Reference',   `<span style="font-family:ui-monospace,'SFMono-Regular',Menlo,monospace;letter-spacing:0.02em">${esc(ref)}</span>`],
-      ['Date &amp; Time', esc(dateStr)],
-      ['Category',    esc(t.category || 'Transaction')],
-      ['Description', esc(t.description || '—')],
-      ['Account',     rawAccountNo ? '···· ' + esc(String(rawAccountNo).slice(-4)) : '—']
+    /* Grouped like a standard bank receipt: identifiers, then parties, then
+       the money itself. */
+    const groups = [
+      [
+        ['Transaction Type', esc(t.category || 'Transaction')],
+        ['Transaction Date', esc(dateStr)],
+        ['Session ID',       `<span style="font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-all">${esc(sid)}</span>`],
+        ['Reference ID',     `<span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">${esc(ref)}</span>`]
+      ],
+      isDebit
+        ? [
+            ['Debit Account',  esc(holder) + ' - ' + esc(maskAcct(rawAccountNo))],
+            ['Beneficiary',    esc(t.description || '—')]
+          ]
+        : [
+            ['Credit Account', esc(holder) + ' - ' + esc(maskAcct(rawAccountNo))],
+            ['Sender',         esc(t.description || '—')]
+          ],
+      [
+        ['Bank',      'First Global Standard Bank'],
+        ['Narration', esc(t.note || t.description || '—')],
+        ['Amount',    esc(amtPlain)],
+        ['Status',    `<span style="color:${statusFg};font-weight:600">${esc(status)}</span>`]
+      ]
     ];
-    if (t.note) rows.push(['Note', esc(t.note)]);
 
-    const rowsHtml = rows.map(([label, val]) => `
-      <tr>
-        <td style="padding:9px 0;color:#6b7280;font-size:12.5px;vertical-align:top;white-space:nowrap">${label}</td>
-        <td style="padding:9px 0 9px 16px;text-align:right;color:#111827;font-size:12.5px;font-weight:500;word-break:break-word">${val}</td>
-      </tr>`).join('');
+    const groupsHtml = groups.map((g, gi) => `
+      <table style="width:100%;border-collapse:collapse;${gi ? 'border-top:1px solid #e8ebef;margin-top:2px;padding-top:2px' : ''}">
+        ${g.map(([label, val]) => `
+        <tr>
+          <td style="padding:7px 0;color:#6b7280;font-size:11.5px;vertical-align:top;white-space:nowrap;width:38%">${label}</td>
+          <td style="padding:7px 0 7px 10px;color:#1f2937;font-size:11.5px;font-weight:500;word-break:break-word">${val}</td>
+        </tr>`).join('')}
+      </table>`).join('');
 
     return `
 <div style="background:#fff;font-family:'DM Sans',-apple-system,Segoe UI,Arial,sans-serif;color:#111827">
-  <div style="height:4px;background:linear-gradient(90deg,#0ea5b7,#0c8a9a 55%,#22d4e8)"></div>
 
-  <div style="padding:22px 28px 18px;border-bottom:1px solid #eceff3">
+  <!-- ── Brand band with the amount as the focal point ── -->
+  <div style="background:linear-gradient(135deg,#0a1628 0%,#0d3a4a 55%,#0ea5b7 160%);padding:24px 26px 22px;position:relative">
     <table style="width:100%;border-collapse:collapse"><tr>
-      <td style="vertical-align:middle;width:38px">
-        <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#0ea5b7,#0c8a9a);color:#fff;text-align:center;line-height:34px;font-family:'Syne',Arial,sans-serif;font-weight:800;font-size:13px">FS</div>
+      <td style="vertical-align:top">
+        <div style="font-size:11px;color:rgba(255,255,255,0.72);text-transform:uppercase;letter-spacing:0.14em;font-weight:600;margin-bottom:7px">Transaction Receipt</div>
+        <div style="font-family:'Manrope','DM Sans',Arial,sans-serif;font-size:29px;font-weight:800;color:#fff;letter-spacing:-0.01em;font-variant-numeric:tabular-nums;line-height:1.05">${esc(cur === 'USD' ? '$' : cur + ' ')}${esc(amtPlain)}</div>
       </td>
-      <td style="vertical-align:middle;padding-left:11px">
-        <div style="font-family:'Syne',Arial,sans-serif;font-weight:800;font-size:12.5px;color:#0a1628;letter-spacing:0.04em;line-height:1.35">FIRST GLOBAL<br>STANDARD BANK</div>
-      </td>
-      <td style="vertical-align:middle;text-align:right">
-        <div style="font-size:9.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.11em;font-weight:600">Transaction</div>
-        <div style="font-size:9.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.11em;font-weight:600">Receipt</div>
+      <td style="vertical-align:top;text-align:right;width:56px">
+        <div style="width:44px;height:44px;border-radius:11px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.22);color:#fff;text-align:center;line-height:44px;font-family:'Syne',Arial,sans-serif;font-weight:800;font-size:15px;display:inline-block">FS</div>
       </td>
     </tr></table>
   </div>
 
-  <div style="padding:26px 28px 22px;text-align:center;border-bottom:1px dashed #e3e7ec">
-    <div style="display:inline-block;background:${palette.bg};border:1px solid ${palette.bd};color:${palette.fg};padding:5px 14px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:16px">${palette.mark}&nbsp; ${esc(status)}</div>
-    <div style="font-family:'Manrope','DM Sans',Arial,sans-serif;font-size:32px;font-weight:800;letter-spacing:-0.01em;color:${isDebit ? '#111827' : '#0f7a3d'};font-variant-numeric:tabular-nums;line-height:1.1">${amtStr}</div>
-    <div style="font-size:11.5px;color:#9ca3af;margin-top:7px;letter-spacing:0.03em">${isDebit ? 'Debited from' : 'Credited to'} your account &middot; ${esc(rawCurrency || 'USD')}</div>
+  <!-- ── Details ── -->
+  <div style="padding:16px 26px 14px">
+    ${groupsHtml}
   </div>
 
-  <div style="padding:16px 28px 18px">
-    <table style="width:100%;border-collapse:collapse">${rowsHtml}</table>
+  <!-- ── CTA ── -->
+  <div style="padding:4px 26px 18px;text-align:center">
+    <div style="font-size:12px;color:#4b5563;margin-bottom:8px">Open a First Global Standard Bank account, visit</div>
+    <div style="display:inline-block;background:#f2f5f7;border:1px solid #e3e7ec;border-radius:999px;padding:8px 18px;font-size:12px;font-weight:700;color:#0d6c7d;word-break:break-all">first-global-bank-1.onrender.com</div>
   </div>
 
-  <div style="padding:15px 28px 18px;border-top:1px dashed #e3e7ec;background:#fafbfc">
-    <div style="font-size:9.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:6px">Verification Code</div>
-    <div style="font-family:ui-monospace,'SFMono-Regular',Menlo,monospace;font-size:13px;font-weight:600;color:#374151;letter-spacing:0.06em">${vcode}</div>
-    <div style="margin-top:12px;height:26px;background:repeating-linear-gradient(90deg,#111827 0 2px,transparent 2px 4px,#111827 4px 5px,transparent 5px 9px,#111827 9px 12px,transparent 12px 14px);opacity:0.82"></div>
-  </div>
-
-  <div style="padding:14px 28px 20px;text-align:center;border-top:1px solid #eceff3">
-    <div style="font-size:10.5px;color:#6b7280;line-height:1.7;margin-bottom:8px">
-      <strong style="color:#374151;font-weight:600">Questions about this transaction?</strong><br>
-      firstglobalstandardbank@gmail.com &middot; +1 (575) 519-4807
-    </div>
-    <div style="font-size:10px;color:#b0b6bf;line-height:1.65">
-      This is a system-generated receipt and does not require a signature.<br>
-      Generated ${esc(new Date().toLocaleString('en-GB'))} &middot; Retain for your records.
+  <!-- ── Disclaimer ── -->
+  <div style="padding:0 26px 22px">
+    <div style="border:1px solid #ebeef1;border-radius:8px;padding:13px 15px">
+      <div style="font-size:9px;color:#7b8794;line-height:1.75;text-align:justify">
+        <strong style="color:#4b5563">Disclaimer:</strong> Your transaction has been successfully processed. Note, however, that completion of any transfer may be affected by other factors including but not limited to transmission errors, incomplete information, fluctuations on the network/internet, interruptions, glitch, delayed information or other matters beyond the Bank's control which may impact on the transaction and for which the Bank will not be liable. All transactions are subject to First Global Standard Bank confirmation and fraud proof verification.
+      </div>
+      <div style="font-size:9px;color:#7b8794;line-height:1.75;margin-top:9px;padding-top:9px;border-top:1px solid #f0f2f4">
+        For any other assistance, kindly contact us on
+        <span style="color:#0d6c7d;font-weight:600">firstglobalstandardbank@gmail.com</span> and
+        <span style="color:#0d6c7d;font-weight:600">+1 (575) 519-4807</span>
+      </div>
     </div>
   </div>
 </div>`;
