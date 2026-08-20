@@ -1,4 +1,4 @@
-const CACHE = 'fgsb-v15';
+const CACHE = 'fgsb-v16';
 const STATIC = [
   '/',
   '/index.html',
