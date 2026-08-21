@@ -730,7 +730,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     Install App
   </button>
   <script>
-    if('serviceWorker'in navigator){navigator.serviceWorker.register('/sw.js');let _swReloading=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_swReloading)return;_swReloading=true;window.location.reload();});}
+    if('serviceWorker'in navigator){var _hadCtrl=!!navigator.serviceWorker.controller;var _swReloading=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(_swReloading||!_hadCtrl)return;_swReloading=true;window.location.reload();});navigator.serviceWorker.register('/sw.js');}
     let _deferredPrompt;
     const fab=document.getElementById('pwa-fab');
     window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;fab.style.display='flex';});
