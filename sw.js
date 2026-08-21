@@ -1,4 +1,4 @@
-const CACHE = 'fgsb-v17';
+const CACHE = 'fgsb-v18';
 const STATIC = [
   '/',
   '/index.html',
@@ -49,7 +49,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       fetch(req).catch(() => new Response(
         JSON.stringify({ error: 'Offline' }),
-        { headers: { 'Content-Type': 'application/json' } }
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
       ))
     );
     return;
