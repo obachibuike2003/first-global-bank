@@ -1,88 +1,26 @@
-const CACHE = 'fgsb-v18';
-const STATIC = [
-  '/',
-  '/index.html',
-  '/login.html',
-  '/Signup.html',
-  '/dashboard.html',
-  '/transfers.html',
-  '/cards.html',
-  '/bills.html',
-  '/loan.html',
-  '/support.html',
-  '/branches.html',
-  '/forgot-password.html',
-  '/reset-password.html',
-  '/manifest.json'
-];
+// Kill-switch service worker.
+//
+// The previous worker cached pages, which made the installed app go stale and
+// occasionally hang on old content while the website stayed correct. This
+// version does the opposite: it takes over, deletes every cache, unregisters
+// itself, and reloads open windows so they load live from the network from now
+// on. After this runs once on a device, no service worker controls the app and
+// it behaves exactly like the website.
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(STATIC)).then(() => self.skipWaiting())
-  );
+self.addEventListener('install', () => self.skipWaiting());
+
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    try {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    } catch (e) {}
+    try {
+      await self.registration.unregister();
+    } catch (e) {}
+    const clients = await self.clients.matchAll({ type: 'window' });
+    clients.forEach(c => { try { c.navigate(c.url); } catch (e) {} });
+  })());
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', e => {
-  const req = e.request;
-  const url = new URL(req.url);
-
-  // Only ever intercept GETs; let POSTs etc. hit the network untouched.
-  if (req.method !== 'GET') return;
-
-  // Admin pages: always fresh, never cached.
-  if (url.origin === self.location.origin && url.pathname.startsWith('/admin')) {
-    e.respondWith(fetch(req));
-    return;
-  }
-
-  // API calls (the backend lives on another origin): network only, with an
-  // offline JSON fallback so callers get a clean error instead of hanging.
-  if (url.pathname.startsWith('/api/') || url.hostname === 'dhiobank.13-48-31-7.sslip.io') {
-    e.respondWith(
-      fetch(req).catch(() => new Response(
-        JSON.stringify({ error: 'Offline' }),
-        { status: 503, headers: { 'Content-Type': 'application/json' } }
-      ))
-    );
-    return;
-  }
-
-  // Page navigations: network-first, so the installed app always loads the
-  // latest deployed page when online and only falls back to cache offline.
-  if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req).then(res => {
-        if (res.ok && url.origin === self.location.origin) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(req, clone));
-        }
-        return res;
-      }).catch(() =>
-        caches.match(req).then(c => c || caches.match('/index.html'))
-      )
-    );
-    return;
-  }
-
-  // Everything else (icons, fonts, css, images): cache-first for speed,
-  // refreshing the cached copy in the background when reachable.
-  e.respondWith(
-    caches.match(req).then(cached =>
-      cached || fetch(req).then(res => {
-        if (res.ok && url.origin === self.location.origin) {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(req, clone));
-        }
-        return res;
-      }).catch(() => cached)
-    )
-  );
-});
+// Never intercept requests — let everything hit the network directly.

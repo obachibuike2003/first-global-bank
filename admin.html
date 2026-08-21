@@ -1955,7 +1955,7 @@
     Install Admin App
   </button>
   <script>
-    if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js');
+    if('serviceWorker'in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});if(window.caches){caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k);});});}}
     let _deferredPrompt;
     const fab=document.getElementById('pwa-fab');
     window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredPrompt=e;fab.style.display='flex';});
