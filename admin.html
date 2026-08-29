@@ -505,6 +505,11 @@
             <span>Approvals</span>
             <span class="nav-badge" id="pending-count">3</span>
           </a>
+          <a href="#" class="nav-link" id="registrations-link" onclick="showRegistrationsTab(event)">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 7a4 4 0 100-8 4 4 0 000 8z"/></svg>
+            <span>Registrations</span>
+            <span class="nav-badge" id="pending-reg-count">0</span>
+          </a>
           <a href="#" class="nav-link">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
             <span>Loans</span>
@@ -1166,6 +1171,48 @@
                   <span class="stat-label">Database Cluster</span>
                 </div>
                 <span class="badge success">Online</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Registrations Management Section -->
+        <div id="registrations-section" style="display:none">
+          <div class="greeting-row" style="animation:fadeUp 0.6s 0.1s ease both">
+            <div class="greeting">
+              <h2>📋 Registration Management</h2>
+              <p>Review and approve new user registrations</p>
+            </div>
+            <div class="greeting-actions">
+              <button class="btn btn-ghost" onclick="loadPendingRegistrations()">🔄 Refresh</button>
+            </div>
+          </div>
+
+          <div class="card" style="animation:fadeUp 0.6s 0.15s ease both">
+            <div class="card-inner">
+              <div class="card-header">
+                <div>
+                  <div class="card-title">Pending Registrations</div>
+                  <div class="card-sub" id="reg-status">Loading...</div>
+                </div>
+              </div>
+              <div id="registrations-list" style="overflow-x:auto">
+                <table class="data-table" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>Applicant</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>ID Card</th>
+                      <th>Account #</th>
+                      <th>Applied</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reg-tbody">
+                    <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Loading registrations...</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -1938,6 +1985,120 @@
       document.getElementById('account-query').value = query;
       searchAccount();
       document.getElementById('account-query').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    /* ─── REGISTRATION MANAGEMENT ─── */
+    async function loadPendingRegistrations() {
+      try {
+        const response = await adminRequest('/api/admin/registrations/pending');
+        const regs = await response.json();
+        
+        const tbody = document.getElementById('reg-tbody');
+        const status = document.getElementById('reg-status');
+        
+        if (!Array.isArray(regs) || regs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">✓ No pending registrations</td></tr>';
+          status.textContent = 'All applications reviewed';
+          document.getElementById('pending-reg-count').textContent = '0';
+          return;
+        }
+        
+        status.textContent = `${regs.length} pending approval`;
+        document.getElementById('pending-reg-count').textContent = regs.length;
+        
+        tbody.innerHTML = regs.map(r => {
+          const date = new Date(r.created_at).toLocaleDateString();
+          return `
+            <tr>
+              <td><strong>${escapeHtml(r.full_name)}</strong></td>
+              <td style="color:var(--muted);font-size:0.8rem">${escapeHtml(r.email)}</td>
+              <td style="color:var(--muted);font-size:0.8rem">${escapeHtml(r.phone || '—')}</td>
+              <td>${r.has_id_card ? `<button class="action-btn approve" style="padding:2px 10px;font-size:0.7rem" onclick="viewIdCard(${r.user_id})">Preview</button>` : '<span style="color:var(--muted);font-size:0.8rem">—</span>'}</td>
+              <td><code style="font-family:monospace;color:var(--teal-bright);font-size:0.8rem">${escapeHtml(r.account_no)}</code></td>
+              <td style="color:var(--muted);font-size:0.8rem">${date}</td>
+              <td style="display:flex;gap:6px">
+                <button class="action-btn approve" style="padding:4px 12px;font-size:0.75rem" onclick="approveRegistration(${r.user_id})">Approve</button>
+                <button class="action-btn decline" style="padding:4px 12px;font-size:0.75rem" onclick="rejectRegistrationPrompt(${r.user_id})">Reject</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error('Error loading registrations:', error);
+        document.getElementById('reg-tbody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--bad)">Error loading registrations</td></tr>';
+      }
+    }
+
+    async function viewIdCard(userId) {
+      try {
+        const response = await adminRequest(`/api/admin/registrations/${userId}/id-card`);
+        const result = await response.json();
+        if (result.image) {
+          const modal = document.createElement('div');
+          modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+          modal.innerHTML = `
+            <div style="background:var(--card);border-radius:12px;padding:20px;max-width:600px;width:100%;text-align:center">
+              <h3 style="margin:0 0 20px 0;color:white">ID Card</h3>
+              <img src="${result.image}" style="max-width:100%;max-height:500px;border-radius:8px;border:1px solid var(--border)">
+              <button onclick="this.closest('div').parentElement.remove()" style="margin-top:20px;padding:10px 20px;background:var(--teal);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500">Close</button>
+            </div>
+          `;
+          document.body.appendChild(modal);
+        }
+      } catch (error) {
+        alert('Error loading ID card: ' + error.message);
+      }
+    }
+
+    async function approveRegistration(userId) {
+      if (!confirm('Approve this registration?')) return;
+      try {
+        const response = await adminRequest(`/api/admin/registrations/${userId}/approve`, {method:'POST'});
+        const result = await response.json();
+        if (result.ok) {
+          alert('Registration approved! User has been notified.');
+          loadPendingRegistrations();
+        } else {
+          alert('Error: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    async function rejectRegistrationPrompt(userId) {
+      const reason = prompt('Rejection reason:', 'Application does not meet requirements');
+      if (reason === null) return;
+      try {
+        const response = await adminRequest(`/api/admin/registrations/${userId}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({reason: reason || 'Application rejected'})
+        });
+        const result = await response.json();
+        if (result.ok) {
+          alert('Registration rejected. User has been notified.');
+          loadPendingRegistrations();
+        } else {
+          alert('Error: ' + (result.error || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    function showRegistrationsTab(e) {
+      e.preventDefault();
+      document.querySelectorAll('[id$="-section"]').forEach(el => el.style.display = 'none');
+      document.getElementById('registrations-section').style.display = 'block';
+      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+      document.getElementById('registrations-link').classList.add('active');
+      loadPendingRegistrations();
+      window.scrollTo(0, 0);
+    }
+
+    function escapeHtml(text) {
+      const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};
+      return text.replace(/[&<>"']/g, m => map[m]);
     }
 
     window.addEventListener('DOMContentLoaded', () => {

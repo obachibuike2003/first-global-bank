@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, g, send_from_directory, abort
 from flask_cors import CORS
 import requests as http
+import base64
 from werkzeug.security import generate_password_hash, check_password_hash
 import random
 
@@ -181,6 +182,59 @@ def send_welcome_email(to_email, full_name, account_no):
     send_email(to_email, "Welcome to First Global Standard Bank", _email_shell(
         "Account Created Successfully",
         f"Issued {datetime.utcnow().strftime('%d %b %Y')} · Welcome to FRSB",
+        body
+    ))
+
+
+def send_registration_pending_email(to_email, full_name):
+    body = f"""
+    <p style="margin:0 0 18px;color:#94a3b8;font-size:0.9rem;line-height:1.65">
+      Hi <strong style="color:#e2e8f0">{full_name}</strong>,<br>
+      Thank you for registering. Your registration is under review.
+    </p>
+    <p style="margin:0 0 20px;color:#94a3b8;font-size:0.88rem;line-height:1.65">
+      We will send you an email once approved. This typically takes 24-48 hours.
+    </p>
+    """
+    send_email(to_email, "Registration Received - Under Review", _email_shell(
+        "Registration Pending",
+        f"Issued {datetime.utcnow().strftime('%d %b %Y')} · First Global Standard Bank",
+        body
+    ))
+
+
+def send_registration_approved_email(to_email, full_name, account_no):
+    body = f"""
+    <p style="margin:0 0 18px;color:#94a3b8;font-size:0.9rem;line-height:1.65">
+      Hi <strong style="color:#e2e8f0">{full_name}</strong>,<br>
+      Great news! Your account has been approved and is ready to use.
+    </p>
+    <p style="margin:0 0 20px;color:#94a3b8;font-size:0.88rem;line-height:1.65">
+      Your account number: <code style="font-family:monospace;color:#22d4e8">{account_no}</code><br>
+      You can now log in to your dashboard.
+    </p>
+    """
+    send_email(to_email, "Your Account Has Been Approved", _email_shell(
+        "Account Approved",
+        f"Issued {datetime.utcnow().strftime('%d %b %Y')} · Welcome to FRSB",
+        body
+    ))
+
+
+def send_registration_rejected_email(to_email, full_name, reason):
+    body = f"""
+    <p style="margin:0 0 18px;color:#94a3b8;font-size:0.9rem;line-height:1.65">
+      Hi <strong style="color:#e2e8f0">{full_name}</strong>,<br>
+      Unfortunately, your registration application has been rejected.
+    </p>
+    <p style="margin:0 0 20px;color:#94a3b8;font-size:0.88rem;line-height:1.65">
+      <strong style="color:#f87171">Reason:</strong> {reason}<br>
+      Please contact our support team if you have questions.
+    </p>
+    """
+    send_email(to_email, "Your Registration Application Has Been Rejected", _email_shell(
+        "Application Rejected",
+        f"Issued {datetime.utcnow().strftime('%d %b %Y')} · Contact Support",
         body
     ))
 
@@ -789,15 +843,17 @@ def row(r):
 # ───────────────────────── bootstrap ─────────────────────────
 _SCHEMA_STMTS = [
     """CREATE TABLE IF NOT EXISTS users (
-        id            SERIAL PRIMARY KEY,
-        full_name     TEXT NOT NULL,
-        email         TEXT NOT NULL UNIQUE,
-        phone         TEXT,
-        password_hash TEXT NOT NULL,
-        role          TEXT NOT NULL DEFAULT 'user',
-        handle        TEXT,
-        created_at    TEXT NOT NULL
+        id               SERIAL PRIMARY KEY,
+        full_name        TEXT NOT NULL,
+        email            TEXT NOT NULL UNIQUE,
+        phone            TEXT,
+        password_hash    TEXT NOT NULL,
+        role             TEXT NOT NULL DEFAULT 'user',
+        handle           TEXT,
+        approval_status  TEXT NOT NULL DEFAULT 'pending',
+        created_at       TEXT NOT NULL
     )""",
+    """ALTER TABLE users ADD COLUMN IF NOT EXISTS approval_status TEXT NOT NULL DEFAULT 'pending'""",
     """CREATE TABLE IF NOT EXISTS accounts (
         id         SERIAL PRIMARY KEY,
         user_id    INTEGER NOT NULL REFERENCES users(id),
@@ -891,6 +947,13 @@ _SCHEMA_STMTS = [
         address TEXT,
         phone   TEXT
     )""",
+    """CREATE TABLE IF NOT EXISTS id_card_images (
+        id         SERIAL PRIMARY KEY,
+        user_id    INTEGER NOT NULL UNIQUE REFERENCES users(id),
+        image_data BYTEA NOT NULL,
+        file_name  TEXT NOT NULL,
+        uploaded_at TEXT NOT NULL
+    )""",
 ]
 
 def bootstrap():
@@ -962,17 +1025,25 @@ def register():
     email     = (b.get("email") or "").strip().lower()
     phone     = (b.get("phone") or "").strip()
     pwd       = b.get("password") or ""
-    if not (full_name and email and pwd):
-        return jsonify({"error":"Missing fields"}), 400
+    id_card_base64 = b.get("id_card") or ""
+    
+    if not (full_name and email and pwd and id_card_base64):
+        return jsonify({"error":"Missing fields (ID card is required)"}), 400
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return jsonify({"error":"Invalid email"}), 400
     if q("select 1 from users where email=%s", (email,)).fetchone():
         return jsonify({"error":"Email already used"}), 409
 
     try:
+        # Decode base64 image
+        try:
+            image_data = base64.b64decode(id_card_base64.split(",")[-1])
+        except:
+            return jsonify({"error":"Invalid image format"}), 400
+        
         pwd_hash = generate_password_hash(pwd)
-        uid = q("insert into users(full_name,email,phone,password_hash,role,created_at) values(%s,%s,%s,%s,%s,%s) RETURNING id",
-                (full_name, email, phone, pwd_hash, "user", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
+        uid = q("insert into users(full_name,email,phone,password_hash,role,approval_status,created_at) values(%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+                (full_name, email, phone, pwd_hash, "user", "pending", datetime.utcnow().isoformat()), commit=True).fetchone()["id"]
 
         while True:
             acct_no = str(random.randint(1000000000, 9999999999))
@@ -980,17 +1051,16 @@ def register():
                 break
         q("""insert into accounts(user_id,account_no,currency,balance,created_at)
              values(%s,%s,%s,%s,%s)""", (uid, acct_no, "USD", 0, datetime.utcnow().isoformat()), commit=True)
-
-        token = new_token()
-        q("""insert into sessions(user_id, token, created_at, expires_at)
-             values(%s,%s,%s,%s)""", (uid, token, datetime.utcnow().isoformat(),
-                                      (datetime.utcnow()+timedelta(days=14)).isoformat()), commit=True)
+        
+        # Store ID card image
+        q("""insert into id_card_images(user_id,image_data,file_name,uploaded_at)
+             values(%s,%s,%s,%s)""", (uid, image_data, "id_card.jpg", datetime.utcnow().isoformat()), commit=True)
     except Exception as exc:
         print(f"[register] DB error: {exc}")
         return jsonify({"error": "Registration failed. Please try again."}), 500
 
-    send_welcome_email(email, full_name, acct_no)
-    return jsonify({"ok": True, "token": token, "user_id": uid, "account_no": acct_no})
+    send_registration_pending_email(email, full_name)
+    return jsonify({"ok": True, "message": "Registration submitted. Please wait for admin approval.", "user_id": uid, "account_no": acct_no})
 
 @app.post("/api/auth/login")
 def login():
@@ -1000,6 +1070,8 @@ def login():
     u = q("select * from users where email=%s", (email,)).fetchone()
     if not u or not check_password_hash(u["password_hash"], pwd):
         return jsonify({"error":"Invalid credentials"}), 401
+    if u["approval_status"] != "approved":
+        return jsonify({"error":"Account pending admin approval"}), 403
     token = new_token()
     q("""insert into sessions(user_id, token, created_at, expires_at)
          values(%s,%s,%s,%s)""", (u["id"], token, datetime.utcnow().isoformat(),
@@ -1455,6 +1527,61 @@ def admin_decide(tid, action):
             )
 
     return jsonify({"ok": True, "status": new_status})
+
+@app.get("/api/admin/registrations/pending")
+def admin_pending_registrations():
+    u, err = require_admin_guard()
+    if err: return err
+    rows = q("""select u.id as user_id, u.full_name, u.email, u.phone, u.created_at,
+                     a.account_no, a.currency, a.balance,
+                     (select 1 from id_card_images where user_id=u.id) as has_id_card
+              from users u
+              left join accounts a on u.id=a.user_id
+              where u.approval_status='pending'
+              order by u.created_at asc""")
+    return jsonify([row(r) for r in rows.fetchall()])
+
+@app.get("/api/admin/registrations/<int:uid>/id-card")
+def admin_get_id_card(uid):
+    u, err = require_admin_guard()
+    if err: return err
+    img = q("select image_data from id_card_images where user_id=%s", (uid,)).fetchone()
+    if not img:
+        return jsonify({"error": "ID card not found"}), 404
+    return jsonify({"image": "data:image/jpeg;base64," + base64.b64encode(img["image_data"]).decode()})
+
+@app.post("/api/admin/registrations/<int:uid>/approve")
+def admin_approve_registration(uid):
+    u, err = require_admin_guard()
+    if err: return err
+    user = q("select * from users where id=%s", (uid,)).fetchone()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    if user["approval_status"] == "approved":
+        return jsonify({"error": "User already approved"}), 400
+    q("update users set approval_status=%s where id=%s", ("approved", uid), commit=True)
+    # Delete ID card image after approval
+    q("delete from id_card_images where user_id=%s", (uid,), commit=True)
+    acct = q("select account_no from accounts where user_id=%s", (uid,)).fetchone()
+    if acct:
+        send_registration_approved_email(user["email"], user["full_name"], acct["account_no"])
+    return jsonify({"ok": True, "message": "Registration approved"})
+
+@app.post("/api/admin/registrations/<int:uid>/reject")
+def admin_reject_registration(uid):
+    u, err = require_admin_guard()
+    if err: return err
+    user = q("select * from users where id=%s", (uid,)).fetchone()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    if user["approval_status"] == "rejected":
+        return jsonify({"error": "User already rejected"}), 400
+    reason = (request.get_json(force=True).get("reason") or "Application rejected").strip()
+    q("update users set approval_status=%s where id=%s", ("rejected", uid), commit=True)
+    # Delete ID card image when rejected
+    q("delete from id_card_images where user_id=%s", (uid,), commit=True)
+    send_registration_rejected_email(user["email"], user["full_name"], reason)
+    return jsonify({"ok": True, "message": "Registration rejected"})
 
 @app.get("/api/admin/users")
 def admin_users():
