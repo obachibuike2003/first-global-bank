@@ -1070,8 +1070,8 @@ def login():
     u = q("select * from users where email=%s", (email,)).fetchone()
     if not u or not check_password_hash(u["password_hash"], pwd):
         return jsonify({"error":"Invalid credentials"}), 401
-    if u["approval_status"] != "approved":
-        return jsonify({"error":"Account pending admin approval"}), 403
+    if u["approval_status"] == "rejected":
+        return jsonify({"error":"Account rejected. Please contact support."}), 403
     token = new_token()
     q("""insert into sessions(user_id, token, created_at, expires_at)
          values(%s,%s,%s,%s)""", (u["id"], token, datetime.utcnow().isoformat(),
