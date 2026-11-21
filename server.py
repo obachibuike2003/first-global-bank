@@ -963,6 +963,14 @@ def bootstrap():
         cur = conn.cursor()
         for stmt in _SCHEMA_STMTS:
             cur.execute(stmt)
+        # One-time grandfather: approve everyone who already existed when the
+        # approval gate went live. Runs exactly once (guarded by a settings
+        # flag); all NEW registrations after this stay 'pending' for admin.
+        cur.execute("SELECT 1 FROM settings WHERE key='approval_gate_migrated'")
+        if cur.fetchone() is None:
+            cur.execute("UPDATE users SET approval_status='approved' WHERE approval_status='pending'")
+            cur.execute("INSERT INTO settings(key,value) VALUES('approval_gate_migrated','1') ON CONFLICT (key) DO NOTHING")
+            print("[db] approval gate: grandfathered existing users to 'approved'")
         cur.close()
         conn.close()
         print("[db] bootstrap: complete")
@@ -1070,8 +1078,12 @@ def login():
     u = q("select * from users where email=%s", (email,)).fetchone()
     if not u or not check_password_hash(u["password_hash"], pwd):
         return jsonify({"error":"Invalid credentials"}), 401
-    if u["approval_status"] == "rejected":
-        return jsonify({"error":"Account rejected. Please contact support."}), 403
+    # Admins bypass the approval gate; everyone else must be approved first.
+    if u["role"] != "admin":
+        if u["approval_status"] == "rejected":
+            return jsonify({"error":"Account rejected. Please contact support."}), 403
+        if u["approval_status"] != "approved":
+            return jsonify({"error":"Your registration is pending admin approval. You'll receive an email once it's approved."}), 403
     token = new_token()
     q("""insert into sessions(user_id, token, created_at, expires_at)
          values(%s,%s,%s,%s)""", (u["id"], token, datetime.utcnow().isoformat(),
