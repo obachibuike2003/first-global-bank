@@ -1089,30 +1089,13 @@
           throw new Error(data.error || 'Registration failed.');
         }
 
-        // Check if registration is pending approval or if it has a token
-        if (data.message && data.message.includes('pending')) {
-          // Registration pending approval
-          const a = document.getElementById('alertBox');
-          a.className = 'alert success show';
-          document.getElementById('alertMsg').textContent = '✓ ' + data.message;
-          document.getElementById('successScreen').innerHTML = `
-            <div style="text-align:center; margin-top:20px">
-              <div style="font-size:3rem; margin-bottom:16px">📋</div>
-              <h3 style="font-family:'Syne',sans-serif; font-size:1.5rem; color:white; margin-bottom:8px">Registration Submitted</h3>
-              <p style="color:#64748b; margin-bottom:20px">Your application is under review. We'll send you an email once approved (24-48 hours).</p>
-              <p style="color:#94a3b8; font-size:0.9rem">You can close this page or <a href="login.html" style="color:var(--teal); text-decoration:none">return to login</a>.</p>
-            </div>
-          `;
-          document.getElementById('successScreen').classList.add('show');
-          document.querySelector('.signup-form').style.display = 'none';
-        } else if (data.token) {
-          // Immediate approval (for development)
-          localStorage.setItem('token', data.token);
-          const a = document.getElementById('alertBox');
-          a.className = 'alert success show';
-          document.getElementById('alertMsg').textContent = '✓ Account created! Redirecting to dashboard…';
-          setTimeout(() => window.location.href = 'dashboard.html', 1200);
-        }
+        // Every new account requires admin approval → send the user to the
+        // sign-in page immediately. They'll be able to log in once an admin
+        // approves them from the dashboard.
+        const a = document.getElementById('alertBox');
+        a.className = 'alert success show';
+        document.getElementById('alertMsg').textContent = '✓ Account created! Taking you to sign in…';
+        setTimeout(() => window.location.href = 'login.html?registered=1', 1300);
       } catch (error) {
         const a = document.getElementById('alertBox');
         a.className = 'alert error show';

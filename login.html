@@ -631,6 +631,13 @@
     const submitBtn = document.getElementById('submitBtn');
     const alertBox = document.getElementById('alertBox');
 
+    // Arrived here straight after registering → explain the approval gate.
+    if (new URLSearchParams(location.search).get('registered') === '1') {
+      alertBox.className = 'alert success show';
+      document.getElementById('alertMsg').textContent =
+        'Account created! It is pending admin approval — you can sign in once approved.';
+    }
+
     function validateEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
     emailInput.addEventListener('blur', () => {
