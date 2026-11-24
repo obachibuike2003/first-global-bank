@@ -640,6 +640,33 @@
           </div>
         </div>
 
+        <!-- ──────────── NEW ACCOUNT APPROVALS (always visible) ──────────── -->
+        <div class="section-label" id="account-approvals">🆕 New Account Approvals</div>
+        <div class="card" style="margin-bottom:20px; animation: fadeUp 0.6s 0.18s ease both;">
+          <div class="card-inner">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Pending Registrations</div>
+                <div class="card-sub" id="reg-status">Loading…</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="loadPendingRegistrations()">🔄 Refresh</button>
+            </div>
+            <div class="table-scroll" style="overflow-x:auto">
+              <table class="data-table" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Applicant</th><th>Email</th><th>Phone</th>
+                    <th>ID Card</th><th>Account #</th><th>Applied</th><th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="reg-tbody">
+                  <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Loading registrations…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- ──────────── APPROVALS QUEUE ──────────── -->
         <div class="section-label">Pending Approvals Queue</div>
         <div class="card" style="margin-bottom:20px; animation: fadeUp 0.6s 0.2s ease both;">
@@ -1177,47 +1204,6 @@
         </div>
 
         <!-- Registrations Management Section -->
-        <div id="registrations-section" style="display:none">
-          <div class="greeting-row" style="animation:fadeUp 0.6s 0.1s ease both">
-            <div class="greeting">
-              <h2>📋 Registration Management</h2>
-              <p>Review and approve new user registrations</p>
-            </div>
-            <div class="greeting-actions">
-              <button class="btn btn-ghost" onclick="loadPendingRegistrations()">🔄 Refresh</button>
-            </div>
-          </div>
-
-          <div class="card" style="animation:fadeUp 0.6s 0.15s ease both">
-            <div class="card-inner">
-              <div class="card-header">
-                <div>
-                  <div class="card-title">Pending Registrations</div>
-                  <div class="card-sub" id="reg-status">Loading...</div>
-                </div>
-              </div>
-              <div id="registrations-list" style="overflow-x:auto">
-                <table class="data-table" style="width:100%">
-                  <thead>
-                    <tr>
-                      <th>Applicant</th>
-                      <th>Email</th>
-                      <th>Phone</th>
-                      <th>ID Card</th>
-                      <th>Account #</th>
-                      <th>Applied</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="reg-tbody">
-                    <tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">Loading registrations...</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div><!-- /content -->
     </section>
   </div><!-- /app -->
@@ -2090,13 +2076,12 @@
     }
 
     function showRegistrationsTab(e) {
-      e.preventDefault();
-      document.querySelectorAll('[id$="-section"]').forEach(el => el.style.display = 'none');
-      document.getElementById('registrations-section').style.display = 'block';
-      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-      document.getElementById('registrations-link').classList.add('active');
+      if (e && e.preventDefault) e.preventDefault();
+      // The New Account Approvals panel is always on the main dashboard now —
+      // just refresh it and scroll to it.
       loadPendingRegistrations();
-      window.scrollTo(0, 0);
+      const el = document.getElementById('account-approvals');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function escapeHtml(text) {
