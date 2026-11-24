@@ -2027,11 +2027,15 @@
         if (result.image) {
           const modal = document.createElement('div');
           modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+          // If the image can't render (e.g. an older HEIC upload), show a
+          // download link instead of a broken image.
+          const fallback = `<div style=\"padding:24px;color:var(--muted)\">This ID photo can't be previewed in the browser.<br><a href='${result.image}' download='id-card' style='color:var(--teal-bright)'>⬇ Download ID image</a></div>`;
           modal.innerHTML = `
             <div style="background:var(--card);border-radius:12px;padding:20px;max-width:600px;width:100%;text-align:center">
               <h3 style="margin:0 0 20px 0;color:white">ID Card</h3>
-              <img src="${result.image}" style="max-width:100%;max-height:500px;border-radius:8px;border:1px solid var(--border)">
-              <button onclick="this.closest('div').parentElement.remove()" style="margin-top:20px;padding:10px 20px;background:var(--teal);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500">Close</button>
+              <img src="${result.image}" onerror="this.outerHTML=\`${fallback}\`" style="max-width:100%;max-height:500px;border-radius:8px;border:1px solid var(--border)">
+              <div style="margin-top:14px"><a href="${result.image}" download="id-card" style="color:var(--teal-bright);font-size:0.8rem">⬇ Download</a></div>
+              <button onclick="this.closest('div').parentElement.remove()" style="margin-top:16px;padding:10px 20px;background:var(--teal);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:500">Close</button>
             </div>
           `;
           document.body.appendChild(modal);

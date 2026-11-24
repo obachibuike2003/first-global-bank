@@ -1040,38 +1040,49 @@
       }
     });
 
-    // Downscale + compress the ID photo in the browser before upload, so a
-    // large phone photo (several MB) becomes a small JPEG (~100-300KB). This
-    // keeps uploads fast and well under any server size limit. Returns base64
-    // WITHOUT the "data:" prefix. Falls back to the raw file if anything fails.
+    // Downscale + re-encode the ID photo to a REAL JPEG in the browser before
+    // upload. This matters because iPhones shoot HEIC, which most browsers
+    // (and the admin's ID preview) cannot display. Decoding via an <img> from
+    // an object URL lets Safari convert HEIC natively, and canvas.toDataURL
+    // guarantees the output is genuine JPEG — small, fast, and viewable
+    // everywhere. Returns base64 WITHOUT the "data:" prefix.
     function compressImage(file, maxDim = 1600, quality = 0.82) {
       return new Promise((resolve, reject) => {
         if (!file) { resolve(''); return; }
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error('Could not read the ID image. Please pick the file again.'));
-        reader.onload = () => {
-          const raw = String(reader.result);
-          const img = new Image();
-          img.onerror = () => resolve(raw.split(',')[1] || ''); // not decodable → send as-is
-          img.onload = () => {
-            try {
-              let { width, height } = img;
-              if (width > maxDim || height > maxDim) {
-                const scale = Math.min(maxDim / width, maxDim / height);
-                width = Math.round(width * scale);
-                height = Math.round(height * scale);
-              }
-              const canvas = document.createElement('canvas');
-              canvas.width = width; canvas.height = height;
-              canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-              resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1] || '');
-            } catch (_) {
-              resolve(raw.split(',')[1] || '');
-            }
-          };
-          img.src = raw;
+
+        // Last-resort fallback: send the raw bytes (only if the browser can't
+        // decode the image at all — e.g. HEIC on a non-Apple browser).
+        const sendRaw = () => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error('Could not read the ID image. Please choose a clear JPG or PNG photo.'));
+          reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+          reader.readAsDataURL(file);
         };
-        reader.readAsDataURL(file);
+
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          try {
+            let { width, height } = img;
+            if (!width || !height) { URL.revokeObjectURL(url); return sendRaw(); }
+            if (width > maxDim || height > maxDim) {
+              const scale = Math.min(maxDim / width, maxDim / height);
+              width = Math.round(width * scale);
+              height = Math.round(height * scale);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width; canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            URL.revokeObjectURL(url);
+            const out = (canvas.toDataURL('image/jpeg', quality).split(',')[1]) || '';
+            out ? resolve(out) : sendRaw();
+          } catch (_) {
+            URL.revokeObjectURL(url);
+            sendRaw();
+          }
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); sendRaw(); };
+        img.src = url;
       });
     }
 

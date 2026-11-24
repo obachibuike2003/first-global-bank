@@ -1560,7 +1560,25 @@ def admin_get_id_card(uid):
     img = q("select image_data from id_card_images where user_id=%s", (uid,)).fetchone()
     if not img:
         return jsonify({"error": "ID card not found"}), 404
-    return jsonify({"image": "data:image/jpeg;base64," + base64.b64encode(img["image_data"]).decode()})
+    data = bytes(img["image_data"])
+    # Sniff the real image type from magic bytes so the browser can render it
+    # (older uploads may be PNG/HEIC rather than JPEG).
+    if data[:3] == b"\xff\xd8\xff":
+        mime = "image/jpeg"
+    elif data[:8] == b"\x89PNG\r\n\x1a\n":
+        mime = "image/png"
+    elif data[:6] in (b"GIF87a", b"GIF89a"):
+        mime = "image/gif"
+    elif data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        mime = "image/webp"
+    elif data[4:12] in (b"ftypheic", b"ftypheix", b"ftyphevc", b"ftypmif1", b"ftypmsf1"):
+        mime = "image/heic"
+    else:
+        mime = "image/jpeg"
+    return jsonify({
+        "image": "data:%s;base64,%s" % (mime, base64.b64encode(data).decode()),
+        "mime": mime,
+    })
 
 @app.post("/api/admin/registrations/<int:uid>/approve")
 def admin_approve_registration(uid):
