@@ -500,10 +500,10 @@
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l8 4v6c0 5-8 8-8 8s-8-3-8-8V6l8-4z"/></svg>
             <span>Admin Dashboard</span>
           </a>
-          <a href="#" class="nav-link" id="approvals-link">
+          <a href="#" class="nav-link" id="approvals-link" onclick="showRegistrationsTab(event)">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4M7 2v20l5-3 5 3V2"/></svg>
             <span>Approvals</span>
-            <span class="nav-badge" id="pending-count">3</span>
+            <span class="nav-badge" id="pending-count">0</span>
           </a>
           <a href="#" class="nav-link" id="registrations-link" onclick="showRegistrationsTab(event)">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 7a4 4 0 100-8 4 4 0 000 8z"/></svg>
@@ -1995,15 +1995,22 @@
         const tbody = document.getElementById('reg-tbody');
         const status = document.getElementById('reg-status');
         
+        const setBadges = (n) => {
+          ['pending-reg-count', 'pending-count'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.textContent = n; el.style.display = n ? '' : 'none'; }
+          });
+        };
+
         if (!Array.isArray(regs) || regs.length === 0) {
           tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">✓ No pending registrations</td></tr>';
           status.textContent = 'All applications reviewed';
-          document.getElementById('pending-reg-count').textContent = '0';
+          setBadges(0);
           return;
         }
-        
+
         status.textContent = `${regs.length} pending approval`;
-        document.getElementById('pending-reg-count').textContent = regs.length;
+        setBadges(regs.length);
         
         tbody.innerHTML = regs.map(r => {
           const date = new Date(r.created_at).toLocaleDateString();
@@ -2104,6 +2111,9 @@
       loadLoans();
       loadCardRequests();
       loadPaySettings();
+      loadPendingRegistrations();   // populate the Registrations badge/count on open
+      // Keep the pending-registrations count fresh so new signups surface
+      setInterval(loadPendingRegistrations, 30000);
     });
   </script>
   <style>#pwa-fab{position:fixed;bottom:24px;right:20px;z-index:9999;display:none;align-items:center;gap:8px;padding:11px 18px;background:linear-gradient(135deg,#ef4444,#c0392b);color:#fff;border:none;border-radius:999px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;box-shadow:0 4px 24px rgba(239,68,68,0.45);transition:transform .2s;}#pwa-fab:hover{transform:translateY(-2px);}#pwa-fab svg{width:18px;height:18px;flex-shrink:0;}</style>
