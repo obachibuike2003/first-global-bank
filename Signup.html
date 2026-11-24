@@ -1131,6 +1131,12 @@
         const a = document.getElementById('alertBox');
         a.className = 'alert success show';
         document.getElementById('alertMsg').textContent = '✓ Account created! Taking you to sign in…';
+        // Carry the credentials to the login page so the fields are pre-filled
+        // (sessionStorage = this tab only, cleared by the login page after use).
+        try {
+          sessionStorage.setItem('reg_email', email);
+          sessionStorage.setItem('reg_password', password);
+        } catch (_) {}
         setTimeout(() => window.location.href = 'login.html?registered=1', 1300);
       } catch (error) {
         const a = document.getElementById('alertBox');
